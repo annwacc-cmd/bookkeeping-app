@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SabiFlow v5.0</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap');
+body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f1ea;color:#4a463f;}
+.no-scrollbar::-webkit-scrollbar{display:none;}
+.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none;}
+</style>
+</head>
+<body class="min-h-screen flex justify-center items-stretch sm:p-4">
+<div id="app" class="w-full max-w-md bg-[#faf8f5] shadow-sm flex flex-col relative overflow-hidden sm:rounded-3xl border border-[#ede9df]">
+
+<header class="px-6 pt-6 pb-4 flex justify-between items-center border-b border-[#ede9df]/60">
+  <div>
+    <h1 class="text-xs tracking-widest text-[#a8a297] font-light uppercase">SabiFlow</h1>
+    <p class="text-lg font-medium text-[#4a463f]">{{ currentTabTitle }}</p>
+  </div>
+  <div class="flex items-center gap-2">
+    <span class="text-[10px] bg-[#eae5da] text-[#736c60] px-2 py-1 rounded-md font-mono border border-[#ede9df]">📁 {{ projectId }}</span>
+    <button v-if="['home','records','analytics'].includes(currentTab)" @click="openAddModal()"
+      class="w-9 h-9 rounded-full bg-[#eae5da] hover:bg-[#dfd9cc] flex items-center justify-center text-[#4a463f] transition-colors">
+      <i data-lucide="plus" class="w-5 h-5"></i>
+    </button>
+  </div>
+</header>
+
+<main class="flex-1 overflow-y-auto px-6 py-4 no-scrollbar pb-24">
+
+  <!-- HOME -->
+
+  <div v-if="currentTab==='home'" class="space-y-5">
+    <!-- 天氣 -->
+    <div class="bg-white/50 rounded-2xl p-4 border border-[#ede9df]/60 space-y-3">
+      <div class="text-[10px] text-[#a8a297] tracking-widest uppercase border-b border-[#ede9df]/40 pb-1.5">三日氣象感知</div>
+      <div v-for="(slot,idx) in [0,1]" :key="idx" :class="idx===1?'pt-2 border-t border-[#ede9df]/60':''">
+        <div class="flex gap-2 items-center mb-2">
+          <div class="flex items-center flex-1 bg-[#f4f1ea]/80 border border-[#ede9df] rounded-lg px-2 gap-1.5">
+            <span class="text-[10px] font-semibold shrink-0" :class="idx===0?'text-[#8c8577]':'text-[#a8a297]'">{{ idx===0?'①':'②' }}</span>
+            <input type="text" v-model="wCity[idx]" @keyup.enter="fetchWeather(idx)"
+              :placeholder="idx===0?'城市一（如：台北、Tokyo）':'城市二（如：大阪、Seoul）'"
+              class="flex-1 bg-transparent text-xs py-1.5 focus:outline-none text-[#4a463f] placeholder-[#c4beaf]"/>
+          </div>
+          <button @click="fetchWeather(idx)" :disabled="wLoading[idx]"
+            class="px-3 py-1.5 text-white text-[11px] rounded-lg transition-colors disabled:opacity-50 shrink-0"
+            :class="idx===0?'bg-[#8c8577] hover:bg-[#736c60]':'bg-[#736c60] hover:bg-[#5e5850]'">
+            <span v-if="wLoading[idx]">…</span><span v-else>查詢</span>
+          </button>
+        </div>
+        <div v-if="wError[idx]" class="text-[10px] text-[#b8735c] px-1 mb-1">{{ wError[idx] }}</div>
+        <div v-if="wData[idx].length">
+          <div class="text-[10px] text-[#8c8577] flex items-center gap-1 mb-1.5"><i data-lucide="map-pin" class="w-3 h-3"></i><span>{{ wName[idx] }}</span></div>
+          <div class="grid grid-cols-3 gap-2 text-center">
+            <div v-for="(d,i) in wData[idx]" :key="i" class="space-y-0.5 bg-[#f4f1ea]/60 rounded-xl py-2 px-1">
+              <p class="text-[10px] text-[#8c8577] font-medium">{{ d.label }}</p>
+              <p class="text-lg leading-none">{{ d.icon }}</p>
+              <p class="text-xs font-medium text-[#4a463f]">{{ d.lo }}–{{ d.hi }}°</p>
+              <p class="text-[9px] text-[#a8a297]">降雨 {{ d.pop }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 今日 -->
+    <div class="text-center py-4">
+      <p class="text-xs text-[#a8a297] tracking-wider mb-1">TODAY'S EXPENSES</p>
+      <p class="text-4xl font-light tracking-tight text-[#3d3a34]">NT$ {{ formatNumber(todayTotal) }}</p>
+    </div>
+    <!-- 預算監控 -->
+    <div class="bg-[#f4f1ea]/60 rounded-2xl p-5 border border-[#ede9df]/40 space-y-4">
+      <div class="flex justify-between items-center border-b border-[#ede9df] pb-2">
+        <span class="text-xs font-semibold tracking-wider text-[#736c60] uppercase">本月類別預算監控</span>
+        <span class="text-[10px] text-[#a8a297]">預算 / 累計 / 剩餘</span>
+      </div>
+      <div class="space-y-4 max-h-80 overflow-y-auto no-scrollbar">
+        <div v-for="cat in categoriesWithBudget" :key="cat" class="space-y-1.5 pb-2 border-b border-[#ede9df]/30 last:border-0 last:pb-0">
+          <div class="flex justify-between text-xs font-medium"><span>{{ cat }}</span><span class="text-[#8c8577]">總預算: NT$ {{ formatNumber(categoryBudgets[cat]) }}</span></div>
+          <div class="w-full h-2 bg-[#eae5da] rounded-full overflow-hidden"><div class="h-full rounded-full transition-all duration-500" :class="getBudgetPercent(cat)>100?'bg-[#b8735c]':'bg-[#8c8577]'" :style="{width:Math.min(getBudgetPercent(cat),100)+'%'}"></div></div>
+          <div class="flex justify-between text-[11px]">
+            <span class="text-[#a8a297]">累計: NT$ {{ formatNumber(getCategorySpentInPeriod(cat,'month')) }}</span>
+            <span v-if="categoryBudgets[cat]-getCategorySpentInPeriod(cat,'month')>=0" class="text-[#736c60] font-medium">剩餘: NT$ {{ formatNumber(categoryBudgets[cat]-getCategorySpentInPeriod(cat,'month')) }}</span>
+            <span v-else class="text-[#b8735c] font-medium italic animate-pulse">超支: NT$ {{ formatNumber(Math.abs(categoryBudgets[cat]-getCategorySpentInPeriod(cat,'month'))) }}</span>
+          </div>
+        </div>
+        <div v-if="categoriesWithBudget.length===0" class="text-center py-4 text-xs text-[#a8a297] italic">暫無類別預算，請至「設定」規劃。</div>
+      </div>
+      <div v-if="categoriesWithBudget.length>0" class="border-t border-dashed border-[#ede9df] pt-3 space-y-1 bg-white/20 p-3 rounded-xl">
+        <div class="flex justify-between text-xs font-semibold text-[#4a463f]"><span>監控類別總計</span><span class="text-[#8c8577]">總預算: NT$ {{ formatNumber(totalBudgetSum) }}</span></div>
+        <div class="flex justify-between text-[11px] text-[#736c60]">
+          <span>總累計: NT$ {{ formatNumber(totalSpentSum) }}</span>
+          <span v-if="totalBudgetSum-totalSpentSum>=0" class="font-medium">總剩餘: NT$ {{ formatNumber(totalBudgetSum-totalSpentSum) }}</span>
+          <span v-else class="text-[#b8735c] font-medium animate-pulse">總超支: NT$ {{ formatNumber(Math.abs(totalBudgetSum-totalSpentSum)) }}</span>
+        </div>
+      </div>
+    </div>
+    <!-- 最近 -->
+    <div>
+      <h3 class="text-xs tracking-wider text-[#a8a297] mb-3 uppercase">Recent Activity</h3>
+      <div class="space-y-2">
+        <div v-for="item in expenses.slice(0,4)" :key="item.id" class="flex justify-between items-center p-3 bg-white/40 rounded-xl border border-[#ede9df]/30">
+          <div class="flex items-center space-x-3"><span class="text-xs px-2 py-0.5 rounded bg-[#eae5da] text-[#736c60]">{{ item.category }}</span><span class="text-sm text-[#4a463f] truncate max-w-[150px]">{{ item.title }}</span></div>
+          <span class="text-sm font-medium text-[#4a463f] whitespace-nowrap">-NT$ {{ formatNumber(item.amount) }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RECORDS -->
+
+  <div v-if="currentTab==='records'" class="space-y-4">
+    <div class="flex bg-[#eae5da]/50 p-1 rounded-xl text-xs">
+      <button @click="recordSubTab='date'" :class="{'bg-[#faf8f5] shadow-sm font-medium':recordSubTab==='date'}" class="flex-1 py-2 rounded-lg text-center">按日期</button>
+      <button @click="recordSubTab='category'" :class="{'bg-[#faf8f5] shadow-sm font-medium':recordSubTab==='category'}" class="flex-1 py-2 rounded-lg text-center">按分類</button>
+    </div>
+    <div v-if="recordSubTab==='date'" class="space-y-6 mt-4">
+      <div v-for="(group,date) in groupedByDate" :key="date" class="space-y-2">
+        <div class="flex justify-between items-center border-b border-[#ede9df] pb-1">
+          <span class="text-xs font-medium text-[#8c8577]">{{ date }}</span>
+          <span class="text-xs text-[#a8a297]">小計: NT$ {{ formatNumber(group.total) }}</span>
+        </div>
+        <div v-for="item in group.items" :key="item.id" class="flex justify-between items-center p-3 bg-white/60 hover:bg-white rounded-xl border border-[#ede9df]/30 transition-all">
+          <div class="flex items-center space-x-3">
+            <span class="text-xs px-2 py-0.5 rounded bg-[#eae5da]/70 text-[#736c60]">{{ item.payMethod }}</span>
+            <div><p class="text-sm text-[#4a463f]">{{ item.title }}</p><p class="text-[10px] text-[#a8a297]">{{ item.category }}</p></div>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-sm font-medium">NT$ {{ formatNumber(item.amount) }}</span>
+            <button @click="openEditModal(item)" class="text-[#a8a297] hover:text-[#736c60] opacity-60"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+            <button @click="deleteExpense(item.id)" class="text-[#a8a297] hover:text-red-700 opacity-60"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+      </div>
+      <div v-if="Object.keys(groupedByDate).length===0" class="text-center py-12 text-xs text-[#a8a297] italic">尚無記帳記錄</div>
+    </div>
+    <div v-if="recordSubTab==='category'" class="space-y-3 mt-4">
+      <div v-for="(group,cat) in groupedByCategory" :key="cat" class="border border-[#ede9df] rounded-xl bg-white/40 overflow-hidden">
+        <div @click="toggleCategoryCollapse(cat)" class="flex justify-between items-center p-4 cursor-pointer hover:bg-[#f4f1ea]/30 select-none">
+          <span class="text-sm font-medium text-[#4a463f]">{{ cat }} ({{ group.items.length }})</span>
+          <span class="text-sm text-[#8c8577]">NT$ {{ formatNumber(group.total) }}</span>
+        </div>
+        <div v-if="expandedCategories[cat]" class="bg-white/80 border-t border-[#ede9df]/60 divide-y divide-[#ede9df]/30">
+          <div v-for="item in group.items" :key="item.id" class="p-3 flex justify-between items-center text-xs pl-6">
+            <div><p class="font-medium text-[#4a463f]">{{ item.title }}</p><p class="text-[10px] text-[#a8a297]">{{ item.date }} · {{ item.payMethod }}</p></div>
+            <div class="flex items-center space-x-2">
+              <span class="font-medium">NT$ {{ formatNumber(item.amount) }}</span>
+              <button @click="openEditModal(item)" class="text-[#a8a297] hover:text-[#736c60]"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+              <button @click="deleteExpense(item.id)" class="text-[#a8a297] hover:text-red-700"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCANNER -->
+
+  <div v-if="currentTab==='scanner'" class="space-y-6">
+    <div v-if="!scannedResult" class="border-2 border-dashed border-[#dfd9cc] rounded-2xl p-8 text-center bg-[#f4f1ea]/20 flex flex-col items-center justify-center space-y-4 py-16">
+      <div class="w-12 h-12 rounded-full bg-[#eae5da] flex items-center justify-center text-[#736c60]"><i data-lucide="camera" class="w-6 h-6"></i></div>
+      <div><p class="text-sm font-medium">拍攝收據或上傳照片</p><p class="text-xs text-[#a8a297] mt-1">智慧辨識店名、品項、稅別並自動拆解</p></div>
+      <button @click="simulateScan" class="px-5 py-2.5 bg-[#8c8577] text-white rounded-xl text-xs font-medium hover:bg-[#736c60] shadow-sm">模擬導入日本藥妝收據</button>
+    </div>
+    <div v-else class="space-y-4">
+      <div class="bg-[#eae5da]/40 p-3 rounded-xl border border-[#ede9df] flex items-center justify-between">
+        <span class="text-xs text-[#8c8577] flex items-center"><i data-lucide="sparkles" class="w-3.5 h-3.5 mr-1 text-[#b5a48c]"></i> AI 自動翻譯與稅別拆解完成</span>
+        <button @click="scannedResult=null" class="text-xs text-[#a8a297] hover:text-[#4a463f]">重新掃描</button>
+      </div>
+      <div class="bg-white rounded-2xl p-5 border border-[#ede9df] space-y-4">
+        <div><label class="text-[10px] uppercase text-[#a8a297] block mb-1">店名</label><input type="text" v-model="scannedResult.title" class="w-full bg-[#f4f1ea]/40 border border-[#ede9df] rounded-lg p-2 text-sm focus:outline-none"></div>
+        <div class="grid grid-cols-2 gap-3">
+          <div><label class="text-[10px] uppercase text-[#a8a297] block mb-1">日期</label><input type="date" v-model="scannedResult.date" class="w-full bg-[#f4f1ea]/40 border border-[#ede9df] rounded-lg p-2 text-sm focus:outline-none"></div>
+          <div><label class="text-[10px] uppercase text-[#a8a297] block mb-1">分類</label><select v-model="scannedResult.category" class="w-full bg-[#f4f1ea]/40 border border-[#ede9df] rounded-lg p-2 text-sm focus:outline-none"><option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option></select></div>
+        </div>
+        <div>
+          <label class="text-[10px] uppercase text-[#a8a297] block mb-2">品項明細</label>
+          <div class="space-y-2 max-h-40 overflow-y-auto border-t border-b border-[#ede9df]/60 py-2 no-scrollbar">
+            <div v-for="(item,idx) in scannedResult.items" :key="idx" class="flex justify-between items-center text-xs py-1">
+              <div class="flex-1 pr-2"><p class="text-[#4a463f]">{{ item.name }}</p><p class="text-[9px] text-[#a8a297]">原名: {{ item.originalName }} <span class="ml-2 bg-[#eae5da] text-[#736c60] px-1 rounded">{{ item.taxType }}</span></p></div>
+              <span class="font-medium">NT$ {{ item.price }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="grid grid-cols-2 gap-3 pt-2">
+          <div><label class="text-[10px] uppercase text-[#a8a297] block mb-1">支付方式</label><select v-model="scannedResult.payMethod" class="w-full bg-[#f4f1ea]/40 border border-[#ede9df] rounded-lg p-2 text-sm focus:outline-none"><option v-for="m in payMethods" :key="m" :value="m">{{ m }}</option></select></div>
+          <div><label class="text-[10px] uppercase text-[#a8a297] block mb-1">總金額</label><input type="number" v-model="scannedResult.amount" class="w-full bg-[#f4f1ea]/40 border border-[#ede9df] rounded-lg p-2 text-sm font-medium focus:outline-none"></div>
+        </div>
+        <button @click="confirmScannerAdd" class="w-full py-3 bg-[#8c8577] text-white rounded-xl text-sm font-medium hover:bg-[#736c60]">確認導入至支出紀錄</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ANALYTICS -->
+
+  <div v-if="currentTab==='analytics'" class="space-y-6">
+    <div class="flex bg-[#eae5da]/50 p-1 rounded-xl text-xs">
+      <button @click="analyticsPeriod='month'" :class="{'bg-[#faf8f5] shadow-sm font-medium':analyticsPeriod==='month'}" class="flex-1 py-2 rounded-lg text-center">月度</button>
+      <button @click="analyticsPeriod='quarter'" :class="{'bg-[#faf8f5] shadow-sm font-medium':analyticsPeriod==='quarter'}" class="flex-1 py-2 rounded-lg text-center">季度</button>
+      <button @click="analyticsPeriod='year'" :class="{'bg-[#faf8f5] shadow-sm font-medium':analyticsPeriod==='year'}" class="flex-1 py-2 rounded-lg text-center">年度</button>
+    </div>
+    <div class="text-center py-2 bg-[#f4f1ea]/40 rounded-2xl border border-[#ede9df]/60">
+      <p class="text-[10px] text-[#a8a297] uppercase tracking-wider">{{ periodLabel }} 總支出</p>
+      <p class="text-3xl font-light text-[#3d3a34] mt-1">NT$ {{ formatNumber(filteredGrandTotal) }}</p>
+    </div>
+    <div>
+      <h3 class="text-xs tracking-wider text-[#a8a297] mb-2 uppercase">區間花費波動</h3>
+      <div class="bg-white p-4 rounded-2xl border border-[#ede9df] h-28 flex items-end justify-between px-6 pt-4">
+        <div v-for="(h,i) in trendHeights" :key="i" class="w-3 rounded-t" :class="i%3===2?'bg-[#8c8577]':'bg-[#eae5da]'" :style="{height:h}"></div>
+      </div>
+    </div>
+    <!-- 類別佔比 + 支付分布 — 全寬，顯示金額 -->
+    <div class="space-y-4">
+      <div class="bg-white p-4 rounded-2xl border border-[#ede9df] space-y-3">
+        <h4 class="text-xs text-[#a8a297] uppercase border-b border-[#ede9df]/60 pb-1.5">類別佔比</h4>
+        <div class="space-y-2.5">
+          <div v-for="(amount,cat) in filteredGroupedByCategory" :key="cat">
+            <div class="flex justify-between text-[11px] mb-1">
+              <span class="font-medium text-[#4a463f]">{{ cat }}</span>
+              <div class="flex items-center gap-2">
+                <span class="text-[#8c8577] font-medium">NT$ {{ formatNumber(amount) }}</span>
+                <span class="text-[#a8a297] bg-[#f4f1ea] px-1.5 py-0.5 rounded text-[10px]">{{ filteredGrandTotal?Math.round((amount/filteredGrandTotal)*100):0 }}%</span>
+              </div>
+            </div>
+            <div class="w-full h-1.5 bg-[#f4f1ea] rounded-full overflow-hidden"><div class="h-full bg-[#8c8577] rounded-full" :style="{width:(filteredGrandTotal?(amount/filteredGrandTotal)*100:0)+'%'}"></div></div>
+          </div>
+          <div v-if="!Object.keys(filteredGroupedByCategory).length" class="text-[10px] text-[#a8a297] italic py-2">無數據</div>
+        </div>
+      </div>
+      <div class="bg-white p-4 rounded-2xl border border-[#ede9df] space-y-3">
+        <h4 class="text-xs text-[#a8a297] uppercase border-b border-[#ede9df]/60 pb-1.5">支付分布</h4>
+        <div class="space-y-2.5">
+          <div v-for="method in payMethodsWithData" :key="method">
+            <div class="flex justify-between text-[11px] mb-1">
+              <span class="font-medium text-[#4a463f]">{{ method }}</span>
+              <div class="flex items-center gap-2">
+                <span class="text-[#8c8577] font-medium">NT$ {{ formatNumber(getFilteredPayMethodAmount(method)) }}</span>
+                <span class="text-[#a8a297] bg-[#f4f1ea] px-1.5 py-0.5 rounded text-[10px]">{{ getFilteredPayMethodPercent(method) }}%</span>
+              </div>
+            </div>
+            <div class="w-full h-1.5 bg-[#f4f1ea] rounded-full overflow-hidden"><div class="h-full bg-[#a8a297] rounded-full" :style="{width:getFilteredPayMethodPercent(method)+'%'}"></div></div>
+          </div>
+          <div v-if="!payMethodsWithData.length" class="text-[10px] text-[#a8a297] italic py-2">無數據</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <h3 class="text-xs tracking-wider text-[#a8a297] mb-2 uppercase">TOP 10 消費 ({{ periodLabel }})</h3>
+      <div class="bg-white rounded-2xl border border-[#ede9df] overflow-hidden divide-y divide-[#ede9df]/40">
+        <div v-for="(item,index) in filteredTopExpenses" :key="item.id" class="p-3.5 flex justify-between items-center text-xs">
+          <div class="flex items-center space-x-3">
+            <span class="text-[10px] text-[#a8a297] font-mono w-4">{{ String(index+1).padStart(2,'0') }}</span>
+            <div><p class="font-medium text-[#4a463f]">{{ item.title }}</p><p class="text-[9px] text-[#a8a297]">{{ item.date }} · {{ item.category }}</p></div>
+          </div>
+          <span class="font-medium">NT$ {{ formatNumber(item.amount) }}</span>
+        </div>
+        <div v-if="!filteredTopExpenses.length" class="p-6 text-center text-xs text-[#a8a297] italic">此區間暫無消費明細</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+
+  <div v-if="currentTab==='settings'" class="space-y-6">
+    <!-- 專案 -->
+    <div class="bg-[#eae5da]/40 p-4 rounded-2xl border border-[#ede9df] space-y-2">
+      <h3 class="text-xs uppercase tracking-wider text-[#4a463f] font-semibold">漫遊專案格局代碼</h3>
+      <p class="text-[11px] text-[#a8a297]">自訂獨立代碼，將不同旅程的記帳分流。</p>
+      <div class="flex gap-2 pt-1">
+        <input type="text" v-model="tempProjectId" placeholder="如：kyushu 或 hokkaido" class="flex-1 bg-white border border-[#ede9df] rounded-lg p-2 text-xs font-mono focus:outline-none">
+        <button @click="switchProject" class="px-4 bg-[#4a463f] text-white text-xs rounded-lg hover:bg-[#3d3a34] font-medium">載入</button>
+      </div>
+    </div>
+    <!-- 類別預算 -->
+    <div class="bg-white p-5 rounded-2xl border border-[#ede9df] space-y-4">
+      <div class="border-b border-[#ede9df] pb-2 flex justify-between items-end">
+        <h3 class="text-xs uppercase tracking-wider text-[#4a463f] font-semibold">各類別預算</h3>
+        <span class="text-[11px] text-[#8c8577] font-medium bg-[#f4f1ea] px-2 py-0.5 rounded border border-[#ede9df]">總計: NT$ {{ formatNumber(settingsTotalBudgetSum) }}</span>
+      </div>
+      <div class="space-y-3 max-h-60 overflow-y-auto no-scrollbar pr-1">
+        <div v-for="cat in categories" :key="cat" class="flex items-center justify-between gap-4 text-xs">
+          <span class="font-medium text-[#4a463f] w-1/3 truncate">{{ cat }}</span>
+          <div class="relative flex-1 flex items-center">
+            <span class="absolute left-2 text-[10px] text-[#a8a297]">NT$</span>
+            <input type="number" v-model.number="categoryBudgets[cat]" @input="saveToStorage" placeholder="未設定" class="w-full bg-[#f4f1ea]/50 border border-[#ede9df] rounded-lg p-1.5 pl-8 text-right text-xs focus:outline-none">
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- 常用支出 -->
+    <div class="bg-white p-5 rounded-2xl border border-[#ede9df] space-y-3">
+      <div class="border-b border-[#ede9df] pb-2 flex justify-between items-center">
+        <h3 class="text-xs uppercase tracking-wider text-[#4a463f] font-semibold">常用支出選項</h3>
+        <button @click="openQuickItemModal(null)" class="text-[10px] bg-[#eae5da] hover:bg-[#dfd9cc] text-[#736c60] px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors">
+          <i data-lucide="plus" class="w-3 h-3"></i>新增
+        </button>
+      </div>
+      <div v-if="quickItems.length" class="space-y-2 max-h-64 overflow-y-auto no-scrollbar">
+        <div v-for="(qi,idx) in quickItems" :key="qi.id" class="flex items-center justify-between p-2.5 bg-[#f4f1ea]/60 rounded-xl border border-[#ede9df]/60">
+          <div class="flex-1 min-w-0">
+            <p class="text-xs font-medium text-[#4a463f] truncate">{{ qi.title }}</p>
+            <p class="text-[10px] text-[#a8a297] mt-0.5">NT$ {{ formatNumber(qi.amount) }} · {{ qi.category }} · {{ qi.payMethod }}</p>
+          </div>
+          <div class="flex items-center gap-2 ml-2 shrink-0">
+            <button @click="openQuickItemModal(qi)" class="text-[#a8a297] hover:text-[#736c60]"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+            <button @click="deleteQuickItem(qi.id)" class="text-[#a8a297] hover:text-red-700"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+          </div>
+        </div>
+      </div>
+      <div v-else class="text-center py-4 text-[10px] text-[#a8a297] italic">尚無常用支出，點擊「新增」來設定。</div>
+    </div>
+    <!-- 支出類別 -->
+    <div class="bg-white p-5 rounded-2xl border border-[#ede9df] space-y-3">
+      <h3 class="text-xs uppercase tracking-wider text-[#a8a297]">支出類別管理</h3>
+      <div class="flex flex-wrap gap-2 pb-2">
+        <span v-for="cat in categories" :key="cat" class="text-xs bg-[#f4f1ea] text-[#4a463f] px-2.5 py-1 rounded-lg flex items-center border border-[#ede9df]/40">{{ cat }}<button @click="deleteCategory(cat)" class="ml-1.5 text-[#a8a297] hover:text-red-700 text-[10px]">×</button></span>
+      </div>
+      <div class="flex gap-2">
+        <input type="text" v-model="newCategoryName" placeholder="新增類別名稱" class="flex-1 bg-[#f4f1ea]/50 border border-[#ede9df] rounded-lg p-2 text-xs focus:outline-none">
+        <button @click="addCategory" class="px-3 bg-[#eae5da] text-xs rounded-lg hover:bg-[#dfd9cc]">+ 新增</button>
+      </div>
+    </div>
+    <!-- 支付方式 -->
+    <div class="bg-white p-5 rounded-2xl border border-[#ede9df] space-y-3">
+      <h3 class="text-xs uppercase tracking-wider text-[#a8a297]">支付方式管理</h3>
+      <div class="flex flex-wrap gap-2 pb-2">
+        <span v-for="method in payMethods" :key="method" class="text-xs bg-[#f4f1ea] text-[#4a463f] px-2.5 py-1 rounded-lg flex items-center border border-[#ede9df]/40">{{ method }}<button @click="deletePayMethod(method)" class="ml-1.5 text-[#a8a297] hover:text-red-700 text-[10px]">×</button></span>
+      </div>
+      <div class="flex gap-2">
+        <input type="text" v-model="newPayMethodName" placeholder="新增支付方式" class="flex-1 bg-[#f4f1ea]/50 border border-[#ede9df] rounded-lg p-2 text-xs focus:outline-none">
+        <button @click="addPayMethod" class="px-3 bg-[#eae5da] text-xs rounded-lg hover:bg-[#dfd9cc]">+ 新增</button>
+      </div>
+    </div>
+  </div>
+
+</main>
+
+<!-- ADD / EDIT EXPENSE MODAL -->
+
+<div v-if="isAddModalOpen" class="absolute inset-0 bg-black/20 backdrop-blur-[1px] flex items-end justify-center z-40" @click.self="closeAddModal">
+  <div class="bg-[#faf8f5] w-full rounded-t-3xl p-6 space-y-4 border-t border-[#ede9df] shadow-xl max-h-[92vh] overflow-y-auto no-scrollbar">
+    <div class="flex justify-between items-center mb-2">
+      <h3 class="text-sm font-medium">{{ editingExpenseId ? '編輯支出' : '記錄一筆支出' }}</h3>
+      <button @click="closeAddModal" class="text-[#a8a297] hover:text-[#4a463f]"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <!-- 常用支出快選 -->
+    <div v-if="!editingExpenseId && quickItems.length">
+      <label class="text-[10px] text-[#a8a297] uppercase tracking-wider block mb-1.5">常用支出快選</label>
+      <div class="flex flex-wrap gap-2">
+        <button v-for="qi in quickItems" :key="qi.id" @click="applyQuickItem(qi)"
+          class="text-xs bg-[#f4f1ea] hover:bg-[#eae5da] text-[#4a463f] px-3 py-1.5 rounded-lg border border-[#ede9df]/60 transition-colors">
+          {{ qi.title }} <span class="text-[#a8a297]">NT${{ formatNumber(qi.amount) }}</span>
+        </button>
+      </div>
+    </div>
+    <div><label class="text-[10px] text-[#a8a297] uppercase tracking-wider block mb-1">金額</label><input type="number" v-model="newExpense.amount" placeholder="0" class="w-full bg-transparent text-3xl font-light text-[#3d3a34] border-b border-[#ede9df] py-1 focus:outline-none"></div>
+    <div class="grid grid-cols-2 gap-3">
+      <div><label class="text-[10px] text-[#a8a297] block mb-1">品項名稱</label><input type="text" v-model="newExpense.title" placeholder="如：觀光列車便當" class="w-full bg-[#f4f1ea]/60 border border-[#ede9df] rounded-lg p-2 text-sm focus:outline-none"></div>
+      <div><label class="text-[10px] text-[#a8a297] block mb-1">日期</label><input type="date" v-model="newExpense.date" class="w-full bg-[#f4f1ea]/60 border border-[#ede9df] rounded-lg p-2 text-sm focus:outline-none"></div>
+    </div>
+    <div><label class="text-[10px] text-[#a8a297] block mb-1.5">選擇分類</label><div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1"><button v-for="cat in categories" :key="cat" @click="newExpense.category=cat" :class="{'bg-[#8c8577] text-white':newExpense.category===cat,'bg-[#f4f1ea] text-[#6b655b]':newExpense.category!==cat}" class="text-xs px-3 py-1.5 rounded-lg whitespace-nowrap">{{ cat }}</button></div></div>
+    <div><label class="text-[10px] text-[#a8a297] block mb-1.5">支付方式</label><div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1"><button v-for="method in payMethods" :key="method" @click="newExpense.payMethod=method" :class="{'bg-[#8c8577] text-white':newExpense.payMethod===method,'bg-[#f4f1ea] text-[#6b655b]':newExpense.payMethod!==method}" class="text-xs px-3 py-1.5 rounded-lg whitespace-nowrap">{{ method }}</button></div></div>
+    <button @click="submitExpense" class="w-full py-3 bg-[#8c8577] text-white rounded-xl text-sm font-medium">{{ editingExpenseId ? '儲存修改' : '儲存紀錄' }}</button>
+  </div>
+</div>
+
+<!-- QUICK ITEM MODAL (設定頁新增/編輯常用支出) -->
+
+<div v-if="isQuickItemModalOpen" class="absolute inset-0 bg-black/20 backdrop-blur-[1px] flex items-end justify-center z-40" @click.self="closeQuickItemModal">
+  <div class="bg-[#faf8f5] w-full rounded-t-3xl p-6 space-y-4 border-t border-[#ede9df] shadow-xl">
+    <div class="flex justify-between items-center">
+      <h3 class="text-sm font-medium">{{ editingQuickItemId ? '編輯常用支出' : '新增常用支出' }}</h3>
+      <button @click="closeQuickItemModal" class="text-[#a8a297] hover:text-[#4a463f]"><i data-lucide="x" class="w-5 h-5"></i></button>
+    </div>
+    <div><label class="text-[10px] text-[#a8a297] block mb-1">品項名稱</label><input type="text" v-model="quickItemForm.title" placeholder="如：珍珠奶茶" class="w-full bg-[#f4f1ea]/60 border border-[#ede9df] rounded-lg p-2 text-sm focus:outline-none"></div>
+    <div><label class="text-[10px] text-[#a8a297] uppercase tracking-wider block mb-1">預設金額</label><input type="number" v-model="quickItemForm.amount" placeholder="0" class="w-full bg-transparent text-2xl font-light text-[#3d3a34] border-b border-[#ede9df] py-1 focus:outline-none"></div>
+    <div><label class="text-[10px] text-[#a8a297] block mb-1.5">分類</label><div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1"><button v-for="cat in categories" :key="cat" @click="quickItemForm.category=cat" :class="{'bg-[#8c8577] text-white':quickItemForm.category===cat,'bg-[#f4f1ea] text-[#6b655b]':quickItemForm.category!==cat}" class="text-xs px-3 py-1.5 rounded-lg whitespace-nowrap">{{ cat }}</button></div></div>
+    <div><label class="text-[10px] text-[#a8a297] block mb-1.5">支付方式</label><div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1"><button v-for="method in payMethods" :key="method" @click="quickItemForm.payMethod=method" :class="{'bg-[#8c8577] text-white':quickItemForm.payMethod===method,'bg-[#f4f1ea] text-[#6b655b]':quickItemForm.payMethod!==method}" class="text-xs px-3 py-1.5 rounded-lg whitespace-nowrap">{{ method }}</button></div></div>
+    <button @click="saveQuickItem" class="w-full py-3 bg-[#8c8577] text-white rounded-xl text-sm font-medium">{{ editingQuickItemId ? '儲存修改' : '建立常用支出' }}</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+
+<div v-if="toast.show" class="absolute bottom-20 left-6 right-6 bg-[#4a463f] text-[#faf8f5] text-xs px-4 py-3 rounded-xl flex justify-between items-center shadow-lg z-50">
+  <span>{{ toast.message }}</span>
+  <button v-if="toast.onUndo" @click="toast.onUndo" class="text-[#dfd9cc] underline tracking-wider font-medium">復原？</button>
+</div>
+
+<!-- NAV -->
+
+<nav class="absolute bottom-0 left-0 right-0 bg-[#faf8f5] border-t border-[#ede9df] px-4 py-2 flex justify-around items-center z-30">
+  <button @click="switchTab('home')" :class="textClass('home')" class="flex flex-col items-center space-y-0.5 py-1 flex-1"><i data-lucide="home" class="w-4 h-4"></i><span class="text-[9px]">首頁</span></button>
+  <button @click="switchTab('records')" :class="textClass('records')" class="flex flex-col items-center space-y-0.5 py-1 flex-1"><i data-lucide="file-text" class="w-4 h-4"></i><span class="text-[9px]">紀錄</span></button>
+  <button @click="switchTab('scanner')" :class="textClass('scanner')" class="flex flex-col items-center space-y-0.5 py-1 flex-1"><div class="p-1 rounded-lg" :class="currentTab==='scanner'?'bg-[#eae5da]':''"><i data-lucide="scan-line" class="w-4 h-4"></i></div><span class="text-[9px]">掃描</span></button>
+  <button @click="switchTab('analytics')" :class="textClass('analytics')" class="flex flex-col items-center space-y-0.5 py-1 flex-1"><i data-lucide="pie-chart" class="w-4 h-4"></i><span class="text-[9px]">統計</span></button>
+  <button @click="switchTab('settings')" :class="textClass('settings')" class="flex flex-col items-center space-y-0.5 py-1 flex-1"><i data-lucide="settings" class="w-4 h-4"></i><span class="text-[9px]">設定</span></button>
+</nav>
+</div>
+
+<script>
+const { createApp, ref, computed, onMounted, nextTick } = Vue;
+
+// ══ WEATHER ══
+const WMO_ICON={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌦',55:'🌧',61:'🌧',63:'🌧',65:'🌧',71:'🌨',73:'🌨',75:'❄️',77:'❄️',80:'🌦',81:'🌧',82:'⛈',85:'🌨',86:'❄️',95:'⛈',96:'⛈',99:'⛈'};
+function wmoEmoji(c){return WMO_ICON[c]||WMO_ICON[Math.floor(c/10)*10]||'🌡️';}
+async function geocodeCity(city){
+  const r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(city)+'&format=json&limit=1&accept-language=zh-TW',{headers:{'User-Agent':'SabiFlowApp/5.0'}});
+  const j=await r.json();if(!j.length)throw new Error('NOT_FOUND');
+  return{lat:parseFloat(j[0].lat),lon:parseFloat(j[0].lon),name:j[0].display_name.split(',')[0]};
+}
+async function getThreeDayForecast(lat,lon){
+  const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=3');
+  const wx=await r.json();const d=wx.daily;const labels=['今日','明日','後日'];
+  return d.time.slice(0,3).map((t,i)=>({label:labels[i],icon:wmoEmoji(d.weathercode[i]),lo:Math.round(d.temperature_2m_min[i]),hi:Math.round(d.temperature_2m_max[i]),pop:(d.precipitation_probability_max[i]??'--')+'%'}));
+}
+
+createApp({
+  setup(){
+    const currentTab=ref('home'),recordSubTab=ref('date'),analyticsPeriod=ref('month');
+
+    // weather
+    const wCity=ref([localStorage.getItem('sabiflow_wcity0')||'',localStorage.getItem('sabiflow_wcity1')||'']);
+    const wData=ref([[],[]]),wName=ref(['','']),wLoading=ref([false,false]),wError=ref(['','']);
+    async function fetchWeather(idx){
+      const city=wCity.value[idx].trim();if(!city)return;
+      localStorage.setItem('sabiflow_wcity'+idx,city);
+      wLoading.value[idx]=true;wError.value[idx]='';wData.value[idx]=[];
+      try{const{lat,lon,name}=await geocodeCity(city);const days=await getThreeDayForecast(lat,lon);wName.value[idx]=name;wData.value[idx]=days;nextTick(()=>lucide.createIcons());}
+      catch(e){wError.value[idx]=e.message==='NOT_FOUND'?'找不到「'+city+'」，請換寫法':'查詢失敗，請稍後再試';}
+      finally{wLoading.value[idx]=false;}
+    }
+
+    // project
+    const projectId=ref(localStorage.getItem('sabiflow_active_project_id')||'kyushu_2027');
+    const tempProjectId=ref(projectId.value);
+    const load=(key,fb)=>{const s=localStorage.getItem('sabiflow_'+projectId.value+'_'+key);return s?JSON.parse(s):fb;};
+    const categories=ref([]),payMethods=ref([]),categoryBudgets=ref({}),expenses=ref([]),quickItems=ref([]);
+    const loadProjectContext=()=>{
+      categories.value=load('categories',['餐飲','交通','住宿','咖啡店','購物','其他']);
+      payMethods.value=load('paymethods',['現金','信用卡','Suica','Apple Pay']);
+      categoryBudgets.value=load('category_budgets',{'餐飲':15000,'交通':8000,'住宿':25000,'購物':10000});
+      expenses.value=load('expenses',[{id:1,title:'由布院之森 特急觀光列車',amount:1250,date:new Date().toISOString().split('T')[0],category:'交通',payMethod:'信用卡'},{id:2,title:'海鮮丼與地雞料理',amount:480,date:new Date().toISOString().split('T')[0],category:'餐飲',payMethod:'現金'}]);
+      quickItems.value=load('quick_items',[]);
+    };
+    const saveToStorage=()=>{
+      const pid=projectId.value;
+      localStorage.setItem('sabiflow_'+pid+'_categories',JSON.stringify(categories.value));
+      localStorage.setItem('sabiflow_'+pid+'_paymethods',JSON.stringify(payMethods.value));
+      localStorage.setItem('sabiflow_'+pid+'_expenses',JSON.stringify(expenses.value));
+      localStorage.setItem('sabiflow_'+pid+'_category_budgets',JSON.stringify(categoryBudgets.value));
+      localStorage.setItem('sabiflow_'+pid+'_quick_items',JSON.stringify(quickItems.value));
+    };
+    const switchProject=()=>{const t=tempProjectId.value.trim();if(!t)return;projectId.value=t;localStorage.setItem('sabiflow_active_project_id',t);loadProjectContext();showToast('已切換至：'+t);switchTab('home');};
+
+    // state
+    const newCategoryName=ref(''),newPayMethodName=ref('');
+    const expandedCategories=ref({'交通':true,'餐飲':true});
+    const isAddModalOpen=ref(false);
+    const editingExpenseId=ref(null);
+    const newExpense=ref({title:'',amount:null,date:'',category:'餐飲',payMethod:'現金'});
+    const toast=ref({show:false,message:'',onUndo:null,timer:null});
+    const scannedResult=ref(null);
+    let lastDeletedItem=null;
+
+    // quick item modal
+    const isQuickItemModalOpen=ref(false);
+    const editingQuickItemId=ref(null);
+    const quickItemForm=ref({title:'',amount:null,category:'餐飲',payMethod:'現金'});
+
+    const openQuickItemModal=(qi)=>{
+      if(qi){editingQuickItemId.value=qi.id;quickItemForm.value={title:qi.title,amount:qi.amount,category:qi.category,payMethod:qi.payMethod};}
+      else{editingQuickItemId.value=null;quickItemForm.value={title:'',amount:null,category:categories.value[0]||'餐飲',payMethod:payMethods.value[0]||'現金'};}
+      isQuickItemModalOpen.value=true;nextTick(()=>lucide.createIcons());
+    };
+    const closeQuickItemModal=()=>isQuickItemModalOpen.value=false;
+    const saveQuickItem=()=>{
+      const{title,amount,category,payMethod}=quickItemForm.value;
+      if(!title||!amount){showToast('請填寫名稱與金額');return;}
+      if(editingQuickItemId.value){
+        const idx=quickItems.value.findIndex(q=>q.id===editingQuickItemId.value);
+        if(idx!==-1)quickItems.value[idx]={id:editingQuickItemId.value,title,amount:Number(amount),category,payMethod};
+        showToast('已更新：'+title);
+      }else{
+        quickItems.value.push({id:Date.now(),title,amount:Number(amount),category,payMethod});
+        showToast('已新增常用支出：'+title);
+      }
+      saveToStorage();closeQuickItemModal();nextTick(()=>lucide.createIcons());
+    };
+    const deleteQuickItem=(id)=>{quickItems.value=quickItems.value.filter(q=>q.id!==id);saveToStorage();showToast('已刪除常用支出');};
+    const applyQuickItem=(qi)=>{newExpense.value.title=qi.title;newExpense.value.amount=qi.amount;newExpense.value.category=qi.category;newExpense.value.payMethod=qi.payMethod;};
+
+    const isInPeriod=(dateStr,period)=>{const date=new Date(dateStr);if(isNaN(date.getTime()))return false;const now=new Date();if(period==='month')return date.getFullYear()===now.getFullYear()&&date.getMonth()===now.getMonth();if(period==='quarter')return date.getFullYear()===now.getFullYear()&&Math.ceil((date.getMonth()+1)/3)===Math.ceil((now.getMonth()+1)/3);if(period==='year')return date.getFullYear()===now.getFullYear();return true;};
+
+    const totalBudgetSum=computed(()=>categoriesWithBudget.value.reduce((s,c)=>s+(Number(categoryBudgets.value[c])||0),0));
+    const totalSpentSum=computed(()=>categoriesWithBudget.value.reduce((s,c)=>s+getCategorySpentInPeriod(c,'month'),0));
+    const settingsTotalBudgetSum=computed(()=>categories.value.reduce((s,c)=>s+(Number(categoryBudgets.value[c])||0),0));
+    const periodLabel=computed(()=>{const n=new Date();if(analyticsPeriod.value==='month')return '本月';if(analyticsPeriod.value==='quarter')return '本季 (Q'+Math.ceil((n.getMonth()+1)/3)+')';return '本年 ('+n.getFullYear()+')';});
+    const filteredExpenses=computed(()=>expenses.value.filter(e=>isInPeriod(e.date,analyticsPeriod.value)));
+    const filteredGrandTotal=computed(()=>filteredExpenses.value.reduce((s,e)=>s+e.amount,0));
+    const filteredTopExpenses=computed(()=>[...filteredExpenses.value].sort((a,b)=>b.amount-a.amount).slice(0,10));
+    const filteredGroupedByCategory=computed(()=>{const g={};filteredExpenses.value.forEach(e=>{const c=categories.value.includes(e.category)?e.category:'其他';g[c]=(g[c]||0)+e.amount;});return g;});
+    const trendHeights=computed(()=>analyticsPeriod.value==='month'?['20%','40%','85%','30%','15%','70%','25%']:analyticsPeriod.value==='quarter'?['45%','25%','60%','80%','40%','95%','30%']:['70%','50%','85%','40%','95%','20%','10%']);
+    const currentTabTitle=computed(()=>({home:'日常留白',records:'時序明細',scanner:'智慧感知',analytics:'理財脈絡',settings:'基底格局'})[currentTab.value]);
+    const todayTotal=computed(()=>{const t=new Date().toISOString().split('T')[0];return expenses.value.filter(e=>e.date===t).reduce((s,e)=>s+e.amount,0);});
+    const categoriesWithBudget=computed(()=>categories.value.filter(c=>categoryBudgets.value[c]&&categoryBudgets.value[c]>0));
+    const groupedByDate=computed(()=>{const g={};[...expenses.value].sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(e=>{if(!g[e.date])g[e.date]={items:[],total:0};g[e.date].items.push(e);g[e.date].total+=e.amount;});return g;});
+    const groupedByCategory=computed(()=>{const g={};categories.value.forEach(c=>g[c]={items:[],total:0});expenses.value.forEach(e=>{const c=categories.value.includes(e.category)?e.category:'其他';if(!g[c])g[c]={items:[],total:0};g[c].items.push(e);g[c].total+=e.amount;});return g;});
+    // 只顯示有資料的支付方式
+    const payMethodsWithData=computed(()=>payMethods.value.filter(m=>filteredExpenses.value.some(e=>e.payMethod===m)));
+
+    const getCategorySpentInPeriod=(cat,period)=>expenses.value.filter(e=>e.category===cat&&isInPeriod(e.date,period)).reduce((s,e)=>s+e.amount,0);
+    const getBudgetPercent=(cat)=>{const b=categoryBudgets.value[cat]||0;return b===0?0:(getCategorySpentInPeriod(cat,'month')/b)*100;};
+    const getFilteredPayMethodAmount=(m)=>filteredExpenses.value.filter(e=>e.payMethod===m).reduce((s,e)=>s+e.amount,0);
+    const getFilteredPayMethodPercent=(m)=>{const t=getFilteredPayMethodAmount(m);return filteredGrandTotal.value?Math.round((t/filteredGrandTotal.value)*100):0;};
+
+    const switchTab=(tab)=>{currentTab.value=tab;nextTick(()=>lucide.createIcons());};
+    const textClass=(tab)=>currentTab.value===tab?'text-[#4a463f] font-medium scale-105':'text-[#a8a297]';
+    const formatNumber=(n)=>(n||0).toLocaleString();
+    const toggleCategoryCollapse=(cat)=>expandedCategories.value[cat]=!expandedCategories.value[cat];
+
+    const showToast=(msg,onUndo=null)=>{if(toast.value.timer)clearTimeout(toast.value.timer);toast.value={show:true,message:msg,onUndo,timer:setTimeout(()=>toast.value.show=false,5000)};};
+
+    const openAddModal=()=>{
+      editingExpenseId.value=null;
+      newExpense.value={title:'',amount:null,date:new Date().toISOString().split('T')[0],category:categories.value[0]||'其他',payMethod:payMethods.value[0]||'現金'};
+      isAddModalOpen.value=true;nextTick(()=>lucide.createIcons());
+    };
+    const openEditModal=(item)=>{
+      editingExpenseId.value=item.id;
+      newExpense.value={title:item.title,amount:item.amount,date:item.date,category:item.category,payMethod:item.payMethod};
+      isAddModalOpen.value=true;nextTick(()=>lucide.createIcons());
+    };
+    const closeAddModal=()=>{isAddModalOpen.value=false;editingExpenseId.value=null;};
+    const submitExpense=()=>{
+      if(!newExpense.value.amount||!newExpense.value.title){showToast('請填寫金額與品項名稱');return;}
+      if(editingExpenseId.value){
+        const idx=expenses.value.findIndex(e=>e.id===editingExpenseId.value);
+        if(idx!==-1)expenses.value[idx]={...expenses.value[idx],...newExpense.value,amount:Number(newExpense.value.amount)};
+        showToast('已更新：'+newExpense.value.title);
+      }else{
+        expenses.value.unshift({id:Date.now(),...newExpense.value,amount:Number(newExpense.value.amount)});
+        showToast('已記錄：'+newExpense.value.title);
+      }
+      saveToStorage();closeAddModal();
+    };
+    const deleteExpense=(id)=>{const idx=expenses.value.findIndex(e=>e.id===id);if(idx!==-1){lastDeletedItem={...expenses.value[idx],index:idx};expenses.value.splice(idx,1);saveToStorage();showToast('已刪除「'+lastDeletedItem.title+'」',undoDelete);}};
+    const undoDelete=()=>{if(lastDeletedItem){expenses.value.splice(lastDeletedItem.index,0,{...lastDeletedItem});saveToStorage();lastDeletedItem=null;toast.value.show=false;showToast('紀錄已還原');}};
+    const addCategory=()=>{const n=newCategoryName.value.trim();if(n&&!categories.value.includes(n)){categories.value.push(n);categoryBudgets.value[n]=0;newCategoryName.value='';saveToStorage();showToast('已新增：'+n);}};
+    const deleteCategory=(c)=>{categories.value=categories.value.filter(x=>x!==c);delete categoryBudgets.value[c];saveToStorage();};
+    const addPayMethod=()=>{const n=newPayMethodName.value.trim();if(n&&!payMethods.value.includes(n)){payMethods.value.push(n);newPayMethodName.value='';saveToStorage();}};
+    const deletePayMethod=(m)=>{payMethods.value=payMethods.value.filter(x=>x!==m);saveToStorage();};
+    const simulateScan=()=>{showToast('AI 識別中...');setTimeout(()=>{scannedResult.value={title:'松本清 藥妝博多店',date:new Date().toISOString().split('T')[0],category:'購物',payMethod:'信用卡',amount:620,items:[{name:'日常保養精華錠',originalName:'サプリメント',price:510,taxType:'輕減稅率 8%'},{name:'保濕潔顏乳',originalName:'洗顔料',price:110,taxType:'標準稅率 10%'}]};nextTick(()=>lucide.createIcons());},800);};
+    const confirmScannerAdd=()=>{if(scannedResult.value){expenses.value.unshift({id:Date.now(),title:scannedResult.value.title,amount:Number(scannedResult.value.amount),date:scannedResult.value.date,category:scannedResult.value.category,payMethod:scannedResult.value.payMethod});saveToStorage();scannedResult.value=null;currentTab.value='records';showToast('收據已導入明細');}};
+
+    onMounted(()=>{loadProjectContext();lucide.createIcons();if(wCity.value[0])fetchWeather(0);if(wCity.value[1])fetchWeather(1);});
+
+    return{
+      currentTab,recordSubTab,analyticsPeriod,
+      wCity,wData,wName,wLoading,wError,fetchWeather,
+      categories,payMethods,categoryBudgets,expenses,quickItems,
+      newCategoryName,newPayMethodName,expandedCategories,
+      isAddModalOpen,editingExpenseId,newExpense,
+      isQuickItemModalOpen,editingQuickItemId,quickItemForm,
+      toast,scannedResult,
+      todayTotal,categoriesWithBudget,groupedByDate,groupedByCategory,
+      payMethodsWithData,
+      periodLabel,filteredExpenses,filteredGrandTotal,filteredTopExpenses,filteredGroupedByCategory,trendHeights,
+      switchTab,textClass,formatNumber,toggleCategoryCollapse,
+      openAddModal,openEditModal,closeAddModal,submitExpense,deleteExpense,
+      openQuickItemModal,closeQuickItemModal,saveQuickItem,deleteQuickItem,applyQuickItem,
+      addCategory,deleteCategory,addPayMethod,deletePayMethod,
+      getCategorySpentInPeriod,getBudgetPercent,
+      getFilteredPayMethodAmount,getFilteredPayMethodPercent,
+      simulateScan,confirmScannerAdd,saveToStorage,
+      projectId,tempProjectId,switchProject,
+      totalBudgetSum,totalSpentSum,settingsTotalBudgetSum,currentTabTitle
+    };
+  }
+}).mount('#app');
+</script>
+
+</body>
+</html>

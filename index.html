@@ -8,12 +8,40 @@
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: “AIzaSyBJePTXhoy60dS03speuoLp57jQ8BHvQD8”,
+authDomain: “bookkeeping-app-8da4f.firebaseapp.com”,
+projectId: “bookkeeping-app-8da4f”,
+storageBucket: “bookkeeping-app-8da4f.firebasestorage.app”,
+messagingSenderId: “780251075497”,
+appId: “1:780251075497:web:4079b8d0921307a0142ab8”
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// 掛載到全域，供 Vue 腳本使用
+window._firebaseDb = db;
+window._firebaseDoc = doc;
+window._firebaseSetDoc = setDoc;
+window._firebaseGetDoc = getDoc;
+window._firebaseOnSnapshot = onSnapshot;
+window._firebaseReady = true;
+window.dispatchEvent(new Event(‘firebaseReady’));
+</script>
+
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600&family=Plus+Jakarta+Sans:wght@300;400;500&display=swap');
 body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f1ea;color:#4a463f;}
 .no-scrollbar::-webkit-scrollbar{display:none;}
 .no-scrollbar{-ms-overflow-style:none;scrollbar-width:none;}
 </style>
+
 </head>
 <body class="min-h-screen flex justify-center items-stretch sm:p-4">
 <div id="app" class="w-full max-w-md bg-[#faf8f5] shadow-sm flex flex-col relative overflow-hidden sm:rounded-3xl border border-[#ede9df]">
@@ -439,22 +467,69 @@ createApp({
     // project
     const projectId=ref(localStorage.getItem('sabiflow_active_project_id')||'kyushu_2027');
     const tempProjectId=ref(projectId.value);
-    const load=(key,fb)=>{const s=localStorage.getItem('sabiflow_'+projectId.value+'_'+key);return s?JSON.parse(s):fb;};
     const categories=ref([]),payMethods=ref([]),categoryBudgets=ref({}),expenses=ref([]),quickItems=ref([]);
-    const loadProjectContext=()=>{
-      categories.value=load('categories',['餐飲','交通','住宿','咖啡店','購物','其他']);
-      payMethods.value=load('paymethods',['現金','信用卡','Suica','Apple Pay']);
-      categoryBudgets.value=load('category_budgets',{'餐飲':15000,'交通':8000,'住宿':25000,'購物':10000});
-      expenses.value=load('expenses',[{id:1,title:'由布院之森 特急觀光列車',amount:1250,date:new Date().toISOString().split('T')[0],category:'交通',payMethod:'信用卡'},{id:2,title:'海鮮丼與地雞料理',amount:480,date:new Date().toISOString().split('T')[0],category:'餐飲',payMethod:'現金'}]);
-      quickItems.value=load('quick_items',[]);
-    };
-    const saveToStorage=()=>{
+    const loadProjectContext=async()=>{
       const pid=projectId.value;
+      const localLoad=(key,fb)=>{const s=localStorage.getItem('sabiflow_'+pid+'_'+key);return s?JSON.parse(s):fb;};
+      const defaults={
+        categories:['餐飲','交通','住宿','咖啡店','購物','其他'],
+        payMethods:['現金','信用卡','Suica','Apple Pay'],
+        categoryBudgets:{'餐飲':15000,'交通':8000,'住宿':25000,'購物':10000},
+        expenses:[{id:1,title:'由布院之森 特急觀光列車',amount:1250,date:new Date().toISOString().split('T')[0],category:'交通',payMethod:'信用卡'},{id:2,title:'海鮮丼與地雞料理',amount:480,date:new Date().toISOString().split('T')[0],category:'餐飲',payMethod:'現金'}],
+        quickItems:[]
+      };
+      // 先用 localStorage 快速渲染，避免白屏
+      categories.value=localLoad('categories',defaults.categories);
+      payMethods.value=localLoad('paymethods',defaults.payMethods);
+      categoryBudgets.value=localLoad('category_budgets',defaults.categoryBudgets);
+      expenses.value=localLoad('expenses',defaults.expenses);
+      quickItems.value=localLoad('quick_items',defaults.quickItems);
+      // 再從 Firestore 拉取最新資料
+      if(window._firebaseReady){
+        try{
+          const db=window._firebaseDb;
+          const docRef=window._firebaseDoc(db,'projects',pid);
+          const snap=await window._firebaseGetDoc(docRef);
+          if(snap.exists()){
+            const d=snap.data();
+            if(d.categories)categories.value=d.categories;
+            if(d.payMethods)payMethods.value=d.payMethods;
+            if(d.categoryBudgets)categoryBudgets.value=d.categoryBudgets;
+            if(d.expenses)expenses.value=d.expenses;
+            if(d.quickItems)quickItems.value=d.quickItems;
+            // 同步更新本機快取
+            localStorage.setItem('sabiflow_'+pid+'_categories',JSON.stringify(categories.value));
+            localStorage.setItem('sabiflow_'+pid+'_paymethods',JSON.stringify(payMethods.value));
+            localStorage.setItem('sabiflow_'+pid+'_expenses',JSON.stringify(expenses.value));
+            localStorage.setItem('sabiflow_'+pid+'_category_budgets',JSON.stringify(categoryBudgets.value));
+            localStorage.setItem('sabiflow_'+pid+'_quick_items',JSON.stringify(quickItems.value));
+          }
+        }catch(e){console.warn('Firebase 讀取失敗，使用本機快取資料',e);}
+      }
+    };
+    const saveToStorage=async()=>{
+      const pid=projectId.value;
+      // 同步寫入 localStorage 作為離線快取
       localStorage.setItem('sabiflow_'+pid+'_categories',JSON.stringify(categories.value));
       localStorage.setItem('sabiflow_'+pid+'_paymethods',JSON.stringify(payMethods.value));
       localStorage.setItem('sabiflow_'+pid+'_expenses',JSON.stringify(expenses.value));
       localStorage.setItem('sabiflow_'+pid+'_category_budgets',JSON.stringify(categoryBudgets.value));
       localStorage.setItem('sabiflow_'+pid+'_quick_items',JSON.stringify(quickItems.value));
+      // 同步寫入 Firestore
+      if(window._firebaseReady){
+        try{
+          const db=window._firebaseDb;
+          const docRef=window._firebaseDoc(db,'projects',pid);
+          await window._firebaseSetDoc(docRef,{
+            categories:categories.value,
+            payMethods:payMethods.value,
+            expenses:expenses.value,
+            categoryBudgets:categoryBudgets.value,
+            quickItems:quickItems.value,
+            updatedAt:new Date().toISOString()
+          });
+        }catch(e){console.warn('Firebase 寫入失敗，資料已存入本機快取',e);}
+      }
     };
     const switchProject=()=>{const t=tempProjectId.value.trim();if(!t)return;projectId.value=t;localStorage.setItem('sabiflow_active_project_id',t);loadProjectContext();showToast('已切換至：'+t);switchTab('home');};
 
@@ -558,7 +633,11 @@ createApp({
     const simulateScan=()=>{showToast('AI 識別中...');setTimeout(()=>{scannedResult.value={title:'松本清 藥妝博多店',date:new Date().toISOString().split('T')[0],category:'購物',payMethod:'信用卡',amount:620,items:[{name:'日常保養精華錠',originalName:'サプリメント',price:510,taxType:'輕減稅率 8%'},{name:'保濕潔顏乳',originalName:'洗顔料',price:110,taxType:'標準稅率 10%'}]};nextTick(()=>lucide.createIcons());},800);};
     const confirmScannerAdd=()=>{if(scannedResult.value){expenses.value.unshift({id:Date.now(),title:scannedResult.value.title,amount:Number(scannedResult.value.amount),date:scannedResult.value.date,category:scannedResult.value.category,payMethod:scannedResult.value.payMethod});saveToStorage();scannedResult.value=null;currentTab.value='records';showToast('收據已導入明細');}};
 
-    onMounted(()=>{loadProjectContext();lucide.createIcons();if(wCity.value[0])fetchWeather(0);if(wCity.value[1])fetchWeather(1);});
+    onMounted(()=>{
+      const init=()=>{loadProjectContext().then(()=>{lucide.createIcons();if(wCity.value[0])fetchWeather(0);if(wCity.value[1])fetchWeather(1);});};
+      if(window._firebaseReady){init();}
+      else{window.addEventListener('firebaseReady',init,{once:true});setTimeout(init,3000);} // 3秒後強制啟動，避免 Firebase 載入失敗
+    });
 
     return{
       currentTab,recordSubTab,analyticsPeriod,
@@ -584,31 +663,6 @@ createApp({
   }
 }).mount('#app');
 </script>
-<script type="module">
-  // Import the functions you need from the SDKs you need
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-app.js";
-  import { getFirestore } from "https://www.gstatic.com/firebasejs/12.13.0/firebase-firestore.js";
 
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
-
-  // Your web app's Firebase configuration
-  const firebaseConfig = {
-    apiKey: "AIzaSyBJePTXhoy60dS03speuoLp57jQ8BHvQD8",
-    authDomain: "bookkeeping-app-8da4f.firebaseapp.com",
-    projectId: "bookkeeping-app-8da4f",
-    storageBucket: "bookkeeping-app-8da4f.firebasestorage.app",
-    messagingSenderId: "780251075497",
-    appId: "1:780251075497:web:4079b8d0921307a0142ab8"
-  };
-
-  // Initialize Firebase
-  const app = initializeApp(firebaseConfig);
-  const db = getFirestore(app);
-
-window.db = db;
-
-console.log("Firebase 已連線");
-</script>
 </body>
 </html>

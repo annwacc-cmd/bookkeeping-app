@@ -12,6 +12,7 @@
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 const firebaseConfig = {
   apiKey: "AIzaSyBJePTXhoy60dS03speuoLp57jQ8BHvQD8",
   authDomain: "bookkeeping-app-8da4f.firebaseapp.com",
@@ -22,7 +23,8 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-window._fb = { db, doc, setDoc, getDoc, ready: true };
+const auth = getAuth(app);
+window._fb = { db, doc, setDoc, getDoc, auth, signInWithEmailAndPassword, signOut, onAuthStateChanged, ready: true };
 window.dispatchEvent(new Event("firebaseReady"));
 console.log("Firebase 已連線");
 </script>
@@ -34,6 +36,37 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
 </style>
 </head>
 <body class="min-h-screen flex justify-center items-stretch sm:p-4">
+
+<!-- ══ 登入畫面 ══ -->
+
+<div id="login-screen" style="display:none;" class="fixed inset-0 z-50 bg-[#f4f1ea] flex items-center justify-center p-6">
+  <div class="w-full max-w-sm bg-[#faf8f5] rounded-3xl border border-[#ede9df] shadow-sm p-8 space-y-6">
+    <div class="text-center space-y-1">
+      <p class="text-xs tracking-widest text-[#a8a297] uppercase">SabiFlow</p>
+      <h2 class="text-xl font-medium text-[#3d3a34]">登入帳號</h2>
+      <p class="text-xs text-[#a8a297]">請輸入您的 Email 與密碼</p>
+    </div>
+    <div class="space-y-3">
+      <div>
+        <label class="text-[10px] text-[#a8a297] uppercase tracking-wider block mb-1">Email</label>
+        <input id="login-email" type="email" placeholder="your@email.com"
+          class="w-full bg-[#f4f1ea]/60 border border-[#ede9df] rounded-xl p-3 text-sm focus:outline-none focus:border-[#8c8577]">
+      </div>
+      <div>
+        <label class="text-[10px] text-[#a8a297] uppercase tracking-wider block mb-1">密碼</label>
+        <input id="login-password" type="password" placeholder="••••••••"
+          class="w-full bg-[#f4f1ea]/60 border border-[#ede9df] rounded-xl p-3 text-sm focus:outline-none focus:border-[#8c8577]"
+          onkeydown="if(event.key==='Enter')doLogin()">
+      </div>
+      <p id="login-error" class="text-xs text-red-500 text-center hidden">Email 或密碼錯誤，請再試一次</p>
+    </div>
+    <button onclick="doLogin()" id="login-btn"
+      class="w-full py-3 bg-[#8c8577] hover:bg-[#736c60] text-white rounded-xl text-sm font-medium transition-colors">
+      登入
+    </button>
+  </div>
+</div>
+
 <div id="app" class="w-full max-w-md bg-[#faf8f5] shadow-sm flex flex-col relative overflow-hidden sm:rounded-3xl border border-[#ede9df]">
 
 <header class="px-6 pt-6 pb-4 flex justify-between items-center border-b border-[#ede9df]/60">
@@ -46,6 +79,10 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
     <button v-if="['home','records','analytics'].includes(currentTab)" @click="openAddModal()"
       class="w-9 h-9 rounded-full bg-[#eae5da] hover:bg-[#dfd9cc] flex items-center justify-center text-[#4a463f] transition-colors">
       <i data-lucide="plus" class="w-5 h-5"></i>
+    </button>
+    <button @click="doLogout()" title="登出"
+      class="w-9 h-9 rounded-full bg-[#eae5da] hover:bg-[#dfd9cc] flex items-center justify-center text-[#a8a297] hover:text-red-500 transition-colors">
+      <i data-lucide="log-out" class="w-4 h-4"></i>
     </button>
   </div>
 </header>
@@ -615,19 +652,44 @@ createApp({
     const simulateScan=()=>{showToast('AI 識別中...');setTimeout(()=>{scannedResult.value={title:'松本清 藥妝博多店',date:new Date().toISOString().split('T')[0],category:'購物',payMethod:'信用卡',amount:620,items:[{name:'日常保養精華錠',originalName:'サプリメント',price:510,taxType:'輕減稅率 8%'},{name:'保濕潔顏乳',originalName:'洗顔料',price:110,taxType:'標準稅率 10%'}]};nextTick(()=>lucide.createIcons());},800);};
     const confirmScannerAdd=()=>{if(scannedResult.value){expenses.value.unshift({id:Date.now(),title:scannedResult.value.title,amount:Number(scannedResult.value.amount),date:scannedResult.value.date,category:scannedResult.value.category,payMethod:scannedResult.value.payMethod});saveToStorage();scannedResult.value=null;currentTab.value='records';showToast('收據已導入明細');}};
 
+
+    const doLogout=async()=>{
+      if(window._fb&&window._fb.auth){
+        await window._fb.signOut(window._fb.auth);
+      }
+    };
+
     onMounted(()=>{
-      const init=()=>{
+      const startApp=()=>{
         loadProjectContext().then(()=>{
           lucide.createIcons();
           if(wCity.value[0])fetchWeather(0);
           if(wCity.value[1])fetchWeather(1);
         });
       };
-      if(window._fb&&window._fb.ready){init();}
-      else{
-        window.addEventListener('firebaseReady',init,{once:true});
-        setTimeout(init,3000); // 3秒後強制啟動保底
-      }
+      const initAuth=()=>{
+        const{auth,onAuthStateChanged}=window._fb;
+        const loginScreen=document.getElementById('login-screen');
+        const appEl=document.getElementById('app');
+        // 先隱藏 app，顯示登入畫面
+        appEl.style.display='none';
+        loginScreen.style.display='flex';
+        onAuthStateChanged(auth,(user)=>{
+          if(user){
+            // 已登入
+            loginScreen.style.display='none';
+            appEl.style.display='flex';
+            appEl.style.flexDirection='column';
+            startApp();
+          } else {
+            // 未登入
+            loginScreen.style.display='flex';
+            appEl.style.display='none';
+          }
+        });
+      };
+      if(window._fb&&window._fb.ready){initAuth();}
+      else{window.addEventListener('firebaseReady',initAuth,{once:true});}
     });
 
     return{
@@ -649,10 +711,30 @@ createApp({
       getFilteredPayMethodAmount,getFilteredPayMethodPercent,
       simulateScan,confirmScannerAdd,saveToStorage,
       projectId,tempProjectId,switchProject,
-      totalBudgetSum,totalSpentSum,settingsTotalBudgetSum,currentTabTitle
+      totalBudgetSum,totalSpentSum,settingsTotalBudgetSum,currentTabTitle,
+      doLogout
     };
   }
 }).mount('#app');
+</script>
+
+<script>
+// 登入按鈕邏輯（在 Vue 外層處理）
+async function doLogin(){
+  const email=document.getElementById('login-email').value.trim();
+  const password=document.getElementById('login-password').value;
+  const errEl=document.getElementById('login-error');
+  const btn=document.getElementById('login-btn');
+  if(!email||!password){errEl.textContent='請輸入 Email 與密碼';errEl.classList.remove('hidden');return;}
+  btn.textContent='登入中...';btn.disabled=true;errEl.classList.add('hidden');
+  try{
+    await window._fb.signInWithEmailAndPassword(window._fb.auth,email,password);
+  }catch(e){
+    errEl.textContent='Email 或密碼錯誤，請再試一次';
+    errEl.classList.remove('hidden');
+    btn.textContent='登入';btn.disabled=false;
+  }
+}
 </script>
 
 </body>

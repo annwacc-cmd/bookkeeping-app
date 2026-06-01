@@ -492,7 +492,7 @@ createApp({
     }
 
     // project
-    const projectId=ref(localStorage.getItem('sabiflow_active_project_id')||'kyushu_2027');
+    const projectId=ref(localStorage.getItem('sabiflow_active_project_id')||'生活支出紀錄');
     const tempProjectId=ref(projectId.value);
     const categories=ref([]),payMethods=ref([]),categoryBudgets=ref({}),expenses=ref([]),quickItems=ref([]);
     const loadProjectContext=async()=>{

@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>SabiFlow v5.5</title>
+<title>SabiFlow v6.1</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
@@ -128,23 +128,38 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
     <!-- 預算監控 -->
     <div class="bg-[#f4f1ea]/60 rounded-2xl p-5 border border-[#ede9df]/40 space-y-4">
       <div class="flex justify-between items-center border-b border-[#ede9df] pb-2">
-        <span class="text-xs font-semibold tracking-wider text-[#736c60] uppercase">本月類別預算監控</span>
+        <span class="text-xs font-semibold tracking-wider text-[#736c60] uppercase">本月類別預算監控 ({{ currentYearMonthLabel }})</span>
         <span class="text-[10px] text-[#a8a297]">預算 / 累計 / 剩餘</span>
       </div>
       <div class="space-y-4 max-h-80 overflow-y-auto no-scrollbar">
         <div v-for="cat in categoriesWithBudget" :key="cat" class="space-y-1.5 pb-2 border-b border-[#ede9df]/30 last:border-0 last:pb-0">
-          <div class="flex justify-between text-xs font-medium"><span>{{ cat }}</span><span class="text-[#8c8577]">總預算: NT$ {{ formatNumber(categoryBudgets[cat]) }}</span></div>
-          <div class="w-full h-2 bg-[#eae5da] rounded-full overflow-hidden"><div class="h-full rounded-full transition-all duration-500" :class="getBudgetPercent(cat)>100?'bg-[#b8735c]':'bg-[#8c8577]'" :style="{width:Math.min(getBudgetPercent(cat),100)+'%'}"></div></div>
+          <div class="flex justify-between text-xs font-medium">
+            <span>{{ cat }}</span>
+            <span class="text-[#8c8577]">總預算: NT$ {{ formatNumber(getMonthlyCategoryBudget(cat, currentYear, currentMonth)) }}</span>
+          </div>
+          <div class="w-full h-2 bg-[#eae5da] rounded-full overflow-hidden">
+            <div class="h-full rounded-full transition-all duration-500" 
+              :class="getBudgetPercent(cat)>100?'bg-[#b8735c]':'bg-[#8c8577]'" 
+              :style="{width:Math.min(getBudgetPercent(cat),100)+'%'}">
+            </div>
+          </div>
           <div class="flex justify-between text-[11px]">
             <span class="text-[#a8a297]">累計: NT$ {{ formatNumber(getCategorySpentInPeriod(cat,'month')) }}</span>
-            <span v-if="categoryBudgets[cat]-getCategorySpentInPeriod(cat,'month')>=0" class="text-[#736c60] font-medium">剩餘: NT$ {{ formatNumber(categoryBudgets[cat]-getCategorySpentInPeriod(cat,'month')) }}</span>
-            <span v-else class="text-[#b8735c] font-medium italic animate-pulse">超支: NT$ {{ formatNumber(Math.abs(categoryBudgets[cat]-getCategorySpentInPeriod(cat,'month'))) }}</span>
+            <span v-if="getMonthlyCategoryBudget(cat, currentYear, currentMonth)-getCategorySpentInPeriod(cat,'month')>=0" class="text-[#736c60] font-medium">
+              剩餘: NT$ {{ formatNumber(getMonthlyCategoryBudget(cat, currentYear, currentMonth)-getCategorySpentInPeriod(cat,'month')) }}
+            </span>
+            <span v-else class="text-[#b8735c] font-medium italic animate-pulse">
+              超支: NT$ {{ formatNumber(Math.abs(getMonthlyCategoryBudget(cat, currentYear, currentMonth)-getCategorySpentInPeriod(cat,'month'))) }}
+            </span>
           </div>
         </div>
         <div v-if="categoriesWithBudget.length===0" class="text-center py-4 text-xs text-[#a8a297] italic">暫無類別預算，請至「設定」規劃。</div>
       </div>
       <div v-if="categoriesWithBudget.length>0" class="border-t border-dashed border-[#ede9df] pt-3 space-y-1 bg-white/20 p-3 rounded-xl">
-        <div class="flex justify-between text-xs font-semibold text-[#4a463f]"><span>監控類別總計</span><span class="text-[#8c8577]">總預算: NT$ {{ formatNumber(totalBudgetSum) }}</span></div>
+        <div class="flex justify-between text-xs font-semibold text-[#4a463f]">
+          <span>監控類別總計</span>
+          <span class="text-[#8c8577]">總預算: NT$ {{ formatNumber(totalBudgetSum) }}</span>
+        </div>
         <div class="flex justify-between text-[11px] text-[#736c60]">
           <span>總累計: NT$ {{ formatNumber(totalSpentSum) }}</span>
           <span v-if="totalBudgetSum-totalSpentSum>=0" class="font-medium">總剩餘: NT$ {{ formatNumber(totalBudgetSum-totalSpentSum) }}</span>
@@ -152,11 +167,15 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
         </div>
       </div>
     </div>
-    <!-- 最近 -->
-    <div>
-      <h3 class="text-xs tracking-wider text-[#a8a297] mb-3 uppercase">Recent Activity</h3>
-      <div class="space-y-2">
-        <div v-for="item in expenses.slice(0,4)" :key="item.id" class="flex justify-between items-center p-3 bg-white/40 rounded-xl border border-[#ede9df]/30">
+    <!-- 最近 (Recent Activity) - 支援收起與展開 -->
+    <div class="space-y-3 bg-[#f4f1ea]/40 border border-[#ede9df]/30 rounded-2xl p-4">
+      <div @click="isRecentActivityExpanded = !isRecentActivityExpanded" class="flex justify-between items-center cursor-pointer select-none">
+        <h3 class="text-xs font-semibold tracking-wider text-[#a8a297] uppercase">Recent Activity</h3>
+        <i :data-lucide="isRecentActivityExpanded ? 'chevron-up' : 'chevron-down'" class="w-4 h-4 text-[#a8a297]"></i>
+      </div>
+      
+      <div v-show="isRecentActivityExpanded" class="space-y-2 transition-all duration-300">
+        <div v-for="item in expenses.slice(0,4)" :key="item.id" class="flex justify-between items-center p-3 bg-white/50 rounded-xl border border-[#ede9df]/20">
           <div class="flex items-center space-x-3">
             <span class="text-xs px-2 py-0.5 rounded bg-[#eae5da] text-[#736c60]">{{ item.category }}</span>
             <span class="text-sm text-[#4a463f] truncate max-w-[150px]">{{ item.title }}</span>
@@ -164,68 +183,124 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
           </div>
           <span class="text-sm font-medium text-[#4a463f] whitespace-nowrap">-NT$ {{ formatNumber(item.amount) }}</span>
         </div>
+        <div v-if="expenses.length===0" class="text-center py-4 text-xs text-[#a8a297] italic">無最新動態</div>
       </div>
     </div>
   </div>
 
   <!-- RECORDS -->
   <div v-if="currentTab==='records'" class="space-y-4">
-    <div class="flex bg-[#eae5da]/50 p-1 rounded-xl text-xs">
-      <button @click="recordSubTab='date'" :class="{'bg-[#faf8f5] shadow-sm font-medium':recordSubTab==='date'}" class="flex-1 py-2 rounded-lg text-center">按日期</button>
-      <button @click="recordSubTab='category'" :class="{'bg-[#faf8f5] shadow-sm font-medium':recordSubTab==='category'}" class="flex-1 py-2 rounded-lg text-center">按分類</button>
+    <!-- 切換與篩選控制面板 -->
+    <div class="bg-white/60 p-3 rounded-2xl border border-[#ede9df] space-y-3 shadow-sm">
+      <div class="flex bg-[#eae5da]/50 p-1 rounded-xl text-xs">
+        <button @click="recordSubTab='date'" :class="{'bg-[#faf8f5] shadow-sm font-medium':recordSubTab==='date'}" class="flex-1 py-1.5 rounded-lg text-center">按日期</button>
+        <button @click="recordSubTab='category'" :class="{'bg-[#faf8f5] shadow-sm font-medium':recordSubTab==='category'}" class="flex-1 py-1.5 rounded-lg text-center">按分類</button>
+      </div>
+
+      <!-- 高級篩選區 -->
+      <div class="grid grid-cols-2 gap-2 text-xs">
+        <div>
+          <label class="text-[9px] text-[#a8a297] block mb-1">月份篩選</label>
+          <select v-model="recordsFilterMonth" class="w-full bg-[#f4f1ea] border border-[#ede9df] rounded-lg p-1.5 text-xs text-[#4a463f] focus:outline-none">
+            <option value="all">顯示全部月份</option>
+            <option v-for="ym in availableYearMonths" :key="ym" :value="ym">{{ formatYearMonthLabel(ym) }}</option>
+          </select>
+        </div>
+        <div>
+          <label class="text-[9px] text-[#a8a297] block mb-1">類別篩選</label>
+          <select v-model="recordsFilterCategory" class="w-full bg-[#f4f1ea] border border-[#ede9df] rounded-lg p-1.5 text-xs text-[#4a463f] focus:outline-none">
+            <option value="all">顯示所有分類</option>
+            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- 快速展開與折疊按鈕 -->
+      <div class="flex justify-between items-center text-[10px] border-t border-[#ede9df]/50 pt-2 px-1">
+        <span class="text-[#a8a297]">已篩選出 {{ filteredRecordsCount }} 筆</span>
+        <div class="flex gap-2">
+          <button @click="toggleAllCollapse(true)" class="text-[#736c60] hover:underline">全部收起</button>
+          <span class="text-[#ede9df]">|</span>
+          <button @click="toggleAllCollapse(false)" class="text-[#736c60] hover:underline">全部展開</button>
+        </div>
+      </div>
     </div>
     
     <!-- 按日期排列 -->
-    <div v-if="recordSubTab==='date'" class="space-y-6 mt-4">
-      <div v-for="(group,date) in groupedByDate" :key="date" class="space-y-2">
-        <div class="flex justify-between items-center border-b border-[#ede9df] pb-1">
-          <span class="text-xs font-medium text-[#8c8577]">{{ date }}</span>
-          <span class="text-xs text-[#a8a297]">小計: NT$ {{ formatNumber(group.total) }}</span>
+    <div v-if="recordSubTab==='date'" class="space-y-4 mt-2">
+      <div v-for="(group,date) in groupedByDateFiltered" :key="date" class="bg-white/30 rounded-2xl border border-[#ede9df]/40 p-2 space-y-1">
+        <!-- 日期群組標題（支援點選折疊） -->
+        <div @click="toggleDateGroupCollapse(date)" class="flex justify-between items-center pb-1.5 px-1 border-b border-[#ede9df]/40 cursor-pointer select-none">
+          <div class="flex items-center gap-1.5">
+            <i data-lucide="calendar" class="w-3.5 h-3.5 text-[#8c8577]"></i>
+            <span class="text-xs font-semibold text-[#736c60]">{{ date }}</span>
+            <span class="text-[9px] bg-[#eae5da] text-[#736c60] px-1.5 py-0.2 rounded-full font-medium">
+              {{ group.items.length }} 筆
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs text-[#a8a297]">小計: NT$ {{ formatNumber(group.total) }}</span>
+            <i :data-lucide="collapsedDateGroups[date] ? 'chevron-down' : 'chevron-up'" class="w-4 h-4 text-[#a8a297]"></i>
+          </div>
         </div>
-        <div v-for="item in group.items" :key="item.id" class="flex flex-col bg-white/60 hover:bg-white rounded-xl border border-[#ede9df]/30 transition-all overflow-hidden">
-          <div class="flex justify-between items-center p-3">
-            <div class="flex items-center space-x-3 cursor-pointer flex-1" @click="toggleExpensePhoto(item.id)">
-              <span class="text-xs px-2 py-0.5 rounded bg-[#eae5da]/70 text-[#736c60]">{{ item.payMethod }}</span>
-              <div class="min-w-0">
-                <div class="flex items-center gap-1.5">
-                  <p class="text-sm text-[#4a463f] font-medium truncate">{{ item.title }}</p>
-                  <!-- 如果有附加照片，顯示一個精緻的微縮圖示 -->
-                  <span v-if="item.photo" class="text-[10px] text-[#8c8577] bg-[#f4f1ea] px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-[#ede9df] hover:bg-[#eae5da]">
-                    <i data-lucide="image" class="w-3 h-3"></i> 收據
-                  </span>
+
+        <!-- 日期明細清單 -->
+        <div v-show="!collapsedDateGroups[date]" class="space-y-2 pt-1 transition-all">
+          <div v-for="item in group.items" :key="item.id" class="flex flex-col bg-[#faf8f5] hover:bg-white rounded-xl border border-[#ede9df]/30 transition-all overflow-hidden">
+            <div class="flex justify-between items-center p-3">
+              <div class="flex items-center space-x-3 cursor-pointer flex-1" @click="toggleExpensePhoto(item.id)">
+                <span class="text-[10px] px-2 py-0.5 rounded bg-[#eae5da]/70 text-[#736c60] shrink-0">{{ item.payMethod }}</span>
+                <div class="min-w-0">
+                  <div class="flex items-center gap-1.5">
+                    <p class="text-sm text-[#4a463f] font-medium truncate">{{ item.title }}</p>
+                    <span v-if="item.photo" class="text-[9px] text-[#8c8577] bg-[#f4f1ea] px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-[#ede9df] hover:bg-[#eae5da]">
+                      <i data-lucide="image" class="w-3 h-3"></i> 收據
+                    </span>
+                  </div>
+                  <p class="text-[10px] text-[#a8a297]">{{ item.category }}</p>
                 </div>
-                <p class="text-[10px] text-[#a8a297]">{{ item.category }}</p>
+              </div>
+              <div class="flex items-center space-x-2">
+                <span class="text-sm font-semibold text-[#4a463f]">NT$ {{ formatNumber(item.amount) }}</span>
+                <button @click="openEditModal(item)" class="text-[#a8a297] hover:text-[#736c60] opacity-80"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                <button @click="deleteExpense(item.id)" class="text-[#a8a297] hover:text-red-700 opacity-80"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
               </div>
             </div>
-            <div class="flex items-center space-x-2">
-              <span class="text-sm font-semibold text-[#4a463f]">NT$ {{ formatNumber(item.amount) }}</span>
-              <button @click="openEditModal(item)" class="text-[#a8a297] hover:text-[#736c60] opacity-60"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
-              <button @click="deleteExpense(item.id)" class="text-[#a8a297] hover:text-red-700 opacity-60"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-            </div>
-          </div>
-          
-          <!-- 展開相片預覽 -->
-          <div v-if="expandedExpensePhotos[item.id] && item.photo" class="px-3 pb-3 border-t border-[#ede9df]/40 pt-2.5 bg-[#f4f1ea]/20">
-            <p class="text-[10px] text-[#a8a297] uppercase tracking-wider mb-1.5 font-medium flex items-center gap-1">
-              <i data-lucide="camera" class="w-3.5 h-3.5"></i> 關聯收據相片
-            </p>
-            <div class="relative max-h-60 rounded-xl overflow-hidden border border-[#ede9df] bg-black/5 flex items-center justify-center">
-              <img :src="item.photo" class="max-w-full max-h-56 object-contain block" />
+            
+            <!-- 展開相片預覽 -->
+            <div v-if="expandedExpensePhotos[item.id] && item.photo" class="px-3 pb-3 border-t border-[#ede9df]/40 pt-2.5 bg-[#f4f1ea]/20">
+              <p class="text-[10px] text-[#a8a297] uppercase tracking-wider mb-1.5 font-medium flex items-center gap-1">
+                <i data-lucide="camera" class="w-3.5 h-3.5"></i> 關聯收據相片
+              </p>
+              <div class="relative max-h-60 rounded-xl overflow-hidden border border-[#ede9df] bg-black/5 flex items-center justify-center">
+                <img :src="item.photo" class="max-w-full max-h-56 object-contain block" />
+              </div>
             </div>
           </div>
         </div>
       </div>
-      <div v-if="Object.keys(groupedByDate).length===0" class="text-center py-12 text-xs text-[#a8a297] italic">尚無記帳記錄</div>
+      <div v-if="Object.keys(groupedByDateFiltered).length===0" class="text-center py-12 text-xs text-[#a8a297] italic">無符合篩選條件的記帳紀錄</div>
     </div>
     
     <!-- 按分類排列 -->
-    <div v-if="recordSubTab==='category'" class="space-y-3 mt-4">
-      <div v-for="(group,cat) in groupedByCategory" :key="cat" class="border border-[#ede9df] rounded-xl bg-white/40 overflow-hidden">
-        <div @click="toggleCategoryCollapse(cat)" class="flex justify-between items-center p-4 cursor-pointer hover:bg-[#f4f1ea]/30 select-none">
-          <span class="text-sm font-medium text-[#4a463f]">{{ cat }} ({{ group.items.length }})</span>
-          <span class="text-sm text-[#8c8577]">NT$ {{ formatNumber(group.total) }}</span>
+    <div v-if="recordSubTab==='category'" class="space-y-3 mt-2">
+      <div v-for="(group,cat) in groupedByCategoryFiltered" :key="cat" class="border border-[#ede9df] rounded-xl bg-white/40 overflow-hidden">
+        <!-- 分類標題 (點選折疊) -->
+        <div @click="toggleCategoryCollapse(cat)" class="flex justify-between items-center p-4 cursor-pointer hover:bg-[#f4f1ea]/30 select-none bg-white/60">
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-medium text-[#4a463f]">{{ cat }}</span>
+            <span class="text-[9px] bg-[#eae5da] text-[#736c60] px-2 py-0.2 rounded-full font-medium">
+              {{ group.items.length }} 筆
+            </span>
+          </div>
+          <div class="flex items-center gap-2">
+            <span class="text-sm font-semibold text-[#8c8577]">NT$ {{ formatNumber(group.total) }}</span>
+            <i :data-lucide="expandedCategories[cat] ? 'chevron-up' : 'chevron-down'" class="w-4 h-4 text-[#a8a297]"></i>
+          </div>
         </div>
-        <div v-if="expandedCategories[cat]" class="bg-white/80 border-t border-[#ede9df]/60 divide-y divide-[#ede9df]/30">
+        
+        <!-- 分類明細清單 -->
+        <div v-show="expandedCategories[cat]" class="bg-white/85 border-t border-[#ede9df]/60 divide-y divide-[#ede9df]/30 transition-all">
           <div v-for="item in group.items" :key="item.id" class="flex flex-col text-xs pl-6">
             <div class="p-3 flex justify-between items-center">
               <div class="flex-1 min-w-0 cursor-pointer" @click="toggleExpensePhoto(item.id)">
@@ -244,19 +319,20 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
               </div>
             </div>
             
-            <!-- 展開相片預覽 (按分類) -->
+            <!-- 展開相片預覽 -->
             <div v-if="expandedExpensePhotos[item.id] && item.photo" class="px-3 pb-3 border-t border-[#ede9df]/40 pt-2 bg-[#f4f1ea]/10 mr-4 rounded-b-xl">
               <div class="relative max-h-48 rounded-lg overflow-hidden border border-[#ede9df] bg-black/5 flex items-center justify-center">
                 <img :src="item.photo" class="max-w-full max-h-44 object-contain block" />
               </div>
             </div>
           </div>
+          <div v-if="group.items.length===0" class="p-4 text-center text-xs text-[#a8a297] italic">無此分類支出數據</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- SCANNER → 智慧感知 / 拍照記帳 -->
+  <!-- SCANNER -->
   <div v-if="currentTab==='scanner'" class="space-y-4">
     <!-- 相機即時鏡頭預覽 -->
     <div v-if="isCameraActive" class="relative bg-black rounded-2xl border border-[#ede9df] overflow-hidden aspect-[4/3] flex flex-col justify-between">
@@ -284,7 +360,7 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
       <p class="text-xs text-[#a8a297]">正透過高精度模型辨識您的消費收據...</p>
     </div>
 
-    <!-- 智慧感知結果確認 (自動帶入) -->
+    <!-- 智慧感知結果確認 -->
     <div v-else-if="scannedResult" class="bg-white/95 rounded-2xl border border-[#ede9df] p-5 space-y-4 shadow-sm">
       <div class="flex justify-between items-center border-b border-[#ede9df] pb-2">
         <h4 class="text-xs font-semibold uppercase tracking-wider text-[#736c60] flex items-center gap-1.5">
@@ -350,15 +426,13 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
     <div v-else class="space-y-4">
       <!-- 拍照預覽區 -->
       <div class="relative bg-[#f4f1ea]/60 rounded-2xl border border-[#ede9df] overflow-hidden" :class="scanPhoto ? 'p-0' : 'p-6'">
-        <!-- 已有拍照預覽 -->
         <div v-if="scanPhoto" class="relative">
           <img :src="scanPhoto" class="w-full max-h-64 object-contain bg-[#2a2825] block mx-auto" />
           <button @click="clearScanPhoto" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors z-10">
             <i data-lucide="x" class="w-4 h-4"></i>
           </button>
         </div>
-        <!-- 未拍照 -->
-        <div v-else class="flex flex-col items-center space-y-3 text-center py-4">
+        <div class="flex flex-col items-center space-y-3 text-center py-4" v-else>
           <div class="w-16 h-16 rounded-full bg-[#eae5da] flex items-center justify-center text-[#736c60]">
             <i data-lucide="camera" class="w-8 h-8"></i>
           </div>
@@ -380,11 +454,10 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
         <input type="file" id="file-upload-input" accept="image/*" class="hidden" @change="handleFileUpload" />
       </div>
 
-      <!-- 手動填入表單 (備用對照模式) -->
+      <!-- 手動填入表單 -->
       <div class="bg-white/60 rounded-2xl border border-[#ede9df]/50 p-4 space-y-3">
         <p class="text-[11px] text-[#a8a297] tracking-wider uppercase border-b border-[#ede9df]/40 pb-1.5">對照收據填入明細</p>
 
-        <!-- 告知相片綁定狀態 -->
         <div v-if="scanPhoto" class="flex items-center gap-2 bg-[#eae5da]/50 border border-[#ede9df] rounded-xl p-2.5 text-xs text-[#736c60]">
           <i data-lucide="check-circle" class="w-4 h-4 shrink-0"></i>
           <span>已偵測到相片！此筆記帳將會成功儲存該張照片。</span>
@@ -436,15 +509,58 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
 
   <!-- ANALYTICS -->
   <div v-if="currentTab==='analytics'" class="space-y-6">
+    <!-- 切換時段 (已移除「季度」選項) -->
     <div class="flex bg-[#eae5da]/50 p-1 rounded-xl text-xs">
-      <button @click="analyticsPeriod='month'" :class="{'bg-[#faf8f5] shadow-sm font-medium':analyticsPeriod==='month'}" class="flex-1 py-2 rounded-lg text-center">月度</button>
-      <button @click="analyticsPeriod='quarter'" :class="{'bg-[#faf8f5] shadow-sm font-medium':analyticsPeriod==='quarter'}" class="flex-1 py-2 rounded-lg text-center">季度</button>
-      <button @click="analyticsPeriod='year'" :class="{'bg-[#faf8f5] shadow-sm font-medium':analyticsPeriod==='year'}" class="flex-1 py-2 rounded-lg text-center">年度</button>
+      <button @click="analyticsPeriod='month'" :class="{'bg-[#faf8f5] shadow-sm font-medium':analyticsPeriod==='month'}" class="flex-1 py-2 rounded-lg text-center">月度分析</button>
+      <button @click="analyticsPeriod='year'" :class="{'bg-[#faf8f5] shadow-sm font-medium':analyticsPeriod==='year'}" class="flex-1 py-2 rounded-lg text-center">年度分析</button>
     </div>
-    <div class="text-center py-2 bg-[#f4f1ea]/40 rounded-2xl border border-[#ede9df]/60">
-      <p class="text-[10px] text-[#a8a297] uppercase tracking-wider">{{ periodLabel }} 總支出</p>
-      <p class="text-3xl font-light text-[#3d3a34] mt-1">NT$ {{ formatNumber(filteredGrandTotal) }}</p>
+
+    <!-- 月份 / 年份篩選選單 -->
+    <div class="bg-white/60 p-4 rounded-2xl border border-[#ede9df] shadow-sm space-y-3">
+      <div class="flex items-center justify-between text-xs">
+        <span class="font-medium text-[#736c60]">選擇分析區間：</span>
+        
+        <!-- 月度：選擇 年份與月份 -->
+        <div v-if="analyticsPeriod==='month'" class="flex items-center gap-1.5">
+          <select v-model="analyticsSelectedYear" class="bg-[#f4f1ea] border border-[#ede9df] rounded-lg p-1.5 text-xs text-[#4a463f] focus:outline-none">
+            <option v-for="y in availableYears" :key="y" :value="y">{{ y }}年</option>
+          </select>
+          <select v-model="analyticsSelectedMonth" class="bg-[#f4f1ea] border border-[#ede9df] rounded-lg p-1.5 text-xs text-[#4a463f] focus:outline-none">
+            <option v-for="m in 12" :key="m" :value="String(m).padStart(2,'0')">{{ m }}月</option>
+          </select>
+        </div>
+
+        <!-- 年度：選擇 年份 -->
+        <div v-if="analyticsPeriod==='year'" class="flex items-center gap-1.5">
+          <select v-model="analyticsSelectedYear" class="bg-[#f4f1ea] border border-[#ede9df] rounded-lg p-1.5 text-xs text-[#4a463f] focus:outline-none">
+            <option v-for="y in availableYears" :key="y" :value="y">{{ y }}年</option>
+          </select>
+        </div>
+      </div>
     </div>
+
+    <!-- 實際消費比對預算大看板 -->
+    <div class="text-center py-4 bg-[#f4f1ea]/40 rounded-2xl border border-[#ede9df]/60 relative overflow-hidden">
+      <div class="absolute top-2 left-3 text-[9px] text-[#a8a297] tracking-wider uppercase font-medium">總體理財整合</div>
+      <p class="text-xs text-[#a8a297] uppercase tracking-wider mb-1.5 mt-2">
+        實際: <span class="text-[#4a463f] font-semibold">NT$ {{ formatNumber(filteredGrandTotal) }}</span>
+        /
+        預算: <span class="text-[#8c8577] font-semibold">NT$ {{ formatNumber(currentPeriodTotalBudget) }}</span>
+      </p>
+      
+      <!-- 總體大進度條 -->
+      <div class="max-w-[80%] mx-auto h-2 bg-[#eae5da] rounded-full overflow-hidden mt-2 relative">
+        <div class="h-full rounded-full transition-all duration-500" 
+          :class="totalProgressPercent > 100 ? 'bg-[#b8735c]' : 'bg-[#8c8577]'" 
+          :style="{ width: Math.min(totalProgressPercent, 100) + '%' }">
+        </div>
+      </div>
+      <p class="text-[10px] text-[#a8a297] mt-1.5">
+        預算消耗進度: <span class="font-medium" :class="totalProgressPercent > 100 ? 'text-[#b8735c]' : 'text-[#736c60]'">{{ Math.round(totalProgressPercent) }}%</span>
+      </p>
+    </div>
+
+    <!-- 折線波動模擬 -->
     <div>
       <h3 class="text-xs tracking-wider text-[#a8a297] mb-2 uppercase">區間花費波動</h3>
       <div class="bg-white p-4 rounded-2xl border border-[#ede9df] h-28 flex items-end justify-between px-6 pt-4">
@@ -456,23 +572,23 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
     <div class="space-y-4">
       <div class="bg-white p-4 rounded-2xl border border-[#ede9df] space-y-3">
         <div class="flex justify-between items-center border-b border-[#ede9df]/60 pb-1.5">
-          <h4 class="text-xs text-[#a8a297] uppercase font-semibold">類別預算 vs 實際支出 ({{ periodLabel }})</h4>
+          <h4 class="text-xs text-[#a8a297] uppercase font-semibold">實際類別消費 / 預算 ({{ periodLabel }})</h4>
           <span class="text-[9px] text-[#a8a297]">實際 / 預算</span>
         </div>
         <div class="space-y-4">
           <div v-for="cat in categories" :key="cat" class="space-y-1.5">
             <div class="flex justify-between text-xs">
               <span class="font-medium text-[#4a463f]">{{ cat }}</span>
-              <div class="flex items-center gap-2">
-                <span class="text-[#4a463f] font-semibold">NT$ {{ formatNumber(getCategorySpentInPeriod(cat, analyticsPeriod)) }}</span>
+              <div class="flex items-center gap-1.5">
+                <span class="text-[#4a463f] font-semibold">實際 {{ formatNumber(getCategorySpentInPeriod(cat, analyticsPeriod)) }}</span>
                 <span class="text-[#a8a297]">/</span>
-                <span class="text-[#8c8577]">
-                  {{ categoryBudgets[cat] ? 'NT$ ' + formatNumber(categoryBudgets[cat] * (analyticsPeriod === 'quarter' ? 3 : analyticsPeriod === 'year' ? 12 : 1)) : '未設預算' }}
+                <span class="text-[#8c8577] font-semibold">
+                  預算 {{ getBudgetForCategoryInAnalytics(cat) > 0 ? formatNumber(getBudgetForCategoryInAnalytics(cat)) : '未設定' }}
                 </span>
               </div>
             </div>
             
-            <!-- 進度雙軌條 -->
+            <!-- 進度條 -->
             <div class="w-full h-2 bg-[#f4f1ea] rounded-full overflow-hidden relative">
               <div class="h-full rounded-full transition-all duration-500" 
                 :class="getCombinedBudgetPercent(cat, analyticsPeriod) > 100 ? 'bg-[#b8735c]' : 'bg-[#8c8577]'" 
@@ -480,17 +596,17 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
               </div>
             </div>
 
-            <!-- 超支/剩餘標記 -->
+            <!-- 剩餘與消耗標記 -->
             <div class="flex justify-between text-[10px] text-[#a8a297]">
               <span>預算消耗: {{ Math.round(getCombinedBudgetPercent(cat, analyticsPeriod)) }}%</span>
-              <span v-if="categoryBudgets[cat]">
+              <div v-if="getBudgetForCategoryInAnalytics(cat) > 0">
                 <span v-if="getCombinedBudgetDiff(cat, analyticsPeriod) >= 0" class="text-[#736c60]">
                   剩餘 NT$ {{ formatNumber(getCombinedBudgetDiff(cat, analyticsPeriod)) }}
                 </span>
                 <span v-else class="text-[#b8735c] font-medium animate-pulse">
                   超支 NT$ {{ formatNumber(Math.abs(getCombinedBudgetDiff(cat, analyticsPeriod))) }}
                 </span>
-              </span>
+              </div>
             </div>
           </div>
         </div>
@@ -515,10 +631,14 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
       </div>
     </div>
 
-    <!-- 排行榜 -->
-    <div>
-      <h3 class="text-xs tracking-wider text-[#a8a297] mb-2 uppercase">TOP 10 消費 ({{ periodLabel }})</h3>
-      <div class="bg-white rounded-2xl border border-[#ede9df] overflow-hidden divide-y divide-[#ede9df]/40">
+    <!-- 排行榜 (TOP 10 消費) - 支援收起與展開 -->
+    <div class="space-y-2">
+      <div @click="isTopExpensesExpanded = !isTopExpensesExpanded" class="flex justify-between items-center cursor-pointer select-none">
+        <h3 class="text-xs tracking-wider text-[#a8a297] uppercase font-semibold">TOP 10 消費 ({{ periodLabel }})</h3>
+        <i :data-lucide="isTopExpensesExpanded ? 'chevron-up' : 'chevron-down'" class="w-4 h-4 text-[#a8a297]"></i>
+      </div>
+
+      <div v-show="isTopExpensesExpanded" class="bg-white rounded-2xl border border-[#ede9df] overflow-hidden divide-y divide-[#ede9df]/40 transition-all duration-300">
         <div v-for="(item,index) in filteredTopExpenses" :key="item.id" class="p-3.5 flex justify-between items-center text-xs">
           <div class="flex items-center space-x-3">
             <span class="text-[10px] text-[#a8a297] font-mono w-4">{{ String(index+1).padStart(2,'0') }}</span>
@@ -542,44 +662,92 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
         <button @click="switchProject" class="px-4 bg-[#4a463f] text-white text-xs rounded-lg hover:bg-[#3d3a34] font-medium">載入</button>
       </div>
     </div>
-    <!-- 類別預算 -->
-    <div class="bg-white p-5 rounded-2xl border border-[#ede9df] space-y-4">
-      <div class="border-b border-[#ede9df] pb-2 flex justify-between items-end">
-        <h3 class="text-xs uppercase tracking-wider text-[#4a463f] font-semibold">各類別預算</h3>
-        <span class="text-[11px] text-[#8c8577] font-medium bg-[#f4f1ea] px-2 py-0.5 rounded border border-[#ede9df]">總計: NT$ {{ formatNumber(settingsTotalBudgetSum) }}</span>
+
+    <!-- 類別預算規劃（支援設定每年不同的月預算 & 本身可折疊/展開） -->
+    <div class="bg-white p-5 rounded-2xl border border-[#ede9df] space-y-3">
+      <div @click="isSettingsBudgetsExpanded = !isSettingsBudgetsExpanded" class="pb-2 flex justify-between items-center cursor-pointer select-none">
+        <div class="space-y-1">
+          <h3 class="text-xs uppercase tracking-wider text-[#4a463f] font-bold flex items-center gap-1.5">
+            自訂各年度月預算
+          </h3>
+          <p class="text-[9px] text-[#a8a297]">您可以個別規劃每一年、每一個月份的獨立額度</p>
+        </div>
+        <i :data-lucide="isSettingsBudgetsExpanded ? 'chevron-up' : 'chevron-down'" class="w-4 h-4 text-[#a8a297]"></i>
       </div>
-      <div class="space-y-3 max-h-60 overflow-y-auto no-scrollbar pr-1">
-        <div v-for="cat in categories" :key="cat" class="flex items-center justify-between gap-4 text-xs">
-          <span class="font-medium text-[#4a463f] w-1/3 truncate">{{ cat }}</span>
-          <div class="relative flex-1 flex items-center">
-            <span class="absolute left-2 text-[10px] text-[#a8a297]">NT$</span>
-            <input type="number" v-model.number="categoryBudgets[cat]" @input="saveToStorage" placeholder="未設定" class="w-full bg-[#f4f1ea]/50 border border-[#ede9df] rounded-lg p-1.5 pl-8 text-right text-xs focus:outline-none">
+
+      <div v-show="isSettingsBudgetsExpanded" class="space-y-4 pt-1 transition-all duration-300">
+        <!-- 年份與月份切換器 -->
+        <div class="bg-[#f4f1ea]/80 p-3 rounded-xl border border-[#ede9df] space-y-2">
+          <div class="flex items-center gap-2">
+            <div class="flex-1">
+              <label class="text-[9px] text-[#a8a297] block mb-0.5">預算年份</label>
+              <select v-model="settingsSelectedYear" class="w-full bg-white border border-[#ede9df] rounded-lg p-1 text-xs focus:outline-none">
+                <option v-for="y in settingsYearOptions" :key="y" :value="y">{{ y }} 年</option>
+              </select>
+            </div>
+            <div class="flex-1">
+              <label class="text-[9px] text-[#a8a297] block mb-0.5">預算月份</label>
+              <select v-model="settingsSelectedMonth" class="w-full bg-white border border-[#ede9df] rounded-lg p-1 text-xs focus:outline-none">
+                <option v-for="m in 12" :key="m" :value="String(m).padStart(2,'0')">{{ m }} 月</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- 快速複製與套用 -->
+          <div class="flex justify-between items-center pt-2 border-t border-[#ede9df]/60 text-[10px]">
+            <span class="text-[#8c8577] font-medium">💡 當月設定總計: NT$ {{ formatNumber(settingsCurrentPeriodBudgetSum) }}</span>
+            <button @click="replicateSettingsBudget" class="text-xs text-[#8c8577] bg-white border border-[#ede9df] px-2 py-0.5 rounded-md hover:bg-[#eae5da] font-medium">
+              套用至該年所有月份
+            </button>
+          </div>
+        </div>
+
+        <!-- 各項類別預算表單 -->
+        <div class="space-y-3 max-h-60 overflow-y-auto no-scrollbar pr-1">
+          <div v-for="cat in categories" :key="cat" class="flex items-center justify-between gap-4 text-xs">
+            <span class="font-medium text-[#4a463f] w-1/3 truncate">{{ cat }}</span>
+            <div class="relative flex-1 flex items-center">
+              <span class="absolute left-2 text-[10px] text-[#a8a297]">NT$</span>
+              <input type="number" 
+                :value="getBudgetBindingValue(cat)"
+                @input="updateBudgetBindingValue(cat, $event.target.value)"
+                placeholder="無月預算" 
+                class="w-full bg-[#f4f1ea]/50 border border-[#ede9df] rounded-lg p-1.5 pl-8 text-right text-xs focus:outline-none">
+            </div>
           </div>
         </div>
       </div>
     </div>
-    <!-- 常用支出 -->
+
+    <!-- 常用支出 - 支援收起與展開 -->
     <div class="bg-white p-5 rounded-2xl border border-[#ede9df] space-y-3">
       <div class="border-b border-[#ede9df] pb-2 flex justify-between items-center">
-        <h3 class="text-xs uppercase tracking-wider text-[#4a463f] font-semibold">常用支出選項</h3>
-        <button @click="openQuickItemModal(null)" class="text-[10px] bg-[#eae5da] hover:bg-[#dfd9cc] text-[#736c60] px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors">
+        <div @click="isQuickItemsExpanded = !isQuickItemsExpanded" class="flex items-center gap-1.5 cursor-pointer select-none flex-1">
+          <h3 class="text-xs uppercase tracking-wider text-[#4a463f] font-semibold">常用支出選項</h3>
+          <i :data-lucide="isQuickItemsExpanded ? 'chevron-up' : 'chevron-down'" class="w-4 h-4 text-[#a8a297]"></i>
+        </div>
+        <button @click="openQuickItemModal(null)" class="text-[10px] bg-[#eae5da] hover:bg-[#dfd9cc] text-[#736c60] px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors shrink-0">
           <i data-lucide="plus" class="w-3 h-3"></i>新增
         </button>
       </div>
-      <div v-if="quickItems.length" class="space-y-2 max-h-64 overflow-y-auto no-scrollbar">
-        <div v-for="(qi,idx) in quickItems" :key="qi.id" class="flex items-center justify-between p-2.5 bg-[#f4f1ea]/60 rounded-xl border border-[#ede9df]/60">
-          <div class="flex-1 min-w-0">
-            <p class="text-xs font-medium text-[#4a463f] truncate">{{ qi.title }}</p>
-            <p class="text-[10px] text-[#a8a297] mt-0.5">NT$ {{ formatNumber(qi.amount) }} · {{ qi.category }} · {{ qi.payMethod }}</p>
-          </div>
-          <div class="flex items-center gap-2 ml-2 shrink-0">
-            <button @click="openQuickItemModal(qi)" class="text-[#a8a297] hover:text-[#736c60]"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
-            <button @click="deleteQuickItem(qi.id)" class="text-[#a8a297] hover:text-red-700"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+      
+      <div v-show="isQuickItemsExpanded" class="space-y-2 transition-all duration-300">
+        <div v-if="quickItems.length" class="space-y-2 max-h-64 overflow-y-auto no-scrollbar">
+          <div v-for="(qi,idx) in quickItems" :key="qi.id" class="flex items-center justify-between p-2.5 bg-[#f4f1ea]/60 rounded-xl border border-[#ede9df]/60">
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-medium text-[#4a463f] truncate">{{ qi.title }}</p>
+              <p class="text-[10px] text-[#a8a297] mt-0.5">NT$ {{ formatNumber(qi.amount) }} · {{ qi.category }} · {{ qi.payMethod }}</p>
+            </div>
+            <div class="flex items-center gap-2 ml-2 shrink-0">
+              <button @click="openQuickItemModal(qi)" class="text-[#a8a297] hover:text-[#736c60]"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+              <button @click="deleteQuickItem(qi.id)" class="text-[#a8a297] hover:text-red-700"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+            </div>
           </div>
         </div>
+        <div class="text-center py-4 text-[10px] text-[#a8a297] italic" v-else>尚無常用支出，點擊「新增」來設定。</div>
       </div>
-      <div class="text-center py-4 text-[10px] text-[#a8a297] italic" v-else>尚無常用支出，點擊「新增」來設定。</div>
     </div>
+
     <!-- 支出類別 -->
     <div class="bg-white p-5 rounded-2xl border border-[#ede9df] space-y-3">
       <h3 class="text-xs uppercase tracking-wider text-[#a8a297]">支出類別管理</h3>
@@ -606,7 +774,7 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
 
 </main>
 
-<!-- ADD / EDIT EXPENSE MODAL (新增 / 編輯支出) -->
+<!-- ADD / EDIT EXPENSE MODAL -->
 <div v-if="isAddModalOpen" class="absolute inset-0 bg-black/20 backdrop-blur-[1px] flex items-end justify-center z-40" @click.self="closeAddModal">
   <div class="bg-[#faf8f5] w-full rounded-t-3xl p-6 space-y-4 border-t border-[#ede9df] shadow-xl max-h-[92vh] overflow-y-auto no-scrollbar">
     <div class="flex justify-between items-center mb-2">
@@ -639,7 +807,6 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
     <div>
       <label class="text-[10px] text-[#a8a297] block mb-1.5">收據 / 發票相片</label>
       <div class="flex items-center gap-3">
-        <!-- 尚未有照片 -->
         <div v-if="!newExpense.photo" class="flex gap-2">
           <label class="px-3 py-2 bg-[#eae5da] hover:bg-[#dfd9cc] text-[#4a463f] text-xs rounded-xl cursor-pointer flex items-center gap-1.5 transition-colors">
             <i data-lucide="image" class="w-3.5 h-3.5"></i> 選擇相片
@@ -649,8 +816,7 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
             <i data-lucide="camera" class="w-3.5 h-3.5"></i> 拍照
           </label>
         </div>
-        <!-- 已有照片 -->
-        <div v-else class="flex items-center gap-2 w-full">
+        <div class="flex items-center gap-2 w-full">
           <div class="relative w-16 h-16 rounded-lg border border-[#ede9df] overflow-hidden bg-black/5 shrink-0">
             <img :src="newExpense.photo" class="w-full h-full object-cover" />
             <button @click="newExpense.photo = ''" class="absolute -top-0.5 -right-0.5 bg-black/60 text-white rounded-full p-0.5">
@@ -662,7 +828,7 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
       </div>
     </div>
 
-    <!-- 相機即時拍照遮罩（在 Modal 內啟動） -->
+    <!-- 相機即時拍照遮罩 -->
     <div v-if="isModalCameraActive" class="p-3 bg-black rounded-2xl overflow-hidden aspect-[4/3] flex flex-col justify-between relative">
       <video id="modal-camera-feed" autoplay playsinline class="w-full h-full object-cover rounded-xl"></video>
       <div class="absolute bottom-6 left-0 right-0 flex justify-around items-center px-6">
@@ -688,7 +854,7 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
       <h3 class="text-sm font-medium">{{ editingQuickItemId ? '編輯常用支出' : '新增常用支出' }}</h3>
       <button @click="closeQuickItemModal" class="text-[#a8a297] hover:text-[#4a463f]"><i data-lucide="x" class="w-5 h-5"></i></button>
     </div>
-    <div><label class="text-[10px] text-[#a8a297] block mb-1">品項名稱</label><input type="text" v-model="quickItemForm.title" placeholder="如：珍珠奶茶" class="w-full bg-[#f4f1ea]/60 border border-[#ede9df] rounded-lg p-2 text-sm focus:outline-none"></div>
+    <div><label class="text-[10px] text-[#a8a297] block mb-1">品項名稱</label><input type="text" v-model="quickItemForm.title" placeholder="如：珍珠奶茶" class="w-full bg-[#f4f1ea]/60 border border-[#ede9df]/60 rounded-lg p-2 text-sm focus:outline-none"></div>
     <div><label class="text-[10px] text-[#a8a297] uppercase tracking-wider block mb-1">預設金額</label><input type="number" v-model="quickItemForm.amount" placeholder="0" class="w-full bg-transparent text-2xl font-light text-[#3d3a34] border-b border-[#ede9df] py-1 focus:outline-none"></div>
     <div><label class="text-[10px] text-[#a8a297] block mb-1.5">分類</label><div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1"><button v-for="cat in categories" :key="cat" @click="quickItemForm.category=cat" :class="{'bg-[#8c8577] text-white':quickItemForm.category===cat,'bg-[#f4f1ea] text-[#6b655b]':quickItemForm.category!==cat}" class="text-xs px-3 py-1.5 rounded-lg whitespace-nowrap">{{ cat }}</button></div></div>
     <div><label class="text-[10px] text-[#a8a297] block mb-1.5">支付方式</label><div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1"><button v-for="method in payMethods" :key="method" @click="quickItemForm.payMethod=method" :class="{'bg-[#8c8577] text-white':quickItemForm.payMethod===method,'bg-[#f4f1ea] text-[#6b655b]':quickItemForm.payMethod!==method}" class="text-xs px-3 py-1.5 rounded-lg whitespace-nowrap">{{ method }}</button></div></div>
@@ -713,13 +879,13 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
 </div>
 
 <script>
-const { createApp, ref, computed, onMounted, nextTick } = Vue;
+const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
 
 // ══ WEATHER ══
 const WMO_ICON={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌦',55:'🌧',61:'🌧',63:'🌧',65:'🌧',71:'🌨',73:'🌨',75:'❄️',77:'❄️',80:'🌦',81:'🌧',82:'⛈',85:'🌨',86:'❄️',95:'⛈',96:'⛈',99:'⛈'};
 function wmoEmoji(c){return WMO_ICON[c]||WMO_ICON[Math.floor(c/10)*10]||'🌡️';}
 async function geocodeCity(city){
-  const r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(city)+'&format=json&limit=1&accept-language=zh-TW',{headers:{'User-Agent':'SabiFlowApp/5.5'}});
+  const r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(city)+'&format=json&limit=1&accept-language=zh-TW',{headers:{'User-Agent':'SabiFlowApp/6.1'}});
   const j=await r.json();if(!j.length)throw new Error('NOT_FOUND');
   return{lat:parseFloat(j[0].lat),lon:parseFloat(j[0].lon),name:j[0].display_name.split(',')[0]};
 }
@@ -732,6 +898,31 @@ async function getThreeDayForecast(lat,lon){
 createApp({
   setup(){
     const currentTab=ref('home'),recordSubTab=ref('date'),analyticsPeriod=ref('month');
+
+    // 當前現實時區的年份和月份
+    const currentYear = new Date().getFullYear();
+    const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
+
+    // ══ 新增：收起與展開控制狀態 ══
+    const isRecentActivityExpanded = ref(true); // 首頁最近活動
+    const isTopExpensesExpanded = ref(true);      // 統計 Top 10 消費
+    const isSettingsBudgetsExpanded = ref(true);  // 設定自訂預算
+    const isQuickItemsExpanded = ref(true);       // 設定常用支出選項
+
+    // ══ 紀錄頁篩選控制 ══
+    const recordsFilterMonth = ref('all');
+    const recordsFilterCategory = ref('all');
+    const collapsedDateGroups = ref({}); // 日期折疊狀態 (日期: boolean)
+
+    // ══ 統計頁年月選擇 ══
+    const analyticsSelectedYear = ref(String(currentYear));
+    const analyticsSelectedMonth = ref(currentMonth);
+
+    // ══ 設定頁預算控制 ══
+    const settingsSelectedYear = ref(String(currentYear));
+    const settingsSelectedMonth = ref(currentMonth);
+    const settingsYearOptions = ref([String(currentYear - 2), String(currentYear - 1), String(currentYear), String(currentYear + 1), String(currentYear + 2)]);
+    const yearlyMonthlyBudgets = ref({});
 
     // 天氣
     const wCity=ref([localStorage.getItem('sabiflow_wcity0')||'',localStorage.getItem('sabiflow_wcity1')||'']);
@@ -755,14 +946,14 @@ createApp({
     const isScanning=ref(false);
     const scanStatusText=ref('正在呼叫智慧感知解析中...');
     const cameraStream=ref(null);
-    const currentCameraFacing=ref('environment'); // 預設使用後鏡頭
+    const currentCameraFacing=ref('environment');
     const scanPhoto = ref(null);
     const scannedResult = ref(null);
 
-    // 收據展開檢視狀態控制 (ID: boolean)
+    // 收據展開檢視狀態控制
     const expandedExpensePhotos = ref({});
 
-    // 預先宣告手動輸入表單
+    // 手動輸入表單
     const scanForm = ref({
       title: '', amount: null,
       date: new Date().toISOString().split('T')[0],
@@ -770,6 +961,66 @@ createApp({
       payMethod: ''
     });
 
+    // 獲取某一特定年份和月份的類別預算
+    const getMonthlyCategoryBudget = (cat, year, month) => {
+      const yStr = String(year);
+      const mStr = String(month).padStart(2, '0');
+      if (yearlyMonthlyBudgets.value[yStr] && yearlyMonthlyBudgets.value[yStr][mStr] && yearlyMonthlyBudgets.value[yStr][mStr][cat] !== undefined) {
+        return Number(yearlyMonthlyBudgets.value[yStr][mStr][cat]) || 0;
+      }
+      return Number(categoryBudgets.value[cat]) || 0;
+    };
+
+    // 取得在設定頁面上自訂年度預算的雙向綁定數值
+    const getBudgetBindingValue = (cat) => {
+      const yStr = settingsSelectedYear.value;
+      const mStr = settingsSelectedMonth.value;
+      if (yearlyMonthlyBudgets.value[yStr] && yearlyMonthlyBudgets.value[yStr][mStr] && yearlyMonthlyBudgets.value[yStr][mStr][cat] !== undefined) {
+        return yearlyMonthlyBudgets.value[yStr][mStr][cat];
+      }
+      return categoryBudgets.value[cat] || null;
+    };
+
+    // 變更在設定頁自訂年度預算的值
+    const updateBudgetBindingValue = (cat, val) => {
+      const yStr = settingsSelectedYear.value;
+      const mStr = settingsSelectedMonth.value;
+      
+      if (!yearlyMonthlyBudgets.value[yStr]) {
+        yearlyMonthlyBudgets.value[yStr] = {};
+      }
+      if (!yearlyMonthlyBudgets.value[yStr][mStr]) {
+        yearlyMonthlyBudgets.value[yStr][mStr] = {};
+      }
+      
+      yearlyMonthlyBudgets.value[yStr][mStr][cat] = val === '' ? null : Number(val);
+      saveToStorage();
+    };
+
+    // 複製目前設定月份的預算到這整年的所有月份
+    const replicateSettingsBudget = () => {
+      const yStr = settingsSelectedYear.value;
+      const mStr = settingsSelectedMonth.value;
+      
+      const sourceBudget = {};
+      categories.value.forEach(cat => {
+        sourceBudget[cat] = getBudgetBindingValue(cat);
+      });
+
+      if (!yearlyMonthlyBudgets.value[yStr]) {
+        yearlyMonthlyBudgets.value[yStr] = {};
+      }
+
+      for (let m = 1; m <= 12; m++) {
+        const targetMonth = String(m).padStart(2, '0');
+        yearlyMonthlyBudgets.value[yStr][targetMonth] = { ...sourceBudget };
+      }
+
+      saveToStorage();
+      showToast(`已複製 ${yStr} 年 ${mStr} 月的預算設定至該年所有 12 個月份！`);
+    };
+
+    // 載入專案格局上下文
     const loadProjectContext=async()=>{
       const pid=projectId.value;
       const lsLoad=(key,fb)=>{try{const s=localStorage.getItem('sabiflow_'+pid+'_'+key);return s?JSON.parse(s):fb;}catch(e){return fb;}};
@@ -777,6 +1028,7 @@ createApp({
         categories:['餐飲','交通','住宿','咖啡店','購物','其他'],
         payMethods:['現金','信用卡','Suica','Apple Pay'],
         categoryBudgets:{'餐飲':15000,'交通':8000,'住宿':25000,'購物':10000},
+        yearlyMonthlyBudgets: {},
         expenses:[
           {id:1,title:'由布院之森 特急觀光列車',amount:1250,date:new Date().toISOString().split('T')[0],category:'交通',payMethod:'信用卡',photo:''},
           {id:2,title:'海鮮丼與地雞料理',amount:480,date:new Date().toISOString().split('T')[0],category:'餐飲',payMethod:'現金',photo:''}
@@ -784,14 +1036,13 @@ createApp({
         quickItems:[]
       };
       
-      // 使用 localStorage 快速渲染
       categories.value=lsLoad('categories',defaults.categories);
       payMethods.value=lsLoad('paymethods',defaults.payMethods);
       categoryBudgets.value=lsLoad('category_budgets',defaults.categoryBudgets);
+      yearlyMonthlyBudgets.value=lsLoad('yearly_monthly_budgets',defaults.yearlyMonthlyBudgets);
       expenses.value=lsLoad('expenses',defaults.expenses);
       quickItems.value=lsLoad('quick_items',defaults.quickItems);
       
-      // 更新掃描手動表單的預設選單
       if (!scanForm.value.category && categories.value.length) {
         scanForm.value.category = categories.value[0];
       }
@@ -799,7 +1050,6 @@ createApp({
         scanForm.value.payMethod = payMethods.value[0];
       }
 
-      // 再從 Firestore 拉取最新資料
       if(window._fb&&window._fb.ready){
         try{
           const{db,doc,getDoc}=window._fb;
@@ -809,10 +1059,10 @@ createApp({
             if(d.categories)categories.value=d.categories;
             if(d.payMethods)payMethods.value=d.payMethods;
             if(d.categoryBudgets)categoryBudgets.value=d.categoryBudgets;
+            if(d.yearlyMonthlyBudgets)yearlyMonthlyBudgets.value=d.yearlyMonthlyBudgets;
             if(d.expenses)expenses.value=d.expenses;
             if(d.quickItems)quickItems.value=d.quickItems;
             
-            // 同步更新
             if (categories.value.length) scanForm.value.category = categories.value[0];
             if (payMethods.value.length) scanForm.value.payMethod = payMethods.value[0];
           }
@@ -827,6 +1077,7 @@ createApp({
       localStorage.setItem('sabiflow_'+pid+'_paymethods',JSON.stringify(payMethods.value));
       localStorage.setItem('sabiflow_'+pid+'_expenses',JSON.stringify(expenses.value));
       localStorage.setItem('sabiflow_'+pid+'_category_budgets',JSON.stringify(categoryBudgets.value));
+      localStorage.setItem('sabiflow_'+pid+'_yearly_monthly_budgets',JSON.stringify(yearlyMonthlyBudgets.value));
       localStorage.setItem('sabiflow_'+pid+'_quick_items',JSON.stringify(quickItems.value));
       if(window._fb&&window._fb.ready){
         try{
@@ -836,6 +1087,7 @@ createApp({
             payMethods:payMethods.value,
             expenses:expenses.value,
             categoryBudgets:categoryBudgets.value,
+            yearlyMonthlyBudgets:yearlyMonthlyBudgets.value,
             quickItems:quickItems.value,
             updatedAt:new Date().toISOString()
           });
@@ -877,7 +1129,7 @@ createApp({
 
     const clearScanPhoto = () => { scanPhoto.value = null; };
 
-    // 儲存掃描頁之手動記帳（必定包含照片屬性！）
+    // 儲存掃描頁之手動記帳
     const submitScanExpense = () => {
       if (!scanForm.value.amount || !scanForm.value.title) {
         showToast('請填寫品項名稱與金額');
@@ -887,7 +1139,7 @@ createApp({
         id: Date.now(),
         ...scanForm.value,
         amount: Number(scanForm.value.amount),
-        photo: scanPhoto.value || '' // 儲存照片
+        photo: scanPhoto.value || ''
       });
       saveToStorage();
       scanPhoto.value = null;
@@ -975,7 +1227,6 @@ createApp({
       isScanning.value = true;
       scanStatusText.value = '正在上傳與解析感知中...';
 
-      // 預設為空，在 Canvas 執行環境中會自動注入可用之 key。
       const apiKey = ""; 
       if (!apiKey) {
         setTimeout(() => {
@@ -1021,7 +1272,6 @@ createApp({
           }
         };
 
-        // 5次指數退避重試邏輯
         let response;
         let delay = 1000;
         for (let i = 0; i < 5; i++) {
@@ -1103,49 +1353,88 @@ createApp({
     const applyQuickItem=(qi)=>{newExpense.value.title=qi.title;newExpense.value.amount=qi.amount;newExpense.value.category=qi.category;newExpense.value.payMethod=qi.payMethod;};
 
     // 期間判斷
-    const isInPeriod=(dateStr,period)=>{
+    const isInPeriod=(dateStr, period)=>{
       const date=new Date(dateStr);if(isNaN(date.getTime()))return false;
-      const now=new Date();
-      if(period==='month')return date.getFullYear()===now.getFullYear()&&date.getMonth()===now.getMonth();
-      if(period==='quarter')return date.getFullYear()===now.getFullYear()&&Math.ceil((date.getMonth()+1)/3)===Math.ceil((now.getMonth()+1)/3);
-      if(period==='year')return date.getFullYear()===now.getFullYear();
+      const targetYear = Number(analyticsSelectedYear.value);
+      const targetMonth = Number(analyticsSelectedMonth.value);
+      
+      if(period==='month'){
+        return date.getFullYear()===targetYear && (date.getMonth()+1)===targetMonth;
+      }
+      if(period==='year'){
+        return date.getFullYear()===targetYear;
+      }
       return true;
     };
 
-    // 預算與統計頁關聯計算
+    // 理財脈絡頁單一類別的預算取得
+    const getBudgetForCategoryInAnalytics = (cat) => {
+      if (analyticsPeriod.value === 'month') {
+        return getMonthlyCategoryBudget(cat, analyticsSelectedYear.value, analyticsSelectedMonth.value);
+      } else {
+        let sum = 0;
+        for (let m = 1; m <= 12; m++) {
+          sum += getMonthlyCategoryBudget(cat, analyticsSelectedYear.value, String(m).padStart(2,'0'));
+        }
+        return sum;
+      }
+    };
+
+    // 類別預算百分比計算
     const getCombinedBudgetPercent=(cat, period)=>{
-      const rawBudget = categoryBudgets.value[cat] || 0;
-      if(rawBudget === 0) return 0;
-      const multiplier = period === 'quarter' ? 3 : period === 'year' ? 12 : 1;
-      const budget = rawBudget * multiplier;
+      const budget = getBudgetForCategoryInAnalytics(cat);
+      if(budget === 0) return 0;
       const spent = getCategorySpentInPeriod(cat, period);
       return (spent / budget) * 100;
     };
 
     const getCombinedBudgetDiff=(cat, period)=>{
-      const rawBudget = categoryBudgets.value[cat] || 0;
-      const multiplier = period === 'quarter' ? 3 : period === 'year' ? 12 : 1;
-      const budget = rawBudget * multiplier;
+      const budget = getBudgetForCategoryInAnalytics(cat);
       const spent = getCategorySpentInPeriod(cat, period);
       return budget - spent;
     };
 
-    const totalBudgetSum=computed(()=>categoriesWithBudget.value.reduce((s,c)=>s+(Number(categoryBudgets.value[c])||0),0));
+    // 統計大面板專屬：當前篩選時段內的所有類別「總預算額度」
+    const currentPeriodTotalBudget = computed(() => {
+      return categories.value.reduce((sum, cat) => {
+        return sum + getBudgetForCategoryInAnalytics(cat);
+      }, 0);
+    });
+
+    // 總進度百分比計算
+    const totalProgressPercent = computed(() => {
+      const budget = currentPeriodTotalBudget.value;
+      if (budget === 0) return 0;
+      return (filteredGrandTotal.value / budget) * 100;
+    });
+
+    // 首頁專用預算加總計算（當前年份月份）
+    const totalBudgetSum=computed(()=>{
+      return categoriesWithBudget.value.reduce((s,c)=>s+getMonthlyCategoryBudget(c, currentYear, currentMonth), 0);
+    });
     const totalSpentSum=computed(()=>categoriesWithBudget.value.reduce((s,c)=>s+getCategorySpentInPeriod(c,'month'),0));
-    const settingsTotalBudgetSum=computed(()=>categories.value.reduce((s,c)=>s+(Number(categoryBudgets.value[c])||0),0));
+    
+    // 設定頁當前自訂設定年月下的預算總和
+    const settingsCurrentPeriodBudgetSum = computed(() => {
+      return categories.value.reduce((s, c) => {
+        return s + (Number(getBudgetBindingValue(c)) || 0);
+      }, 0);
+    });
     
     const periodLabel=computed(()=>{
-      const n=new Date();
-      if(analyticsPeriod.value==='month')return '本月';
-      if(analyticsPeriod.value==='quarter')return '本季 (Q'+Math.ceil((n.getMonth()+1)/3)+')';
-      return '本年 ('+n.getFullYear()+')';
+      if(analyticsPeriod.value==='month') return `${analyticsSelectedYear.value}年${analyticsSelectedMonth.value}月`;
+      return `${analyticsSelectedYear.value}年度`;
+    });
+
+    const currentYearMonthLabel = computed(() => {
+      return `${currentYear}年${currentMonth}月`;
     });
     
     const filteredExpenses=computed(()=>expenses.value.filter(e=>isInPeriod(e.date,analyticsPeriod.value)));
     const filteredGrandTotal=computed(()=>filteredExpenses.value.reduce((s,e)=>s+e.amount,0));
     const filteredTopExpenses=computed(()=>[...filteredExpenses.value].sort((a,b)=>b.amount-a.amount).slice(0,10));
     
-    const trendHeights=computed(()=>analyticsPeriod.value==='month'?['20%','40%','85%','30%','15%','70%','25%']:analyticsPeriod.value==='quarter'?['45%','25%','60%','80%','40%','95%','30%']:['70%','50%','85%','40%','95%','20%','10%']);
+    const trendHeights=computed(()=>analyticsPeriod.value==='month'?['20%','40%','85%','30%','15%','70%','25%']:['70%','50%','85%','40%','95%','20%','10%']);
     const currentTabTitle=computed(()=>({home:'日常留白',records:'時序明細',scanner:'智慧感知',analytics:'理財脈絡',settings:'基底格局'})[currentTab.value]);
     
     const todayTotal=computed(()=>{
@@ -1153,11 +1442,66 @@ createApp({
       return expenses.value.filter(e=>e.date===t).reduce((s,e)=>s+e.amount,0);
     });
     
-    const categoriesWithBudget=computed(()=>categories.value.filter(c=>categoryBudgets.value[c]&&categoryBudgets.value[c]>0));
+    // 首頁篩選：有設定月預算的類別
+    const categoriesWithBudget=computed(()=>{
+      return categories.value.filter(c => {
+        const b = getMonthlyCategoryBudget(c, currentYear, currentMonth);
+        return b && b > 0;
+      });
+    });
+
+    // 提取所有現有消費記錄中的「年份 + 月份」
+    const availableYearMonths = computed(() => {
+      const ymSet = new Set();
+      expenses.value.forEach(e => {
+        if (e.date && e.date.length >= 7) {
+          ymSet.add(e.date.substring(0, 7));
+        }
+      });
+      return Array.from(ymSet).sort((a,b) => b.localeCompare(a));
+    });
+
+    // 提取所有現有消費記錄中的「年份」列表
+    const availableYears = computed(() => {
+      const ySet = new Set();
+      ySet.add(String(currentYear));
+      expenses.value.forEach(e => {
+        if (e.date && e.date.length >= 4) {
+          ySet.add(e.date.substring(0, 4));
+        }
+      });
+      return Array.from(ySet).sort((a,b) => b.localeCompare(a));
+    });
+
+    // 輔助格式化年月選單 Label
+    const formatYearMonthLabel = (ymStr) => {
+      const parts = ymStr.split('-');
+      return `${parts[0]}年${parts[1]}月`;
+    };
+
+    // 紀錄頁篩選過後的支出項目
+    const recordsFilteredList = computed(() => {
+      return expenses.value.filter(item => {
+        if (recordsFilterMonth.value !== 'all') {
+          if (!item.date || !item.date.startsWith(recordsFilterMonth.value)) {
+            return false;
+          }
+        }
+        if (recordsFilterCategory.value !== 'all') {
+          if (item.category !== recordsFilterCategory.value) {
+            return false;
+          }
+        }
+        return true;
+      });
+    });
+
+    const filteredRecordsCount = computed(() => recordsFilteredList.value.length);
     
-    const groupedByDate=computed(()=>{
+    // 紀錄頁：按日期排列且篩選
+    const groupedByDateFiltered=computed(()=>{
       const g={};
-      [...expenses.value].sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(e=>{
+      [...recordsFilteredList.value].sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(e=>{
         if(!g[e.date])g[e.date]={items:[],total:0};
         g[e.date].items.push(e);
         g[e.date].total+=e.amount;
@@ -1165,10 +1509,11 @@ createApp({
       return g;
     });
     
-    const groupedByCategory=computed(()=>{
+    // 紀錄頁：按分類排列且篩選
+    const groupedByCategoryFiltered=computed(()=>{
       const g={};
       categories.value.forEach(c=>g[c]={items:[],total:0});
-      expenses.value.forEach(e=>{
+      recordsFilteredList.value.forEach(e=>{
         const c=categories.value.includes(e.category)?e.category:'其他';
         if(!g[c])g[c]={items:[],total:0};
         g[c].items.push(e);
@@ -1176,12 +1521,34 @@ createApp({
       });
       return g;
     });
+
+    // 紀錄頁一鍵全部折疊或展開
+    const toggleAllCollapse = (shouldCollapse) => {
+      if (recordSubTab.value === 'date') {
+        Object.keys(groupedByDateFiltered.value).forEach(date => {
+          collapsedDateGroups.value[date] = shouldCollapse;
+        });
+      } else {
+        categories.value.forEach(cat => {
+          expandedCategories.value[cat] = !shouldCollapse;
+        });
+      }
+      nextTick(()=>lucide.createIcons());
+    };
+
+    const toggleDateGroupCollapse = (date) => {
+      collapsedDateGroups.value[date] = !collapsedDateGroups.value[date];
+      nextTick(()=>lucide.createIcons());
+    };
     
     const payMethodsWithData=computed(()=>payMethods.value.filter(m=>filteredExpenses.value.some(e=>e.payMethod===m)));
 
+    // 理財時段類別花費計算
     const getCategorySpentInPeriod=(cat,period)=>expenses.value.filter(e=>e.category===cat&&isInPeriod(e.date,period)).reduce((s,e)=>s+e.amount,0);
+    
+    // 首頁用預算百分比
     const getBudgetPercent=(cat)=>{
-      const b=categoryBudgets.value[cat]||0;
+      const b=getMonthlyCategoryBudget(cat, currentYear, currentMonth);
       return b===0?0:(getCategorySpentInPeriod(cat,'month')/b)*100;
     };
     
@@ -1214,7 +1581,7 @@ createApp({
       nextTick(()=>lucide.createIcons());
     };
 
-    // ══ 新增支出彈窗相關與「直接加照片」邏輯 ══
+    // ══ 新增支出彈窗相關 ══
     const isModalCameraActive = ref(false);
     const modalCameraStream = ref(null);
 
@@ -1346,7 +1713,18 @@ createApp({
         showToast('已新增：'+n);
       }
     };
-    const deleteCategory=(c)=>{categories.value=categories.value.filter(x=>x!==c);delete categoryBudgets.value[c];saveToStorage();};
+    const deleteCategory=(c)=>{
+      categories.value=categories.value.filter(x=>x!==c);
+      delete categoryBudgets.value[c];
+      Object.keys(yearlyMonthlyBudgets.value).forEach(y => {
+        Object.keys(yearlyMonthlyBudgets.value[y]).forEach(m => {
+          if(yearlyMonthlyBudgets.value[y][m]) {
+            delete yearlyMonthlyBudgets.value[y][m][c];
+          }
+        });
+      });
+      saveToStorage();
+    };
     
     const addPayMethod=()=>{
       const n=newPayMethodName.value.trim();
@@ -1358,7 +1736,7 @@ createApp({
     };
     const deletePayMethod=(m)=>{payMethods.value=payMethods.value.filter(x=>x!==m);saveToStorage();};
 
-    // 感知確認導入（強制存入當下拍到的照片！）
+    // 感知確認導入
     const confirmScannerAdd=()=>{
       if(scannedResult.value){
         expenses.value.unshift({
@@ -1368,7 +1746,7 @@ createApp({
           date:scannedResult.value.date,
           category:scannedResult.value.category,
           payMethod:scannedResult.value.payMethod,
-          photo:scanPhoto.value || '' // 儲存照片
+          photo:scanPhoto.value || ''
         });
         saveToStorage();
         scannedResult.value=null;
@@ -1383,6 +1761,17 @@ createApp({
         await window._fb.signOut(window._fb.auth);
       }
     };
+
+    // 監聽所有新折疊控制狀態的變化，自動刷新 Lucide 圖示避免渲染錯誤
+    watch(
+      [
+        analyticsPeriod, analyticsSelectedYear, analyticsSelectedMonth,
+        isRecentActivityExpanded, isTopExpensesExpanded, isSettingsBudgetsExpanded, isQuickItemsExpanded
+      ],
+      () => {
+        nextTick(() => lucide.createIcons());
+      }
+    );
 
     onMounted(()=>{
       const startApp=()=>{
@@ -1421,7 +1810,7 @@ createApp({
       }
     });
 
-    return{
+    return {
       currentTab,recordSubTab,analyticsPeriod,
       wCity,wData,wName,wLoading,wError,fetchWeather,
       categories,payMethods,categoryBudgets,expenses,quickItems,
@@ -1429,7 +1818,7 @@ createApp({
       isAddModalOpen,editingExpenseId,newExpense,
       isQuickItemModalOpen,editingQuickItemId,quickItemForm,
       toast,scannedResult,
-      todayTotal,categoriesWithBudget,groupedByDate,groupedByCategory,
+      todayTotal,categoriesWithBudget,
       payMethodsWithData,
       periodLabel,filteredExpenses,filteredGrandTotal,filteredTopExpenses,trendHeights,
       switchTab,textClass,formatNumber,toggleCategoryCollapse,
@@ -1440,12 +1829,30 @@ createApp({
       getFilteredPayMethodAmount,getFilteredPayMethodPercent,
       confirmScannerAdd,saveToStorage,scanPhoto,scanForm,onScanPhotoSelected,clearScanPhoto,submitScanExpense,
       projectId,tempProjectId,switchProject,
-      totalBudgetSum,totalSpentSum,settingsTotalBudgetSum,currentTabTitle,
+      totalBudgetSum,totalSpentSum,currentTabTitle,
       doLogout,
       isCameraActive,isScanning,scanStatusText,startCamera,stopCamera,switchCamera,capturePhoto,handleFileUpload,triggerFileInput,
       getCombinedBudgetPercent,getCombinedBudgetDiff,
       expandedExpensePhotos,toggleExpensePhoto,
-      isModalCameraActive,onExpensePhotoUploaded,startCameraForExpense,stopCameraForExpense,capturePhotoForExpense
+      isModalCameraActive,onExpensePhotoUploaded,startCameraForExpense,stopCameraForExpense,capturePhotoForExpense,
+      
+      // 折疊與展開新增狀態
+      isRecentActivityExpanded, isTopExpensesExpanded, isSettingsBudgetsExpanded, isQuickItemsExpanded,
+
+      // 進階年月、分類篩選
+      recordsFilterMonth,recordsFilterCategory,availableYearMonths,formatYearMonthLabel,
+      recordsFilteredList,filteredRecordsCount,groupedByDateFiltered,groupedByCategoryFiltered,
+      collapsedDateGroups,toggleDateGroupCollapse,toggleAllCollapse,
+
+      // 理財脈絡
+      analyticsSelectedYear,analyticsSelectedMonth,availableYears,getBudgetForCategoryInAnalytics,
+      currentPeriodTotalBudget,totalProgressPercent,
+
+      // 每年不同月預算
+      settingsSelectedYear,settingsSelectedMonth,settingsYearOptions,yearlyMonthlyBudgets,
+      settingsCurrentPeriodBudgetSum,getBudgetBindingValue,updateBudgetBindingValue,
+      replicateSettingsBudget,getMonthlyCategoryBudget,
+      currentYear,currentMonth,currentYearMonthLabel
     };
   }
 }).mount('#app');

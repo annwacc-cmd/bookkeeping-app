@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>SabiFlow v6.1</title>
+<title>SabiFlow v7.1</title>
 <script src="https://cdn.tailwindcss.com"></script>
 <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
 <script src="https://unpkg.com/lucide@latest"></script>
@@ -28,13 +28,118 @@ window.dispatchEvent(new Event("firebaseReady"));
 console.log("Firebase 已連線");
 </script>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght=400;600&family=Plus+Jakarta+Sans:wght=300;400;500&display=swap');
-body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f1ea;color:#4a463f;}
-.no-scrollbar::-webkit-scrollbar{display:none;}
-.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none;}
+@import url('https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght=400;600&family=Plus+Jakarta+Sans:wght=300;400;500&family=Architects+Daughter&family=ZCOOL+KuaiLe&display=swap');
+
+/* ══ 預設極簡侘寂風 ══ */
+body {
+  font-family: 'Plus Jakarta Sans', 'Noto Serif TC', serif;
+  background-color: #f4f1ea;
+  color: #4a463f;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+/* ══ 手繪塗鴉風專屬樣式 ══ */
+.doodle-style {
+  font-family: 'Architects Daughter', 'ZCOOL KuaiLe', 'Noto Serif TC', cursive, sans-serif !important;
+  background-color: #fffdf6 !important;
+  color: #111111 !important;
+}
+
+/* 塗鴉風卡片邊框：模擬不規則的手繪線條 */
+.doodle-style .doodle-card {
+  border: 2px solid #111111 !important;
+  border-radius: 255px 15px 225px 15px/15px 225px 15px 255px !important;
+  background-color: #ffffff !important;
+  box-shadow: 4px 4px 0px #111111 !important;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.doodle-style .doodle-card:hover {
+  transform: translate(-1px, -1px);
+  box-shadow: 6px 6px 0px #111111 !important;
+}
+
+/* 塗鴉風按鈕 */
+.doodle-style .doodle-btn {
+  border: 2px solid #111111 !important;
+  border-radius: 12px 4px 14px 4px/4px 14px 4px 12px !important;
+  background-color: #fff176 !important; /* 活潑的黃色筆觸感 */
+  color: #111111 !important;
+  box-shadow: 3px 3px 0px #111111 !important;
+  font-weight: bold !important;
+}
+
+.doodle-style .doodle-btn:active {
+  transform: translate(2px, 2px);
+  box-shadow: 1px 1px 0px #111111 !important;
+}
+
+/* 塗鴉風輸入框 */
+.doodle-style .doodle-input {
+  border: 2px solid #111111 !important;
+  border-radius: 6px 12px 4px 9px/9px 4px 12px 6px !important;
+  background-color: #ffffff !important;
+  color: #111111 !important;
+  box-shadow: inset 1px 1px 3px rgba(0,0,0,0.1) !important;
+}
+
+/* 塗鴉風標籤與文字效果 */
+.doodle-style .doodle-tag {
+  border: 1.5px solid #111111 !important;
+  background-color: #e1f5fe !important; /* 淡淡的藍色草稿筆觸 */
+  color: #111111 !important;
+  border-radius: 8px 3px 10px 4px/4px 9px 3px 10px !important;
+}
+
+/* 塗鴉風進度條：帶斜線手繪筆觸背景 */
+.doodle-style .doodle-progress-bg {
+  background-color: #ffffff !important;
+  border: 2px solid #111111 !important;
+  border-radius: 20px !important;
+}
+
+.doodle-style .doodle-progress-bar {
+  background: repeating-linear-gradient(
+    45deg,
+    #ff8a80,
+    #ff8a80 6px,
+    #ff5252 6px,
+    #ff5252 12px
+  ) !important; /* 紅色斜紋手寫蠟筆塗色感 */
+  border-right: 2px solid #111111 !important;
+}
+
+.doodle-style .doodle-progress-bar-green {
+  background: repeating-linear-gradient(
+    45deg,
+    #a5d6a7,
+    #a5d6a7 6px,
+    #81c784 6px,
+    #81c784 12px
+  ) !important; /* 綠色斜紋塗色 */
+  border-right: 2px solid #111111 !important;
+}
+
+/* 塗鴉風圓形按鈕 */
+.doodle-style .doodle-circle-btn {
+  border: 2px solid #111111 !important;
+  background-color: #ffffff !important;
+  box-shadow: 2px 2px 0px #111111 !important;
+  color: #111111 !important;
+}
+
+/* 隨機微小旋轉，製造手繪的不規則感 */
+.doodle-style .doodle-tilt-left {
+  transform: rotate(-0.5deg);
+}
+.doodle-style .doodle-tilt-right {
+  transform: rotate(0.8deg);
+}
 </style>
 </head>
-<body class="min-h-screen flex justify-center items-stretch sm:p-4">
+<body class="min-h-screen flex justify-center items-stretch md:p-6 transition-colors duration-300">
 
 <!-- ══ 登入畫面 ══ -->
 <div id="login-screen" style="display:none;" class="fixed inset-0 z-50 bg-[#f4f1ea] flex items-center justify-center p-6">
@@ -65,830 +170,947 @@ body{font-family:'Plus Jakarta Sans','Noto Serif TC',serif;background-color:#f4f
   </div>
 </div>
 
-<div id="app" class="w-full max-w-md bg-[#faf8f5] shadow-sm flex flex-col relative overflow-hidden sm:rounded-3xl border border-[#ede9df]">
+<!-- ══ 主應用程式 ══ -->
+<div id="app" :class="{'doodle-style': isDoodleMode}" class="w-full max-w-6xl bg-[#faf8f5] shadow-sm flex flex-col md:flex-row relative overflow-hidden md:rounded-3xl border border-[#ede9df] transition-colors duration-300">
 
-<header class="px-6 pt-6 pb-4 flex justify-between items-center border-b border-[#ede9df]/60">
-  <div>
-    <h1 class="text-xs tracking-widest text-[#a8a297] font-light uppercase">SabiFlow</h1>
-    <p class="text-lg font-medium text-[#4a463f]">{{ currentTabTitle }}</p>
-  </div>
-  <div class="flex items-center gap-2">
-    <span class="text-[10px] bg-[#eae5da] text-[#736c60] px-2 py-1 rounded-md font-mono border border-[#ede9df]">📁 {{ projectId }}</span>
-    <button v-if="['home','records','analytics'].includes(currentTab)" @click="openAddModal()"
-      class="w-9 h-9 rounded-full bg-[#eae5da] hover:bg-[#dfd9cc] flex items-center justify-center text-[#4a463f] transition-colors">
-      <i data-lucide="plus" class="w-5 h-5"></i>
-    </button>
-    <button @click="doLogout()" title="登出"
-      class="w-9 h-9 rounded-full bg-[#eae5da] hover:bg-[#dfd9cc] flex items-center justify-center text-[#a8a297] hover:text-red-500 transition-colors">
-      <i data-lucide="log-out" class="w-4 h-4"></i>
-    </button>
-  </div>
-</header>
+  <!-- 💻 電腦版專屬：左側常駐導覽 & 狀態大面板 -->
+  <aside class="hidden md:flex w-72 bg-[#faf8f5] border-r border-[#ede9df]/80 flex-col p-6 space-y-6 shrink-0" :class="{'border-[#111111] border-r-2': isDoodleMode}">
+    <div>
+      <h1 class="text-xs tracking-widest text-[#a8a297] font-light uppercase" :class="{'text-[#111111] font-bold': isDoodleMode}">SabiFlow</h1>
+      <p class="text-xl font-bold text-[#4a463f] mt-1" :class="{'text-[#111111] font-black': isDoodleMode}">日常與留白</p>
+    </div>
 
-<main class="flex-1 overflow-y-auto px-6 py-4 no-scrollbar pb-24">
+    <!-- 左側直式選單 -->
+    <nav class="space-y-1.5">
+      <button @click="switchTab('home')" :class="[currentTab === 'home' ? (isDoodleMode ? 'bg-[#fff176] border-2 border-[#111111] font-bold' : 'bg-[#eae5da] text-[#4a463f] font-semibold') : 'text-[#a8a297] hover:text-[#4a463f]']" class="w-full text-left py-2 px-3 rounded-xl flex items-center gap-3 transition-all text-sm">
+        <i data-lucide="home" class="w-4 h-4"></i> 首頁概觀
+      </button>
+      <button @click="switchTab('records')" :class="[currentTab === 'records' ? (isDoodleMode ? 'bg-[#fff176] border-2 border-[#111111] font-bold' : 'bg-[#eae5da] text-[#4a463f] font-semibold') : 'text-[#a8a297] hover:text-[#4a463f]']" class="w-full text-left py-2 px-3 rounded-xl flex items-center gap-3 transition-all text-sm">
+        <i data-lucide="file-text" class="w-4 h-4"></i> 時序明細
+      </button>
+      <button @click="switchTab('scanner')" :class="[currentTab === 'scanner' ? (isDoodleMode ? 'bg-[#fff176] border-2 border-[#111111] font-bold' : 'bg-[#eae5da] text-[#4a463f] font-semibold') : 'text-[#a8a297] hover:text-[#4a463f]']" class="w-full text-left py-2 px-3 rounded-xl flex items-center gap-3 transition-all text-sm">
+        <i data-lucide="scan-line" class="w-4 h-4"></i> 智慧感知
+      </button>
+      <button @click="switchTab('analytics')" :class="[currentTab === 'analytics' ? (isDoodleMode ? 'bg-[#fff176] border-2 border-[#111111] font-bold' : 'bg-[#eae5da] text-[#4a463f] font-semibold') : 'text-[#a8a297] hover:text-[#4a463f]']" class="w-full text-left py-2 px-3 rounded-xl flex items-center gap-3 transition-all text-sm">
+        <i data-lucide="pie-chart" class="w-4 h-4"></i> 理財脈絡
+      </button>
+      <button @click="switchTab('settings')" :class="[currentTab === 'settings' ? (isDoodleMode ? 'bg-[#fff176] border-2 border-[#111111] font-bold' : 'bg-[#eae5da] text-[#4a463f] font-semibold') : 'text-[#a8a297] hover:text-[#4a463f]']" class="w-full text-left py-2 px-3 rounded-xl flex items-center gap-3 transition-all text-sm">
+        <i data-lucide="settings" class="w-4 h-4"></i> 基底格局
+      </button>
+    </nav>
 
-  <!-- HOME -->
-  <div v-if="currentTab==='home'" class="space-y-5">
-    <!-- 天氣 -->
-    <div class="bg-white/50 rounded-2xl p-4 border border-[#ede9df]/60 space-y-3">
-      <div class="text-[10px] text-[#a8a297] tracking-widest uppercase border-b border-[#ede9df]/40 pb-1.5">三日氣象感知</div>
-      <div v-for="(slot,idx) in [0,1]" :key="idx" :class="idx===1?'pt-2 border-t border-[#ede9df]/60':''">
-        <div class="flex gap-2 items-center mb-2">
-          <div class="flex items-center flex-1 bg-[#f4f1ea]/80 border border-[#ede9df] rounded-lg px-2 gap-1.5">
-            <span class="text-[10px] font-semibold shrink-0" :class="idx===0?'text-[#8c8577]':'text-[#a8a297]'">{{ idx===0?'①':'②' }}</span>
-            <input type="text" v-model="wCity[idx]" @keyup.enter="fetchWeather(idx)"
-              :placeholder="idx===0?'城市一（如：台北、Tokyo）':'城市二（如：大阪、Seoul）'"
-              class="flex-1 bg-transparent text-xs py-1.5 focus:outline-none text-[#4a463f] placeholder-[#c4beaf]"/>
-          </div>
-          <button @click="fetchWeather(idx)" :disabled="wLoading[idx]"
-            class="px-3 py-1.5 text-white text-[11px] rounded-lg transition-colors disabled:opacity-50 shrink-0"
-            :class="idx===0?'bg-[#8c8577] hover:bg-[#736c60]':'bg-[#736c60] hover:bg-[#5e5850]'">
-            <span v-if="wLoading[idx]">…</span><span v-else>查詢</span>
-          </button>
-        </div>
-        <div v-if="wError[idx]" class="text-[10px] text-[#b8735c] px-1 mb-1">{{ wError[idx] }}</div>
-        <div v-if="wData[idx].length">
-          <div class="text-[10px] text-[#8c8577] flex items-center gap-1 mb-1.5"><i data-lucide="map-pin" class="w-3 h-3"></i><span>{{ wName[idx] }}</span></div>
-          <div class="grid grid-cols-3 gap-2 text-center">
-            <div v-for="(d,i) in wData[idx]" :key="i" class="space-y-0.5 bg-[#f4f1ea]/60 rounded-xl py-2 px-1">
-              <p class="text-[10px] text-[#8c8577] font-medium">{{ d.label }}</p>
-              <p class="text-lg leading-none">{{ d.icon }}</p>
-              <p class="text-xs font-medium text-[#4a463f]">{{ d.lo }}–{{ d.hi }}°</p>
-              <p class="text-[9px] text-[#a8a297]">降雨 {{ d.pop }}</p>
-            </div>
-          </div>
+    <!-- 📊 即時理財儀表 (修正綁定為本月真實累積) -->
+    <div class="bg-[#f4f1ea]/60 border border-[#ede9df] p-4 rounded-2xl space-y-3 flex-1 overflow-y-auto no-scrollbar" :class="['doodle-card']">
+      <div class="text-[10px] text-[#a8a297] tracking-widest uppercase border-b border-[#ede9df]/40 pb-1.5" :class="{'text-[#111111] border-[#111111] border-b-2 font-bold': isDoodleMode}">
+        即時理財儀表
+      </div>
+      <div class="space-y-1">
+        <p class="text-[11px] text-[#a8a297]" :class="{'text-[#111111]': isDoodleMode}">本月累積消耗</p>
+        <p class="text-xl font-bold text-[#4a463f]" :class="{'text-[#111111] font-black': isDoodleMode}">NT$ {{ formatNumber(currentMonthTotal) }}</p>
+      </div>
+
+      <div class="pt-2 border-t border-[#ede9df]/40 space-y-1.5">
+        <p class="text-[11px] text-[#a8a297]" :class="{'text-[#111111]': isDoodleMode}">專案同步</p>
+        <div class="flex items-center gap-1.5">
+          <span class="text-[10px] bg-[#eae5da] text-[#736c60] px-2 py-0.5 rounded-md font-mono border border-[#ede9df]" :class="['doodle-tag']">📁 {{ projectId }}</span>
         </div>
       </div>
     </div>
-    <!-- 今日 -->
-    <div class="text-center py-4">
-      <p class="text-xs text-[#a8a297] tracking-wider mb-1">TODAY'S EXPENSES</p>
-      <p class="text-4xl font-light tracking-tight text-[#3d3a34]">NT$ {{ formatNumber(todayTotal) }}</p>
+
+    <!-- 底部控制 -->
+    <div class="flex items-center gap-2 pt-4 border-t border-[#ede9df]/60" :class="{'border-[#111111] border-t-2': isDoodleMode}">
+      <!-- 風格切換 -->
+      <button @click="toggleStyleMode" title="切換風格"
+        class="w-9 h-9 rounded-full bg-[#eae5da] hover:bg-[#dfd9cc] flex items-center justify-center text-[#4a463f] transition-all"
+        :class="['doodle-circle-btn', isDoodleMode ? 'bg-[#fff9c4]' : '']">
+        <i data-lucide="wand-2" class="w-4 h-4"></i>
+      </button>
+      <span class="text-xs text-[#a8a297] flex-1">切換視覺</span>
+
+      <!-- 登出 -->
+      <button @click="doLogout()" title="登出"
+        class="w-9 h-9 rounded-full bg-[#eae5da] hover:bg-[#dfd9cc] flex items-center justify-center text-[#a8a297] hover:text-red-500 transition-all"
+        :class="['doodle-circle-btn']">
+        <i data-lucide="log-out" class="w-4 h-4"></i>
+      </button>
     </div>
-    <!-- 預算監控 -->
-    <div class="bg-[#f4f1ea]/60 rounded-2xl p-5 border border-[#ede9df]/40 space-y-4">
-      <div class="flex justify-between items-center border-b border-[#ede9df] pb-2">
-        <span class="text-xs font-semibold tracking-wider text-[#736c60] uppercase">本月類別預算監控 ({{ currentYearMonthLabel }})</span>
-        <span class="text-[10px] text-[#a8a297]">預算 / 累計 / 剩餘</span>
-      </div>
-      <div class="space-y-4 max-h-80 overflow-y-auto no-scrollbar">
-        <div v-for="cat in categoriesWithBudget" :key="cat" class="space-y-1.5 pb-2 border-b border-[#ede9df]/30 last:border-0 last:pb-0">
-          <div class="flex justify-between text-xs font-medium">
-            <span>{{ cat }}</span>
-            <span class="text-[#8c8577]">總預算: NT$ {{ formatNumber(getMonthlyCategoryBudget(cat, currentYear, currentMonth)) }}</span>
-          </div>
-          <div class="w-full h-2 bg-[#eae5da] rounded-full overflow-hidden">
-            <div class="h-full rounded-full transition-all duration-500" 
-              :class="getBudgetPercent(cat)>100?'bg-[#b8735c]':'bg-[#8c8577]'" 
-              :style="{width:Math.min(getBudgetPercent(cat),100)+'%'}">
-            </div>
-          </div>
-          <div class="flex justify-between text-[11px]">
-            <span class="text-[#a8a297]">累計: NT$ {{ formatNumber(getCategorySpentInPeriod(cat,'month')) }}</span>
-            <span v-if="getMonthlyCategoryBudget(cat, currentYear, currentMonth)-getCategorySpentInPeriod(cat,'month')>=0" class="text-[#736c60] font-medium">
-              剩餘: NT$ {{ formatNumber(getMonthlyCategoryBudget(cat, currentYear, currentMonth)-getCategorySpentInPeriod(cat,'month')) }}
-            </span>
-            <span v-else class="text-[#b8735c] font-medium italic animate-pulse">
-              超支: NT$ {{ formatNumber(Math.abs(getMonthlyCategoryBudget(cat, currentYear, currentMonth)-getCategorySpentInPeriod(cat,'month'))) }}
-            </span>
-          </div>
-        </div>
-        <div v-if="categoriesWithBudget.length===0" class="text-center py-4 text-xs text-[#a8a297] italic">暫無類別預算，請至「設定」規劃。</div>
-      </div>
-      <div v-if="categoriesWithBudget.length>0" class="border-t border-dashed border-[#ede9df] pt-3 space-y-1 bg-white/20 p-3 rounded-xl">
-        <div class="flex justify-between text-xs font-semibold text-[#4a463f]">
-          <span>監控類別總計</span>
-          <span class="text-[#8c8577]">總預算: NT$ {{ formatNumber(totalBudgetSum) }}</span>
-        </div>
-        <div class="flex justify-between text-[11px] text-[#736c60]">
-          <span>總累計: NT$ {{ formatNumber(totalSpentSum) }}</span>
-          <span v-if="totalBudgetSum-totalSpentSum>=0" class="font-medium">總剩餘: NT$ {{ formatNumber(totalBudgetSum-totalSpentSum) }}</span>
-          <span v-else class="text-[#b8735c] font-medium animate-pulse">總超支: NT$ {{ formatNumber(Math.abs(totalBudgetSum-totalSpentSum)) }}</span>
-        </div>
-      </div>
+  </aside>
+
+  <!-- 📱 手機版專屬：頂部固定導覽列 -->
+  <header class="md:hidden px-6 pt-6 pb-4 flex justify-between items-center border-b border-[#ede9df]/60 shrink-0" :class="{'border-[#111111] border-b-2': isDoodleMode}">
+    <div>
+      <h1 class="text-xs tracking-widest text-[#a8a297] font-light uppercase" :class="{'text-[#111111] font-bold': isDoodleMode}">SabiFlow</h1>
+      <p class="text-lg font-medium text-[#4a463f]" :class="{'text-[#111111] font-black': isDoodleMode}">{{ currentTabTitle }}</p>
     </div>
-    <!-- 最近 (Recent Activity) - 支援收起與展開 -->
-    <div class="space-y-3 bg-[#f4f1ea]/40 border border-[#ede9df]/30 rounded-2xl p-4">
-      <div @click="isRecentActivityExpanded = !isRecentActivityExpanded" class="flex justify-between items-center cursor-pointer select-none">
-        <h3 class="text-xs font-semibold tracking-wider text-[#a8a297] uppercase">Recent Activity</h3>
-        <i :data-lucide="isRecentActivityExpanded ? 'chevron-up' : 'chevron-down'" class="w-4 h-4 text-[#a8a297]"></i>
-      </div>
+    <div class="flex items-center gap-1.5">
+      <span class="text-[10px] bg-[#eae5da] text-[#736c60] px-2 py-1 rounded-md font-mono border border-[#ede9df]" :class="['doodle-tag']">📁 {{ projectId }}</span>
       
-      <div v-show="isRecentActivityExpanded" class="space-y-2 transition-all duration-300">
-        <div v-for="item in expenses.slice(0,4)" :key="item.id" class="flex justify-between items-center p-3 bg-white/50 rounded-xl border border-[#ede9df]/20">
-          <div class="flex items-center space-x-3">
-            <span class="text-xs px-2 py-0.5 rounded bg-[#eae5da] text-[#736c60]">{{ item.category }}</span>
-            <span class="text-sm text-[#4a463f] truncate max-w-[150px]">{{ item.title }}</span>
-            <i v-if="item.photo" data-lucide="image" class="w-3.5 h-3.5 text-[#8c8577]"></i>
-          </div>
-          <span class="text-sm font-medium text-[#4a463f] whitespace-nowrap">-NT$ {{ formatNumber(item.amount) }}</span>
-        </div>
-        <div v-if="expenses.length===0" class="text-center py-4 text-xs text-[#a8a297] italic">無最新動態</div>
-      </div>
-    </div>
-  </div>
+      <!-- 風格切換按鈕 -->
+      <button @click="toggleStyleMode" title="切換風格"
+        class="w-9 h-9 rounded-full bg-[#eae5da] hover:bg-[#dfd9cc] flex items-center justify-center text-[#4a463f] transition-colors"
+        :class="['doodle-circle-btn', isDoodleMode ? 'bg-[#fff9c4]' : '']">
+        <i data-lucide="wand-2" class="w-4 h-4"></i>
+      </button>
 
-  <!-- RECORDS -->
-  <div v-if="currentTab==='records'" class="space-y-4">
-    <!-- 切換與篩選控制面板 -->
-    <div class="bg-white/60 p-3 rounded-2xl border border-[#ede9df] space-y-3 shadow-sm">
-      <div class="flex bg-[#eae5da]/50 p-1 rounded-xl text-xs">
-        <button @click="recordSubTab='date'" :class="{'bg-[#faf8f5] shadow-sm font-medium':recordSubTab==='date'}" class="flex-1 py-1.5 rounded-lg text-center">按日期</button>
-        <button @click="recordSubTab='category'" :class="{'bg-[#faf8f5] shadow-sm font-medium':recordSubTab==='category'}" class="flex-1 py-1.5 rounded-lg text-center">按分類</button>
-      </div>
-
-      <!-- 高級篩選區 -->
-      <div class="grid grid-cols-2 gap-2 text-xs">
-        <div>
-          <label class="text-[9px] text-[#a8a297] block mb-1">月份篩選</label>
-          <select v-model="recordsFilterMonth" class="w-full bg-[#f4f1ea] border border-[#ede9df] rounded-lg p-1.5 text-xs text-[#4a463f] focus:outline-none">
-            <option value="all">顯示全部月份</option>
-            <option v-for="ym in availableYearMonths" :key="ym" :value="ym">{{ formatYearMonthLabel(ym) }}</option>
-          </select>
-        </div>
-        <div>
-          <label class="text-[9px] text-[#a8a297] block mb-1">類別篩選</label>
-          <select v-model="recordsFilterCategory" class="w-full bg-[#f4f1ea] border border-[#ede9df] rounded-lg p-1.5 text-xs text-[#4a463f] focus:outline-none">
-            <option value="all">顯示所有分類</option>
-            <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
-          </select>
-        </div>
-      </div>
-
-      <!-- 快速展開與折疊按鈕 -->
-      <div class="flex justify-between items-center text-[10px] border-t border-[#ede9df]/50 pt-2 px-1">
-        <span class="text-[#a8a297]">已篩選出 {{ filteredRecordsCount }} 筆</span>
-        <div class="flex gap-2">
-          <button @click="toggleAllCollapse(true)" class="text-[#736c60] hover:underline">全部收起</button>
-          <span class="text-[#ede9df]">|</span>
-          <button @click="toggleAllCollapse(false)" class="text-[#736c60] hover:underline">全部展開</button>
-        </div>
-      </div>
-    </div>
-    
-    <!-- 按日期排列 -->
-    <div v-if="recordSubTab==='date'" class="space-y-4 mt-2">
-      <div v-for="(group,date) in groupedByDateFiltered" :key="date" class="bg-white/30 rounded-2xl border border-[#ede9df]/40 p-2 space-y-1">
-        <!-- 日期群組標題（支援點選折疊） -->
-        <div @click="toggleDateGroupCollapse(date)" class="flex justify-between items-center pb-1.5 px-1 border-b border-[#ede9df]/40 cursor-pointer select-none">
-          <div class="flex items-center gap-1.5">
-            <i data-lucide="calendar" class="w-3.5 h-3.5 text-[#8c8577]"></i>
-            <span class="text-xs font-semibold text-[#736c60]">{{ date }}</span>
-            <span class="text-[9px] bg-[#eae5da] text-[#736c60] px-1.5 py-0.2 rounded-full font-medium">
-              {{ group.items.length }} 筆
-            </span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="text-xs text-[#a8a297]">小計: NT$ {{ formatNumber(group.total) }}</span>
-            <i :data-lucide="collapsedDateGroups[date] ? 'chevron-down' : 'chevron-up'" class="w-4 h-4 text-[#a8a297]"></i>
-          </div>
-        </div>
-
-        <!-- 日期明細清單 -->
-        <div v-show="!collapsedDateGroups[date]" class="space-y-2 pt-1 transition-all">
-          <div v-for="item in group.items" :key="item.id" class="flex flex-col bg-[#faf8f5] hover:bg-white rounded-xl border border-[#ede9df]/30 transition-all overflow-hidden">
-            <div class="flex justify-between items-center p-3">
-              <div class="flex items-center space-x-3 cursor-pointer flex-1" @click="toggleExpensePhoto(item.id)">
-                <span class="text-[10px] px-2 py-0.5 rounded bg-[#eae5da]/70 text-[#736c60] shrink-0">{{ item.payMethod }}</span>
-                <div class="min-w-0">
-                  <div class="flex items-center gap-1.5">
-                    <p class="text-sm text-[#4a463f] font-medium truncate">{{ item.title }}</p>
-                    <span v-if="item.photo" class="text-[9px] text-[#8c8577] bg-[#f4f1ea] px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-[#ede9df] hover:bg-[#eae5da]">
-                      <i data-lucide="image" class="w-3 h-3"></i> 收據
-                    </span>
-                  </div>
-                  <p class="text-[10px] text-[#a8a297]">{{ item.category }}</p>
-                </div>
-              </div>
-              <div class="flex items-center space-x-2">
-                <span class="text-sm font-semibold text-[#4a463f]">NT$ {{ formatNumber(item.amount) }}</span>
-                <button @click="openEditModal(item)" class="text-[#a8a297] hover:text-[#736c60] opacity-80"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
-                <button @click="deleteExpense(item.id)" class="text-[#a8a297] hover:text-red-700 opacity-80"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-              </div>
-            </div>
-            
-            <!-- 展開相片預覽 -->
-            <div v-if="expandedExpensePhotos[item.id] && item.photo" class="px-3 pb-3 border-t border-[#ede9df]/40 pt-2.5 bg-[#f4f1ea]/20">
-              <p class="text-[10px] text-[#a8a297] uppercase tracking-wider mb-1.5 font-medium flex items-center gap-1">
-                <i data-lucide="camera" class="w-3.5 h-3.5"></i> 關聯收據相片
-              </p>
-              <div class="relative max-h-60 rounded-xl overflow-hidden border border-[#ede9df] bg-black/5 flex items-center justify-center">
-                <img :src="item.photo" class="max-w-full max-h-56 object-contain block" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <div v-if="Object.keys(groupedByDateFiltered).length===0" class="text-center py-12 text-xs text-[#a8a297] italic">無符合篩選條件的記帳紀錄</div>
-    </div>
-    
-    <!-- 按分類排列 -->
-    <div v-if="recordSubTab==='category'" class="space-y-3 mt-2">
-      <div v-for="(group,cat) in groupedByCategoryFiltered" :key="cat" class="border border-[#ede9df] rounded-xl bg-white/40 overflow-hidden">
-        <!-- 分類標題 (點選折疊) -->
-        <div @click="toggleCategoryCollapse(cat)" class="flex justify-between items-center p-4 cursor-pointer hover:bg-[#f4f1ea]/30 select-none bg-white/60">
-          <div class="flex items-center gap-2">
-            <span class="text-sm font-medium text-[#4a463f]">{{ cat }}</span>
-            <span class="text-[9px] bg-[#eae5da] text-[#736c60] px-2 py-0.2 rounded-full font-medium">
-              {{ group.items.length }} 筆
-            </span>
-          </div>
-          <div class="flex items-center gap-2">
-            <span class="text-sm font-semibold text-[#8c8577]">NT$ {{ formatNumber(group.total) }}</span>
-            <i :data-lucide="expandedCategories[cat] ? 'chevron-up' : 'chevron-down'" class="w-4 h-4 text-[#a8a297]"></i>
-          </div>
-        </div>
-        
-        <!-- 分類明細清單 -->
-        <div v-show="expandedCategories[cat]" class="bg-white/85 border-t border-[#ede9df]/60 divide-y divide-[#ede9df]/30 transition-all">
-          <div v-for="item in group.items" :key="item.id" class="flex flex-col text-xs pl-6">
-            <div class="p-3 flex justify-between items-center">
-              <div class="flex-1 min-w-0 cursor-pointer" @click="toggleExpensePhoto(item.id)">
-                <div class="flex items-center gap-1.5">
-                  <p class="font-medium text-[#4a463f]">{{ item.title }}</p>
-                  <span v-if="item.photo" class="text-[9px] text-[#8c8577] bg-[#f4f1ea] px-1 py-0.5 rounded border border-[#ede9df]">
-                    📷 有圖
-                  </span>
-                </div>
-                <p class="text-[10px] text-[#a8a297]">{{ item.date }} · {{ item.payMethod }}</p>
-              </div>
-              <div class="flex items-center space-x-2 shrink-0 pr-3">
-                <span class="font-semibold text-[#4a463f]">NT$ {{ formatNumber(item.amount) }}</span>
-                <button @click="openEditModal(item)" class="text-[#a8a297] hover:text-[#736c60]"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
-                <button @click="deleteExpense(item.id)" class="text-[#a8a297] hover:text-red-700"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-              </div>
-            </div>
-            
-            <!-- 展開相片預覽 -->
-            <div v-if="expandedExpensePhotos[item.id] && item.photo" class="px-3 pb-3 border-t border-[#ede9df]/40 pt-2 bg-[#f4f1ea]/10 mr-4 rounded-b-xl">
-              <div class="relative max-h-48 rounded-lg overflow-hidden border border-[#ede9df] bg-black/5 flex items-center justify-center">
-                <img :src="item.photo" class="max-w-full max-h-44 object-contain block" />
-              </div>
-            </div>
-          </div>
-          <div v-if="group.items.length===0" class="p-4 text-center text-xs text-[#a8a297] italic">無此分類支出數據</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SCANNER -->
-  <div v-if="currentTab==='scanner'" class="space-y-4">
-    <!-- 相機即時鏡頭預覽 -->
-    <div v-if="isCameraActive" class="relative bg-black rounded-2xl border border-[#ede9df] overflow-hidden aspect-[4/3] flex flex-col justify-between">
-      <video id="camera-feed" autoplay playsinline class="w-full h-full object-cover"></video>
-      <canvas id="photo-canvas" class="hidden"></canvas>
-      <div class="absolute bottom-4 left-0 right-0 flex justify-around items-center px-6 z-10">
-        <button @click="stopCamera" class="w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center backdrop-blur-md">
-          <i data-lucide="x" class="w-5 h-5"></i>
-        </button>
-        <button @click="capturePhoto" class="w-16 h-16 rounded-full border-4 border-white bg-red-500/80 hover:bg-red-600 active:scale-95 transition-all flex items-center justify-center">
-          <span class="w-8 h-8 rounded-full bg-white block"></span>
-        </button>
-        <button @click="switchCamera" class="w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center backdrop-blur-md">
-          <i data-lucide="refresh-cw" class="w-5 h-5"></i>
-        </button>
-      </div>
-    </div>
-
-    <!-- 智慧解析載入中 UI -->
-    <div v-else-if="isScanning" class="bg-white/60 rounded-2xl border border-[#ede9df] p-8 text-center space-y-4 animate-pulse">
-      <div class="flex justify-center">
-        <div class="w-12 h-12 rounded-full border-4 border-[#8c8577] border-t-transparent animate-spin"></div>
-      </div>
-      <p class="text-sm font-medium text-[#736c60]">{{ scanStatusText }}</p>
-      <p class="text-xs text-[#a8a297]">正透過高精度模型辨識您的消費收據...</p>
-    </div>
-
-    <!-- 智慧感知結果確認 -->
-    <div v-else-if="scannedResult" class="bg-white/95 rounded-2xl border border-[#ede9df] p-5 space-y-4 shadow-sm">
-      <div class="flex justify-between items-center border-b border-[#ede9df] pb-2">
-        <h4 class="text-xs font-semibold uppercase tracking-wider text-[#736c60] flex items-center gap-1.5">
-          <i data-lucide="sparkles" class="w-4 h-4 text-[#8c8577]"></i> 智慧感知解析結果
-        </h4>
-        <button @click="scannedResult = null" class="text-xs text-[#a8a297] hover:text-red-500">取消</button>
-      </div>
+      <button v-if="['home','records','analytics'].includes(currentTab)" @click="openAddModal()"
+        class="w-9 h-9 rounded-full bg-[#eae5da] hover:bg-[#dfd9cc] flex items-center justify-center text-[#4a463f] transition-colors"
+        :class="['doodle-circle-btn']">
+        <i data-lucide="plus" class="w-5 h-5"></i>
+      </button>
       
-      <!-- 顯示剛拍下的收據照片以供核對 -->
-      <div v-if="scanPhoto" class="relative max-h-40 rounded-xl overflow-hidden border border-[#ede9df] bg-black/5 flex items-center justify-center">
-        <img :src="scanPhoto" class="max-w-full max-h-36 object-contain" />
-        <div class="absolute top-1 right-1 bg-black/60 text-white text-[9px] px-1.5 py-0.5 rounded-md font-medium">照片將會綁定此支出</div>
-      </div>
-      
-      <div class="space-y-3">
-        <div>
-          <label class="text-[10px] text-[#a8a297] block mb-0.5">感知主旨 / 店名</label>
-          <input type="text" v-model="scannedResult.title" class="w-full bg-[#f4f1ea]/40 border border-[#ede9df] rounded-lg p-2 text-sm font-medium focus:outline-none focus:border-[#8c8577]" />
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="text-[10px] text-[#a8a297] block mb-0.5">金額</label>
-            <input type="number" v-model.number="scannedResult.amount" class="w-full bg-[#f4f1ea]/40 border border-[#ede9df] rounded-lg p-2 text-sm font-bold text-[#8c8577] focus:outline-none" />
-          </div>
-          <div>
-            <label class="text-[10px] text-[#a8a297] block mb-0.5">日期</label>
-            <input type="date" v-model="scannedResult.date" class="w-full bg-[#f4f1ea]/40 border border-[#ede9df] rounded-lg p-2 text-xs focus:outline-none" />
-          </div>
-        </div>
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="text-[10px] text-[#a8a297] block mb-0.5">消費類別</label>
-            <select v-model="scannedResult.category" class="w-full bg-[#f4f1ea]/40 border border-[#ede9df] rounded-lg p-2 text-xs focus:outline-none">
-              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="text-[10px] text-[#a8a297] block mb-0.5">支付方式</label>
-            <select v-model="scannedResult.payMethod" class="w-full bg-[#f4f1ea]/40 border border-[#ede9df] rounded-lg p-2 text-xs focus:outline-none">
-              <option v-for="method in payMethods" :key="method" :value="method">{{ method }}</option>
-            </select>
-          </div>
-        </div>
+      <button @click="doLogout()" title="登出"
+        class="w-9 h-9 rounded-full bg-[#eae5da] hover:bg-[#dfd9cc] flex items-center justify-center text-[#a8a297] hover:text-red-500 transition-colors"
+        :class="['doodle-circle-btn']">
+        <i data-lucide="log-out" class="w-4 h-4"></i>
+      </button>
+    </div>
+  </header>
 
-        <!-- 條目明細 -->
-        <div v-if="scannedResult.items && scannedResult.items.length" class="bg-[#f4f1ea]/40 rounded-xl p-3 space-y-2 border border-[#ede9df]/50">
-          <p class="text-[10px] text-[#a8a297] uppercase tracking-wider font-semibold">明細項對照</p>
-          <div class="max-h-32 overflow-y-auto space-y-1.5 pr-1 no-scrollbar">
-            <div v-for="(item, idx) in scannedResult.items" :key="idx" class="flex justify-between items-center text-xs">
-              <span class="text-[#4a463f] truncate max-w-[180px]">{{ item.name || item.originalName }}</span>
-              <span class="font-mono font-medium text-[#736c60]">NT$ {{ formatNumber(item.price) }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
+  <!-- 🏛️ 主視圖顯示區 -->
+  <main class="flex-1 overflow-y-auto px-6 py-6 no-scrollbar pb-24 md:pb-6">
 
-      <button @click="confirmScannerAdd" class="w-full py-3 bg-[#8c8577] text-white rounded-xl text-sm font-semibold hover:bg-[#736c60] transition-colors flex items-center justify-center gap-2">
-        <i data-lucide="check" class="w-4 h-4"></i> 確認導入時序明細 (含相片)
+    <!-- 💻 電腦版頂部麵包屑 -->
+    <div class="hidden md:flex justify-between items-center mb-6 border-b border-[#ede9df]/60 pb-3" :class="{'border-[#111111] border-b-2': isDoodleMode}">
+      <div>
+        <p class="text-xs text-[#a8a297]" :class="{'text-[#111111] font-bold': isDoodleMode}">工作空間 / {{ currentTabTitle }}</p>
+        <h2 class="text-xl font-bold text-[#4a463f] mt-0.5" :class="{'text-[#111111] font-black': isDoodleMode}">{{ currentTabTitle }}</h2>
+      </div>
+      <button @click="openAddModal()" class="px-5 py-2.5 bg-[#8c8577] text-white text-xs font-semibold rounded-xl hover:bg-[#736c60] transition-all flex items-center gap-2" :class="['doodle-btn']">
+        <i data-lucide="plus" class="w-4 h-4"></i> 快速記帳紀錄
       </button>
     </div>
 
-    <!-- 預設拍照與上傳控制區 -->
-    <div v-else class="space-y-4">
-      <!-- 拍照預覽區 -->
-      <div class="relative bg-[#f4f1ea]/60 rounded-2xl border border-[#ede9df] overflow-hidden" :class="scanPhoto ? 'p-0' : 'p-6'">
-        <div v-if="scanPhoto" class="relative">
-          <img :src="scanPhoto" class="w-full max-h-64 object-contain bg-[#2a2825] block mx-auto" />
-          <button @click="clearScanPhoto" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors z-10">
-            <i data-lucide="x" class="w-4 h-4"></i>
-          </button>
-        </div>
-        <div class="flex flex-col items-center space-y-3 text-center py-4" v-else>
-          <div class="w-16 h-16 rounded-full bg-[#eae5da] flex items-center justify-center text-[#736c60]">
-            <i data-lucide="camera" class="w-8 h-8"></i>
-          </div>
-          <div>
-            <p class="text-sm font-medium text-[#4a463f]">拍攝收據或上傳照片</p>
-            <p class="text-xs text-[#a8a297] mt-1">智慧感知將自動分析品項細節並保留相片</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- 操作按鈕 -->
-      <div class="grid grid-cols-2 gap-2">
-        <button @click="startCamera" class="flex items-center justify-center gap-2 py-2.5 bg-[#8c8577] text-white text-xs font-medium rounded-xl hover:bg-[#736c60] transition-colors">
-          <i data-lucide="camera" class="w-4 h-4"></i> 開啟相機
-        </button>
-        <button @click="triggerFileInput" class="flex items-center justify-center gap-2 py-2.5 bg-[#eae5da] text-[#4a463f] text-xs font-medium rounded-xl hover:bg-[#dfd9cc] transition-colors">
-          <i data-lucide="image" class="w-4 h-4"></i> 選擇照片
-        </button>
-        <input type="file" id="file-upload-input" accept="image/*" class="hidden" @change="handleFileUpload" />
-      </div>
-
-      <!-- 手動填入表單 -->
-      <div class="bg-white/60 rounded-2xl border border-[#ede9df]/50 p-4 space-y-3">
-        <p class="text-[11px] text-[#a8a297] tracking-wider uppercase border-b border-[#ede9df]/40 pb-1.5">對照收據填入明細</p>
-
-        <div v-if="scanPhoto" class="flex items-center gap-2 bg-[#eae5da]/50 border border-[#ede9df] rounded-xl p-2.5 text-xs text-[#736c60]">
-          <i data-lucide="check-circle" class="w-4 h-4 shrink-0"></i>
-          <span>已偵測到相片！此筆記帳將會成功儲存該張照片。</span>
-        </div>
-
-        <div>
-          <label class="text-[10px] text-[#a8a297] block mb-1">金額</label>
-          <input type="number" v-model.number="scanForm.amount" placeholder="0" inputmode="decimal"
-            class="w-full bg-transparent text-3xl font-light border-b border-[#ede9df] py-1 focus:outline-none text-[#3d3a34]" />
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="text-[10px] text-[#a8a297] block mb-1">品項名稱</label>
-            <input type="text" v-model="scanForm.title" placeholder="如：藥妝購買"
-              class="w-full bg-[#f4f1ea]/60 border border-[#ede9df] rounded-lg p-2 text-sm focus:outline-none" />
-          </div>
-          <div>
-            <label class="text-[10px] text-[#a8a297] block mb-1">日期</label>
-            <input type="date" v-model="scanForm.date"
-              class="w-full bg-[#f4f1ea]/60 border border-[#ede9df] rounded-lg p-2 text-sm focus:outline-none" />
-          </div>
-        </div>
-
-        <div class="grid grid-cols-2 gap-3">
-          <div>
-            <label class="text-[10px] text-[#a8a297] block mb-1">消費類別</label>
-            <select v-model="scanForm.category"
-              class="w-full bg-[#f4f1ea]/60 border border-[#ede9df] rounded-lg p-2 text-xs focus:outline-none">
-              <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
-            </select>
-          </div>
-          <div>
-            <label class="text-[10px] text-[#a8a297] block mb-1">支付方式</label>
-            <select v-model="scanForm.payMethod"
-              class="w-full bg-[#f4f1ea]/60 border border-[#ede9df] rounded-lg p-2 text-xs focus:outline-none">
-              <option v-for="method in payMethods" :key="method" :value="method">{{ method }}</option>
-            </select>
-          </div>
-        </div>
-
-        <button @click="submitScanExpense"
-          class="w-full py-3 bg-[#8c8577] text-white rounded-xl text-sm font-medium hover:bg-[#736c60] transition-colors">
-          儲存記帳紀錄 (含相片)
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <!-- ANALYTICS -->
-  <div v-if="currentTab==='analytics'" class="space-y-6">
-    <!-- 切換時段 (已移除「季度」選項) -->
-    <div class="flex bg-[#eae5da]/50 p-1 rounded-xl text-xs">
-      <button @click="analyticsPeriod='month'" :class="{'bg-[#faf8f5] shadow-sm font-medium':analyticsPeriod==='month'}" class="flex-1 py-2 rounded-lg text-center">月度分析</button>
-      <button @click="analyticsPeriod='year'" :class="{'bg-[#faf8f5] shadow-sm font-medium':analyticsPeriod==='year'}" class="flex-1 py-2 rounded-lg text-center">年度分析</button>
-    </div>
-
-    <!-- 月份 / 年份篩選選單 -->
-    <div class="bg-white/60 p-4 rounded-2xl border border-[#ede9df] shadow-sm space-y-3">
-      <div class="flex items-center justify-between text-xs">
-        <span class="font-medium text-[#736c60]">選擇分析區間：</span>
-        
-        <!-- 月度：選擇 年份與月份 -->
-        <div v-if="analyticsPeriod==='month'" class="flex items-center gap-1.5">
-          <select v-model="analyticsSelectedYear" class="bg-[#f4f1ea] border border-[#ede9df] rounded-lg p-1.5 text-xs text-[#4a463f] focus:outline-none">
-            <option v-for="y in availableYears" :key="y" :value="y">{{ y }}年</option>
-          </select>
-          <select v-model="analyticsSelectedMonth" class="bg-[#f4f1ea] border border-[#ede9df] rounded-lg p-1.5 text-xs text-[#4a463f] focus:outline-none">
-            <option v-for="m in 12" :key="m" :value="String(m).padStart(2,'0')">{{ m }}月</option>
-          </select>
-        </div>
-
-        <!-- 年度：選擇 年份 -->
-        <div v-if="analyticsPeriod==='year'" class="flex items-center gap-1.5">
-          <select v-model="analyticsSelectedYear" class="bg-[#f4f1ea] border border-[#ede9df] rounded-lg p-1.5 text-xs text-[#4a463f] focus:outline-none">
-            <option v-for="y in availableYears" :key="y" :value="y">{{ y }}年</option>
-          </select>
-        </div>
-      </div>
-    </div>
-
-    <!-- 實際消費比對預算大看板 -->
-    <div class="text-center py-4 bg-[#f4f1ea]/40 rounded-2xl border border-[#ede9df]/60 relative overflow-hidden">
-      <div class="absolute top-2 left-3 text-[9px] text-[#a8a297] tracking-wider uppercase font-medium">總體理財整合</div>
-      <p class="text-xs text-[#a8a297] uppercase tracking-wider mb-1.5 mt-2">
-        實際: <span class="text-[#4a463f] font-semibold">NT$ {{ formatNumber(filteredGrandTotal) }}</span>
-        /
-        預算: <span class="text-[#8c8577] font-semibold">NT$ {{ formatNumber(currentPeriodTotalBudget) }}</span>
-      </p>
+    <!-- HOME -->
+    <div v-if="currentTab==='home'" class="space-y-6">
       
-      <!-- 總體大進度條 -->
-      <div class="max-w-[80%] mx-auto h-2 bg-[#eae5da] rounded-full overflow-hidden mt-2 relative">
-        <div class="h-full rounded-full transition-all duration-500" 
-          :class="totalProgressPercent > 100 ? 'bg-[#b8735c]' : 'bg-[#8c8577]'" 
-          :style="{ width: Math.min(totalProgressPercent, 100) + '%' }">
-        </div>
-      </div>
-      <p class="text-[10px] text-[#a8a297] mt-1.5">
-        預算消耗進度: <span class="font-medium" :class="totalProgressPercent > 100 ? 'text-[#b8735c]' : 'text-[#736c60]'">{{ Math.round(totalProgressPercent) }}%</span>
-      </p>
-    </div>
-
-    <!-- 折線波動模擬 -->
-    <div>
-      <h3 class="text-xs tracking-wider text-[#a8a297] mb-2 uppercase">區間花費波動</h3>
-      <div class="bg-white p-4 rounded-2xl border border-[#ede9df] h-28 flex items-end justify-between px-6 pt-4">
-        <div v-for="(h,i) in trendHeights" :key="i" class="w-3 rounded-t" :class="i%3===2?'bg-[#8c8577]':'bg-[#eae5da]'" :style="{height:h}"></div>
-      </div>
-    </div>
-
-    <!-- 預算與實際支出雙軌比對 -->
-    <div class="space-y-4">
-      <div class="bg-white p-4 rounded-2xl border border-[#ede9df] space-y-3">
-        <div class="flex justify-between items-center border-b border-[#ede9df]/60 pb-1.5">
-          <h4 class="text-xs text-[#a8a297] uppercase font-semibold">實際類別消費 / 預算 ({{ periodLabel }})</h4>
-          <span class="text-[9px] text-[#a8a297]">實際 / 預算</span>
-        </div>
-        <div class="space-y-4">
-          <div v-for="cat in categories" :key="cat" class="space-y-1.5">
-            <div class="flex justify-between text-xs">
-              <span class="font-medium text-[#4a463f]">{{ cat }}</span>
-              <div class="flex items-center gap-1.5">
-                <span class="text-[#4a463f] font-semibold">實際 {{ formatNumber(getCategorySpentInPeriod(cat, analyticsPeriod)) }}</span>
-                <span class="text-[#a8a297]">/</span>
-                <span class="text-[#8c8577] font-semibold">
-                  預算 {{ getBudgetForCategoryInAnalytics(cat) > 0 ? formatNumber(getBudgetForCategoryInAnalytics(cat)) : '未設定' }}
-                </span>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- 三日氣象感知 (API 已修正優化) -->
+        <div class="bg-white/50 rounded-2xl p-5 border border-[#ede9df]/60 space-y-4" :class="['doodle-card', 'doodle-tilt-left']">
+          <div class="text-[10px] text-[#a8a297] tracking-widest uppercase border-b border-[#ede9df]/40 pb-1.5" :class="{'text-[#111111] border-[#111111] border-b-2 font-bold': isDoodleMode}">三日氣象感知</div>
+          <div v-for="(slot,idx) in [0,1]" :key="idx" :class="[idx===1?'pt-3 border-t border-[#ede9df]/60':'', idx===1 && isDoodleMode?'border-[#111111] border-t-2':'']">
+            <div class="flex gap-2 items-center mb-2">
+              <div class="flex items-center flex-1 bg-[#f4f1ea]/80 border border-[#ede9df] rounded-lg px-2 gap-1.5" :class="['doodle-input']">
+                <span class="text-[10px] font-semibold shrink-0" :class="idx===0?'text-[#8c8577]':'text-[#a8a297]'">{{ idx===0?'①':'②' }}</span>
+                <input type="text" v-model="wCity[idx]" @keyup.enter="fetchWeather(idx)"
+                  :placeholder="idx===0?'城市一（如：台北、Tokyo）':'城市二（如：大阪、Seoul）'"
+                  class="flex-1 bg-transparent text-xs py-1.5 focus:outline-none text-[#4a463f] placeholder-[#c4beaf] doodle-input-inner"/>
               </div>
+              <button @click="fetchWeather(idx)" :disabled="wLoading[idx]"
+                class="px-4 py-1.5 text-white text-[11px] rounded-lg transition-colors disabled:opacity-50 shrink-0"
+                :class="['doodle-btn', idx===0?'bg-[#8c8577] hover:bg-[#736c60]':'bg-[#736c60] hover:bg-[#5e5850]']">
+                <span v-if="wLoading[idx]">…</span><span v-else>查詢</span>
+              </button>
+            </div>
+            <div v-if="wError[idx]" class="text-[10px] text-[#b8735c] px-1 mb-1 font-semibold">{{ wError[idx] }}</div>
+            <div v-if="wData[idx].length">
+              <div class="text-[10px] text-[#8c8577] flex items-center gap-1 mb-1.5" :class="{'text-[#111111] font-bold': isDoodleMode}"><i data-lucide="map-pin" class="w-3 h-3"></i><span>{{ wName[idx] }}</span></div>
+              <div class="grid grid-cols-3 gap-2 text-center">
+                <div v-for="(d,i) in wData[idx]" :key="i" class="space-y-0.5 bg-[#f4f1ea]/60 rounded-xl py-2 px-1" :class="['doodle-card']">
+                  <p class="text-[10px] text-[#8c8577] font-medium" :class="{'text-[#111111] font-bold': isDoodleMode}">{{ d.label }}</p>
+                  <p class="text-lg leading-none">{{ d.icon }}</p>
+                  <p class="text-xs font-medium text-[#4a463f]" :class="{'text-[#111111] font-black': isDoodleMode}">{{ d.lo }}–{{ d.hi }}°</p>
+                  <p class="text-[9px] text-[#a8a297]" :class="{'text-[#111111]': isDoodleMode}">降雨 {{ d.pop }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 今日花費看板 & 本月預算監控 -->
+        <div class="space-y-5">
+          <div class="text-center py-6 bg-white/40 rounded-2xl border border-[#ede9df]/60" :class="['doodle-card']">
+            <p class="text-xs text-[#a8a297] tracking-wider mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">TODAY'S EXPENSES</p>
+            <p class="text-4xl font-light tracking-tight text-[#3d3a34]" :class="{'text-[#111111] font-black': isDoodleMode}">NT$ {{ formatNumber(todayTotal) }}</p>
+          </div>
+
+          <!-- 預算監控 -->
+          <div class="bg-[#f4f1ea]/60 rounded-2xl p-5 border border-[#ede9df]/40 space-y-4" :class="['doodle-card', 'doodle-tilt-right']">
+            <div class="flex justify-between items-center border-b border-[#ede9df] pb-2" :class="{'border-[#111111] border-b-2': isDoodleMode}">
+              <span class="text-xs font-semibold tracking-wider text-[#736c60] uppercase" :class="{'text-[#111111] font-black': isDoodleMode}">本月類別預算監控 ({{ currentYearMonthLabel }})</span>
+              <span class="text-[10px] text-[#a8a297]" :class="{'text-[#111111]': isDoodleMode}">預算 / 累計 / 剩餘</span>
+            </div>
+            <div class="space-y-4 max-h-80 overflow-y-auto no-scrollbar">
+              <div v-for="cat in categoriesWithBudget" :key="cat" class="space-y-1.5 pb-2 border-b border-[#ede9df]/30 last:border-0 last:pb-0" :class="{'border-[#111111]/30 border-b': isDoodleMode}">
+                <div class="flex justify-between text-xs font-medium">
+                  <span :class="{'font-bold text-[#111111]': isDoodleMode}">{{ cat }}</span>
+                  <span class="text-[#8c8577]" :class="{'text-[#111111] font-bold': isDoodleMode}">總預算: NT$ {{ formatNumber(getMonthlyCategoryBudget(cat, currentYear, currentMonth)) }}</span>
+                </div>
+                <div class="w-full h-2.5 bg-[#eae5da] rounded-full overflow-hidden" :class="['doodle-progress-bg']">
+                  <div class="h-full rounded-full transition-all duration-500" 
+                    :class="[getBudgetPercent(cat)>100?'bg-[#b8735c]':'bg-[#8c8577]', isDoodleMode ? (getBudgetPercent(cat)>100?'doodle-progress-bar':'doodle-progress-bar-green') : '']" 
+                    :style="{width:Math.min(getBudgetPercent(cat),100)+'%'}">
+                  </div>
+                </div>
+                <div class="flex justify-between text-[11px]">
+                  <span class="text-[#a8a297]" :class="{'text-[#555555]': isDoodleMode}">累計: NT$ {{ formatNumber(getCategorySpentInPeriod(cat,'month')) }}</span>
+                  <span v-if="getMonthlyCategoryBudget(cat, currentYear, currentMonth)-getCategorySpentInPeriod(cat,'month')>=0" class="text-[#736c60] font-medium" :class="{'text-[#2e7d32] font-black': isDoodleMode}">
+                    剩餘: NT$ {{ formatNumber(getMonthlyCategoryBudget(cat, currentYear, currentMonth)-getCategorySpentInPeriod(cat,'month')) }}
+                  </span>
+                  <span v-else class="text-[#b8735c] font-medium italic animate-pulse" :class="{'text-[#d32f2f] font-black not-italic': isDoodleMode}">
+                    超支: NT$ {{ formatNumber(Math.abs(getMonthlyCategoryBudget(cat, currentYear, currentMonth)-getCategorySpentInPeriod(cat,'month'))) }}
+                  </span>
+                </div>
+              </div>
+              <div v-if="categoriesWithBudget.length===0" class="text-center py-4 text-xs text-[#a8a297] italic" :class="{'text-[#111111] font-bold': isDoodleMode}">暫無類別預算，請至「設定」規劃。</div>
+            </div>
+            <div v-if="categoriesWithBudget.length>0" class="border-t border-dashed border-[#ede9df] pt-3 space-y-1 bg-white/20 p-3 rounded-xl" :class="{'border-[#111111] border-t-2 bg-yellow-50/20': isDoodleMode}">
+              <div class="flex justify-between text-xs font-semibold text-[#4a463f]" :class="{'text-[#111111] font-black': isDoodleMode}">
+                <span>監控類別總計</span>
+                <span class="text-[#8c8577]" :class="{'text-[#111111] font-bold': isDoodleMode}">總預算: NT$ {{ formatNumber(totalBudgetSum) }}</span>
+              </div>
+              <div class="flex justify-between text-[11px] text-[#736c60]" :class="{'text-[#111111] font-semibold': isDoodleMode}">
+                <span>總累計: NT$ {{ formatNumber(totalSpentSum) }}</span>
+                <span v-if="totalBudgetSum-totalSpentSum>=0" class="font-medium" :class="{'text-[#2e7d32] font-black': isDoodleMode}">總剩餘: NT$ {{ formatNumber(totalBudgetSum-totalSpentSum) }}</span>
+                <span v-else class="text-[#b8735c] font-medium animate-pulse" :class="{'text-[#d32f2f] font-black': isDoodleMode}">總超支: NT$ {{ formatNumber(Math.abs(totalBudgetSum-totalSpentSum)) }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 最近活動 (Recent Activity) -->
+      <div class="space-y-3 bg-[#f4f1ea]/40 border border-[#ede9df]/30 rounded-2xl p-5" :class="['doodle-card']">
+        <div @click="isRecentActivityExpanded = !isRecentActivityExpanded" class="flex justify-between items-center cursor-pointer select-none">
+          <h3 class="text-xs font-semibold tracking-wider text-[#a8a297] uppercase" :class="{'text-[#111111] font-black': isDoodleMode}">Recent Activity</h3>
+          <i :data-lucide="isRecentActivityExpanded ? 'chevron-up' : 'chevron-down'" class="w-4 h-4 text-[#a8a297]" :class="{'text-[#111111]': isDoodleMode}"></i>
+        </div>
+        
+        <div v-show="isRecentActivityExpanded" class="grid grid-cols-1 md:grid-cols-2 gap-3 transition-all duration-300">
+          <div v-for="item in expenses.slice(0,6)" :key="item.id" class="flex justify-between items-center p-3.5 bg-white/50 rounded-xl border border-[#ede9df]/20" :class="['doodle-card']">
+            <div class="flex items-center space-x-3 min-w-0">
+              <span class="text-xs px-2 py-0.5 rounded bg-[#eae5da] text-[#736c60]" :class="['doodle-tag']">{{ item.category }}</span>
+              <span class="text-sm text-[#4a463f] truncate max-w-[150px] md:max-w-[200px]" :class="{'text-[#111111] font-bold': isDoodleMode}">{{ item.title }}</span>
+              <i v-if="item.photo" data-lucide="image" class="w-3.5 h-3.5 text-[#8c8577]" :class="{'text-[#111111]': isDoodleMode}"></i>
+            </div>
+            <span class="text-sm font-semibold text-[#4a463f] whitespace-nowrap" :class="{'text-[#111111] font-black': isDoodleMode}">-NT$ {{ formatNumber(item.amount) }}</span>
+          </div>
+          <div v-if="expenses.length===0" class="text-center py-6 text-xs text-[#a8a297] italic" :class="{'text-[#111111]': isDoodleMode}">無最新動態</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- RECORDS -->
+    <div v-if="currentTab==='records'" class="space-y-6">
+      <div class="bg-white/60 p-4 rounded-2xl border border-[#ede9df] space-y-4 shadow-sm" :class="['doodle-card']">
+        <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
+          <div class="flex bg-[#eae5da]/50 p-1 rounded-xl text-xs w-full md:w-64" :class="{'bg-transparent border-2 border-[#111111] p-0.5 rounded-lg': isDoodleMode}">
+            <button @click="recordSubTab='date'" :class="[recordSubTab==='date' ? (isDoodleMode ? 'bg-[#fff176] font-bold border border-[#111111]' : 'bg-[#faf8f5] shadow-sm font-medium') : '']" class="flex-1 py-1.5 rounded-lg text-center">按日期</button>
+            <button @click="recordSubTab='category'" :class="[recordSubTab==='category' ? (isDoodleMode ? 'bg-[#fff176] font-bold border border-[#111111]' : 'bg-[#faf8f5] shadow-sm font-medium') : '']" class="flex-1 py-1.5 rounded-lg text-center">按分類</button>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 text-xs w-full md:w-auto md:flex items-center">
+            <div class="md:w-44">
+              <label class="text-[9px] text-[#a8a297] block mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">月份篩選</label>
+              <select v-model="recordsFilterMonth" class="w-full bg-[#f4f1ea] border border-[#ede9df] rounded-lg p-2 text-xs text-[#4a463f] focus:outline-none" :class="['doodle-input']">
+                <option value="all">顯示全部月份</option>
+                <option v-for="ym in availableYearMonths" :key="ym" :value="ym">{{ formatYearMonthLabel(ym) }}</option>
+              </select>
+            </div>
+            <div class="md:w-44">
+              <label class="text-[9px] text-[#a8a297] block mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">類別篩選</label>
+              <select v-model="recordsFilterCategory" class="w-full bg-[#f4f1ea] border border-[#ede9df] rounded-lg p-2 text-xs text-[#4a463f] focus:outline-none" :class="['doodle-input']">
+                <option value="all">顯示所有分類</option>
+                <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-between items-center text-[10px] border-t border-[#ede9df]/50 pt-3 px-1" :class="{'border-[#111111]': isDoodleMode}">
+          <span class="text-[#a8a297]" :class="{'text-[#111111] font-bold': isDoodleMode}">已篩選出 {{ filteredRecordsCount }} 筆</span>
+          <div class="flex gap-2">
+            <button @click="toggleAllCollapse(true)" class="text-[#736c60] hover:underline" :class="{'text-[#111111] font-bold': isDoodleMode}">全部收起</button>
+            <span class="text-[#ede9df]" :class="{'text-[#111111]': isDoodleMode}">|</span>
+            <button @click="toggleAllCollapse(false)" class="text-[#736c60] hover:underline" :class="{'text-[#111111] font-bold': isDoodleMode}">全部展開</button>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 按日期排列 -->
+      <div v-if="recordSubTab==='date'" class="space-y-4">
+        <div v-for="(group,date) in groupedByDateFiltered" :key="date" class="bg-white/30 rounded-2xl border border-[#ede9df]/40 p-3 space-y-2" :class="['doodle-card', 'doodle-tilt-left']">
+          <div @click="toggleDateGroupCollapse(date)" class="flex justify-between items-center pb-2 px-1 border-b border-[#ede9df]/40 cursor-pointer select-none" :class="{'border-[#111111] pb-2': isDoodleMode}">
+            <div class="flex items-center gap-1.5">
+              <i data-lucide="calendar" class="w-4 h-4 text-[#8c8577]" :class="{'text-[#111111]': isDoodleMode}"></i>
+              <span class="text-sm font-semibold text-[#736c60]" :class="{'text-[#111111] font-black': isDoodleMode}">{{ date }}</span>
+              <span class="text-[9px] bg-[#eae5da] text-[#736c60] px-1.5 py-0.2 rounded-full font-medium" :class="['doodle-tag']">
+                {{ group.items.length }} 筆
+              </span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-xs text-[#a8a297]" :class="{'text-[#111111] font-bold': isDoodleMode}">小計: NT$ {{ formatNumber(group.total) }}</span>
+              <i :data-lucide="collapsedDateGroups[date] ? 'chevron-down' : 'chevron-up'" class="w-4 h-4 text-[#a8a297]" :class="{'text-[#111111]': isDoodleMode}"></i>
+            </div>
+          </div>
+
+          <div v-show="!collapsedDateGroups[date]" class="grid grid-cols-1 lg:grid-cols-2 gap-3 pt-1 transition-all">
+            <div v-for="item in group.items" :key="item.id" class="flex flex-col bg-[#faf8f5] hover:bg-white rounded-xl border border-[#ede9df]/30 transition-all overflow-hidden" :class="['doodle-card']">
+              <div class="flex justify-between items-center p-3">
+                <div class="flex items-center space-x-3 cursor-pointer flex-1" @click="toggleExpensePhoto(item.id)">
+                  <span class="text-[10px] px-2 py-0.5 rounded bg-[#eae5da]/70 text-[#736c60] shrink-0" :class="['doodle-tag']">{{ item.payMethod }}</span>
+                  <div class="min-w-0">
+                    <div class="flex items-center gap-1.5">
+                      <p class="text-sm text-[#4a463f] font-medium truncate" :class="{'text-[#111111] font-bold': isDoodleMode}">{{ item.title }}</p>
+                      <span v-if="item.photo" class="text-[9px] text-[#8c8577] bg-[#f4f1ea] px-1.5 py-0.5 rounded flex items-center gap-0.5 border border-[#ede9df] hover:bg-[#eae5da]" :class="['doodle-tag']">
+                        <i data-lucide="image" class="w-3 h-3"></i> 收據
+                      </span>
+                    </div>
+                    <p class="text-[10px] text-[#a8a297]" :class="{'text-[#555555]': isDoodleMode}">{{ item.category }}</p>
+                  </div>
+                </div>
+                <div class="flex items-center space-x-2 shrink-0">
+                  <span class="text-sm font-semibold text-[#4a463f]" :class="{'text-[#111111] font-black': isDoodleMode}">NT$ {{ formatNumber(item.amount) }}</span>
+                  <button @click="openEditModal(item)" class="text-[#a8a297] hover:text-[#736c60] opacity-80" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                  <button @click="deleteExpense(item.id)" class="text-[#a8a297] hover:text-red-700 opacity-80" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                </div>
+              </div>
+              
+              <div v-if="expandedExpensePhotos[item.id] && item.photo" class="px-3 pb-3 border-t border-[#ede9df]/40 pt-2.5 bg-[#f4f1ea]/20" :class="{'border-[#111111]': isDoodleMode}">
+                <p class="text-[10px] text-[#a8a297] uppercase tracking-wider mb-1.5 font-medium flex items-center gap-1" :class="{'text-[#111111] font-bold': isDoodleMode}">
+                  <i data-lucide="camera" class="w-3.5 h-3.5"></i> 關聯收據相片
+                </p>
+                <div class="relative max-h-60 rounded-xl overflow-hidden border border-[#ede9df] bg-black/5 flex items-center justify-center" :class="{'border-2 border-[#111111]': isDoodleMode}">
+                  <img :src="item.photo" class="max-w-full max-h-56 object-contain block" />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-if="Object.keys(groupedByDateFiltered).length===0" class="text-center py-12 text-xs text-[#a8a297] italic" :class="{'text-[#111111]': isDoodleMode}">無符合篩選條件的記帳紀錄</div>
+      </div>
+      
+      <!-- 按分類排列 -->
+      <div v-if="recordSubTab==='category'" class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <div v-for="(group,cat) in groupedByCategoryFiltered" :key="cat" class="border border-[#ede9df] rounded-xl bg-white/40 overflow-hidden h-fit" :class="['doodle-card', 'doodle-tilt-right']">
+          <div @click="toggleCategoryCollapse(cat)" class="flex justify-between items-center p-4 cursor-pointer hover:bg-[#f4f1ea]/30 select-none bg-white/60">
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-medium text-[#4a463f]" :class="{'text-[#111111] font-bold': isDoodleMode}">{{ cat }}</span>
+              <span class="text-[9px] bg-[#eae5da] text-[#736c60] px-2 py-0.2 rounded-full font-medium" :class="['doodle-tag']">
+                {{ group.items.length }} 筆
+              </span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm font-semibold text-[#8c8577]" :class="{'text-[#111111] font-black': isDoodleMode}">NT$ {{ formatNumber(group.total) }}</span>
+              <i :data-lucide="expandedCategories[cat] ? 'chevron-up' : 'chevron-down'" class="w-4 h-4 text-[#a8a297]" :class="{'text-[#111111]': isDoodleMode}"></i>
+            </div>
+          </div>
+          
+          <div v-show="expandedCategories[cat]" class="bg-white/85 border-t border-[#ede9df]/60 divide-y divide-[#ede9df]/30 transition-all" :class="{'border-t-2 border-[#111111] divide-[#111111]/30': isDoodleMode}">
+            <div v-for="item in group.items" :key="item.id" class="flex flex-col text-xs pl-4">
+              <div class="p-3 flex justify-between items-center">
+                <div class="flex-1 min-w-0 cursor-pointer" @click="toggleExpensePhoto(item.id)">
+                  <div class="flex items-center gap-1.5">
+                    <p class="font-medium text-[#4a463f]" :class="{'text-[#111111] font-bold': isDoodleMode}">{{ item.title }}</p>
+                    <span v-if="item.photo" class="text-[9px] text-[#8c8577] bg-[#f4f1ea] px-1 py-0.5 rounded border border-[#ede9df]" :class="['doodle-tag']">
+                      📷 有圖
+                    </span>
+                  </div>
+                  <p class="text-[10px] text-[#a8a297]" :class="{'text-[#555555]': isDoodleMode}">{{ item.date }} · {{ item.payMethod }}</p>
+                </div>
+                <div class="flex items-center space-x-2 shrink-0 pr-3">
+                  <span class="font-semibold text-[#4a463f]" :class="{'text-[#111111] font-black': isDoodleMode}">NT$ {{ formatNumber(item.amount) }}</span>
+                  <button @click="openEditModal(item)" class="text-[#a8a297] hover:text-[#736c60]" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                  <button @click="deleteExpense(item.id)" class="text-[#a8a297] hover:text-red-700" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                </div>
+              </div>
+              
+              <div v-if="expandedExpensePhotos[item.id] && item.photo" class="px-3 pb-3 border-t border-[#ede9df]/40 pt-2 bg-[#f4f1ea]/10 mr-4 rounded-b-xl" :class="{'border-[#111111]': isDoodleMode}">
+                <div class="relative max-h-48 rounded-lg overflow-hidden border border-[#ede9df] bg-black/5 flex items-center justify-center" :class="{'border-2 border-[#111111]': isDoodleMode}">
+                  <img :src="item.photo" class="max-w-full max-h-44 object-contain block" />
+                </div>
+              </div>
+            </div>
+            <div v-if="group.items.length===0" class="p-4 text-center text-xs text-[#a8a297] italic" :class="{'text-[#111111]': isDoodleMode}">無此分類支出數據</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCANNER -->
+    <div v-if="currentTab==='scanner'" class="space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- 左欄 -->
+        <div class="lg:col-span-5 space-y-4">
+          <div v-if="isCameraActive" class="relative bg-black rounded-2xl border border-[#ede9df] overflow-hidden aspect-[4/3] flex flex-col justify-between" :class="{'border-2 border-[#111111]': isDoodleMode}">
+            <video id="camera-feed" autoplay playsinline class="w-full h-full object-cover"></video>
+            <canvas id="photo-canvas" class="hidden"></canvas>
+            <div class="absolute bottom-4 left-0 right-0 flex justify-around items-center px-6 z-10">
+              <button @click="stopCamera" class="w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center backdrop-blur-md">
+                <i data-lucide="x" class="w-5 h-5"></i>
+              </button>
+              <button @click="capturePhoto" class="w-16 h-16 rounded-full border-4 border-white bg-red-500/80 hover:bg-red-600 active:scale-95 transition-all flex items-center justify-center">
+                <span class="w-8 h-8 rounded-full bg-white block"></span>
+              </button>
+              <button @click="switchCamera" class="w-10 h-10 rounded-full bg-black/40 text-white flex items-center justify-center backdrop-blur-md">
+                <i data-lucide="refresh-cw" class="w-5 h-5"></i>
+              </button>
+            </div>
+          </div>
+
+          <div v-else class="space-y-4">
+            <div class="relative bg-[#f4f1ea]/60 rounded-2xl border border-[#ede9df] overflow-hidden" :class="[scanPhoto ? 'p-0' : 'p-8', 'doodle-card', 'doodle-tilt-left']">
+              <div v-if="scanPhoto" class="relative">
+                <img :src="scanPhoto" class="w-full max-h-72 object-contain bg-[#2a2825] block mx-auto" />
+                <button @click="clearScanPhoto" class="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors z-10">
+                  <i data-lucide="x" class="w-4 h-4"></i>
+                </button>
+              </div>
+              <div class="flex flex-col items-center space-y-4 text-center py-6" v-else>
+                <div class="w-16 h-16 rounded-full bg-[#eae5da] flex items-center justify-center text-[#736c60]" :class="['doodle-circle-btn']">
+                  <i data-lucide="camera" class="w-8 h-8"></i>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-[#4a463f]" :class="{'text-[#111111] font-black': isDoodleMode}">拍攝收據或上傳照片</p>
+                  <p class="text-xs text-[#a8a297] mt-1" :class="{'text-[#333333]': isDoodleMode}">智慧感知將自動分析品項細節並保留相片</p>
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2">
+              <button @click="startCamera" class="flex items-center justify-center gap-2 py-3 bg-[#8c8577] text-white text-xs font-medium rounded-xl hover:bg-[#736c60] transition-colors" :class="['doodle-btn']">
+                <i data-lucide="camera" class="w-4 h-4"></i> 開啟相機
+              </button>
+              <button @click="triggerFileInput" class="flex items-center justify-center gap-2 py-3 bg-[#eae5da] text-[#4a463f] text-xs font-medium rounded-xl hover:bg-[#dfd9cc] transition-colors" :class="['doodle-btn']">
+                <i data-lucide="image" class="w-4 h-4"></i> 選擇照片
+              </button>
+              <input type="file" id="file-upload-input" accept="image/*" class="hidden" @change="handleFileUpload" />
+            </div>
+          </div>
+        </div>
+
+        <!-- 右欄 -->
+        <div class="lg:col-span-7">
+          <div v-if="isScanning" class="bg-white/60 rounded-2xl border border-[#ede9df] p-12 text-center space-y-4 animate-pulse" :class="['doodle-card']">
+            <div class="flex justify-center">
+              <div class="w-12 h-12 rounded-full border-4 border-[#8c8577] border-t-transparent animate-spin" :class="{'border-[#111111]': isDoodleMode}"></div>
+            </div>
+            <p class="text-sm font-medium text-[#736c60]" :class="{'text-[#111111] font-bold': isDoodleMode}">{{ scanStatusText }}</p>
+            <p class="text-xs text-[#a8a297]" :class="{'text-[#333333]': isDoodleMode}">正透過高精度模型辨識您的消費收據...</p>
+          </div>
+
+          <div v-else-if="scannedResult" class="bg-white/95 rounded-2xl border border-[#ede9df] p-6 space-y-4 shadow-sm" :class="['doodle-card']">
+            <div class="flex justify-between items-center border-b border-[#ede9df] pb-3" :class="{'border-[#111111] border-b-2': isDoodleMode}">
+              <h4 class="text-xs font-semibold uppercase tracking-wider text-[#736c60] flex items-center gap-1.5" :class="{'text-[#111111] font-black': isDoodleMode}">
+                <i data-lucide="sparkles" class="w-4 h-4 text-[#8c8577]" :class="{'text-[#111111]': isDoodleMode}"></i> 智慧感知解析結果
+              </h4>
+              <button @click="scannedResult = null" class="text-xs text-[#a8a297] hover:text-red-500" :class="{'text-[#111111] font-bold': isDoodleMode}">取消</button>
             </div>
             
-            <!-- 進度條 -->
-            <div class="w-full h-2 bg-[#f4f1ea] rounded-full overflow-hidden relative">
-              <div class="h-full rounded-full transition-all duration-500" 
-                :class="getCombinedBudgetPercent(cat, analyticsPeriod) > 100 ? 'bg-[#b8735c]' : 'bg-[#8c8577]'" 
-                :style="{width: Math.min(getCombinedBudgetPercent(cat, analyticsPeriod), 100) + '%'}">
+            <div class="space-y-4">
+              <div>
+                <label class="text-[10px] text-[#a8a297] block mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">感知主旨 / 店名</label>
+                <input type="text" v-model="scannedResult.title" class="w-full bg-[#f4f1ea]/40 border border-[#ede9df] rounded-lg p-2.5 text-sm font-medium focus:outline-none focus:border-[#8c8577]" :class="['doodle-input']" />
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-[10px] text-[#a8a297] block mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">金額</label>
+                  <input type="number" v-model.number="scannedResult.amount" class="w-full bg-[#f4f1ea]/40 border border-[#ede9df] rounded-lg p-2.5 text-sm font-bold text-[#8c8577] focus:outline-none" :class="['doodle-input']" />
+                </div>
+                <div>
+                  <label class="text-[10px] text-[#a8a297] block mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">日期</label>
+                  <input type="date" v-model="scannedResult.date" class="w-full bg-[#f4f1ea]/40 border border-[#ede9df] rounded-lg p-2.5 text-xs focus:outline-none" :class="['doodle-input']" />
+                </div>
+              </div>
+              <div class="grid grid-cols-2 gap-3">
+                <div>
+                  <label class="text-[10px] text-[#a8a297] block mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">消費類別</label>
+                  <select v-model="scannedResult.category" class="w-full bg-[#f4f1ea]/40 border border-[#ede9df] rounded-lg p-2.5 text-xs focus:outline-none" :class="['doodle-input']">
+                    <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                  </select>
+                </div>
+                <div>
+                  <label class="text-[10px] text-[#a8a297] block mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">支付方式</label>
+                  <select v-model="scannedResult.payMethod" class="w-full bg-[#f4f1ea]/40 border border-[#ede9df] rounded-lg p-2.5 text-xs focus:outline-none" :class="['doodle-input']">
+                    <option v-for="method in payMethods" :key="method" :value="method">{{ method }}</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- 條目明細 -->
+              <div v-if="scannedResult.items && scannedResult.items.length" class="bg-[#f4f1ea]/40 rounded-xl p-4 space-y-2 border border-[#ede9df]/50" :class="['doodle-card']">
+                <p class="text-[10px] text-[#a8a297] uppercase tracking-wider font-semibold" :class="{'text-[#111111]': isDoodleMode}">明細項對照</p>
+                <div class="max-h-48 overflow-y-auto space-y-2 pr-1 no-scrollbar">
+                  <div v-for="(item, idx) in scannedResult.items" :key="idx" class="flex justify-between items-center text-xs">
+                    <span class="text-[#4a463f] truncate max-w-[220px]" :class="{'text-[#111111] font-bold': isDoodleMode}">{{ item.name || item.originalName }}</span>
+                    <span class="font-mono font-medium text-[#736c60]" :class="{'text-[#111111] font-black': isDoodleMode}">NT$ {{ formatNumber(item.price) }}</span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <!-- 剩餘與消耗標記 -->
-            <div class="flex justify-between text-[10px] text-[#a8a297]">
-              <span>預算消耗: {{ Math.round(getCombinedBudgetPercent(cat, analyticsPeriod)) }}%</span>
-              <div v-if="getBudgetForCategoryInAnalytics(cat) > 0">
-                <span v-if="getCombinedBudgetDiff(cat, analyticsPeriod) >= 0" class="text-[#736c60]">
-                  剩餘 NT$ {{ formatNumber(getCombinedBudgetDiff(cat, analyticsPeriod)) }}
-                </span>
-                <span v-else class="text-[#b8735c] font-medium animate-pulse">
-                  超支 NT$ {{ formatNumber(Math.abs(getCombinedBudgetDiff(cat, analyticsPeriod))) }}
-                </span>
+            <button @click="confirmScannerAdd" class="w-full py-3.5 bg-[#8c8577] text-white rounded-xl text-sm font-semibold hover:bg-[#736c60] transition-colors flex items-center justify-center gap-2" :class="['doodle-btn']">
+              <i data-lucide="check" class="w-4 h-4"></i> 確認導入時序明細 (含相片)
+            </button>
+          </div>
+
+          <div v-else class="bg-white/60 rounded-2xl border border-[#ede9df]/50 p-6 space-y-4" :class="['doodle-card', 'doodle-tilt-right']">
+            <p class="text-[11px] text-[#a8a297] tracking-wider uppercase border-b border-[#ede9df]/40 pb-1.5" :class="{'text-[#111111] border-[#111111] border-b-2 font-bold': isDoodleMode}">對照收據填入明細</p>
+
+            <div v-if="scanPhoto" class="flex items-center gap-2 bg-[#eae5da]/50 border border-[#ede9df] rounded-xl p-2.5 text-xs text-[#736c60]" :class="['doodle-card']">
+              <i data-lucide="check-circle" class="w-4 h-4 shrink-0" :class="{'text-[#111111]': isDoodleMode}"></i>
+              <span :class="{'text-[#111111] font-bold': isDoodleMode}">已偵測到相片！此筆記帳將會成功儲存該張照片。</span>
+            </div>
+
+            <div>
+              <label class="text-[10px] text-[#a8a297] block mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">金額</label>
+              <input type="number" v-model.number="scanForm.amount" placeholder="0" inputmode="decimal"
+                class="w-full bg-transparent text-3xl font-light border-b border-[#ede9df] py-1.5 focus:outline-none text-[#3d3a34]" :class="['doodle-input', 'pl-2']" />
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-[10px] text-[#a8a297] block mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">品項名稱</label>
+                <input type="text" v-model="scanForm.title" placeholder="如：藥妝購買"
+                  class="w-full bg-[#f4f1ea]/60 border border-[#ede9df] rounded-lg p-2.5 text-sm focus:outline-none" :class="['doodle-input']" />
+              </div>
+              <div>
+                <label class="text-[10px] text-[#a8a297] block mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">日期</label>
+                <input type="date" v-model="scanForm.date"
+                  class="w-full bg-[#f4f1ea]/60 border border-[#ede9df] rounded-lg p-2.5 text-sm focus:outline-none" :class="['doodle-input']" />
               </div>
             </div>
-          </div>
-        </div>
-      </div>
 
-      <!-- 支付方式分佈 -->
-      <div class="bg-white p-4 rounded-2xl border border-[#ede9df] space-y-3">
-        <h4 class="text-xs text-[#a8a297] uppercase border-b border-[#ede9df]/60 pb-1.5">支付分布</h4>
-        <div class="space-y-2.5">
-          <div v-for="method in payMethodsWithData" :key="method">
-            <div class="flex justify-between text-[11px] mb-1">
-              <span class="font-medium text-[#4a463f]">{{ method }}</span>
-              <div class="flex items-center gap-2">
-                <span class="text-[#8c8577] font-medium">NT$ {{ formatNumber(getFilteredPayMethodAmount(method)) }}</span>
-                <span class="text-[#a8a297] bg-[#f4f1ea] px-1.5 py-0.5 rounded text-[10px]">{{ getFilteredPayMethodPercent(method) }}%</span>
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="text-[10px] text-[#a8a297] block mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">消費類別</label>
+                <select v-model="scanForm.category"
+                  class="w-full bg-[#f4f1ea]/60 border border-[#ede9df] rounded-lg p-2.5 text-xs focus:outline-none" :class="['doodle-input']">
+                  <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
+                </select>
+              </div>
+              <div>
+                <label class="text-[10px] text-[#a8a297] block mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">支付方式</label>
+                <select v-model="scanForm.payMethod"
+                  class="w-full bg-[#f4f1ea]/60 border border-[#ede9df] rounded-lg p-2.5 text-xs focus:outline-none" :class="['doodle-input']">
+                  <option v-for="method in payMethods" :key="method" :value="method">{{ method }}</option>
+                </select>
               </div>
             </div>
-            <div class="w-full h-1.5 bg-[#f4f1ea] rounded-full overflow-hidden"><div class="h-full bg-[#a8a297] rounded-full" :style="{width:getFilteredPayMethodPercent(method)+'%'}"></div></div>
-          </div>
-          <div v-if="!payMethodsWithData.length" class="text-[10px] text-[#a8a297] italic py-2">無數據</div>
-        </div>
-      </div>
-    </div>
 
-    <!-- 排行榜 (TOP 10 消費) - 支援收起與展開 -->
-    <div class="space-y-2">
-      <div @click="isTopExpensesExpanded = !isTopExpensesExpanded" class="flex justify-between items-center cursor-pointer select-none">
-        <h3 class="text-xs tracking-wider text-[#a8a297] uppercase font-semibold">TOP 10 消費 ({{ periodLabel }})</h3>
-        <i :data-lucide="isTopExpensesExpanded ? 'chevron-up' : 'chevron-down'" class="w-4 h-4 text-[#a8a297]"></i>
-      </div>
-
-      <div v-show="isTopExpensesExpanded" class="bg-white rounded-2xl border border-[#ede9df] overflow-hidden divide-y divide-[#ede9df]/40 transition-all duration-300">
-        <div v-for="(item,index) in filteredTopExpenses" :key="item.id" class="p-3.5 flex justify-between items-center text-xs">
-          <div class="flex items-center space-x-3">
-            <span class="text-[10px] text-[#a8a297] font-mono w-4">{{ String(index+1).padStart(2,'0') }}</span>
-            <div><p class="font-medium text-[#4a463f]">{{ item.title }}</p><p class="text-[9px] text-[#a8a297]">{{ item.date }} · {{ item.category }}</p></div>
-          </div>
-          <span class="font-medium">NT$ {{ formatNumber(item.amount) }}</span>
-        </div>
-        <div v-if="!filteredTopExpenses.length" class="p-6 text-center text-xs text-[#a8a297] italic">此區間暫無消費明細</div>
-      </div>
-    </div>
-  </div>
-
-  <!-- SETTINGS -->
-  <div v-if="currentTab==='settings'" class="space-y-6">
-    <!-- 專案 -->
-    <div class="bg-[#eae5da]/40 p-4 rounded-2xl border border-[#ede9df] space-y-2">
-      <h3 class="text-xs uppercase tracking-wider text-[#4a463f] font-semibold">漫遊專案格局代碼</h3>
-      <p class="text-[11px] text-[#a8a297]">自訂獨立代碼，將不同旅程的記帳分流。</p>
-      <div class="flex gap-2 pt-1">
-        <input type="text" v-model="tempProjectId" placeholder="如：kyushu 或 hokkaido" class="flex-1 bg-white border border-[#ede9df] rounded-lg p-2 text-xs font-mono focus:outline-none">
-        <button @click="switchProject" class="px-4 bg-[#4a463f] text-white text-xs rounded-lg hover:bg-[#3d3a34] font-medium">載入</button>
-      </div>
-    </div>
-
-    <!-- 類別預算規劃（支援設定每年不同的月預算 & 本身可折疊/展開） -->
-    <div class="bg-white p-5 rounded-2xl border border-[#ede9df] space-y-3">
-      <div @click="isSettingsBudgetsExpanded = !isSettingsBudgetsExpanded" class="pb-2 flex justify-between items-center cursor-pointer select-none">
-        <div class="space-y-1">
-          <h3 class="text-xs uppercase tracking-wider text-[#4a463f] font-bold flex items-center gap-1.5">
-            自訂各年度月預算
-          </h3>
-          <p class="text-[9px] text-[#a8a297]">您可以個別規劃每一年、每一個月份的獨立額度</p>
-        </div>
-        <i :data-lucide="isSettingsBudgetsExpanded ? 'chevron-up' : 'chevron-down'" class="w-4 h-4 text-[#a8a297]"></i>
-      </div>
-
-      <div v-show="isSettingsBudgetsExpanded" class="space-y-4 pt-1 transition-all duration-300">
-        <!-- 年份與月份切換器 -->
-        <div class="bg-[#f4f1ea]/80 p-3 rounded-xl border border-[#ede9df] space-y-2">
-          <div class="flex items-center gap-2">
-            <div class="flex-1">
-              <label class="text-[9px] text-[#a8a297] block mb-0.5">預算年份</label>
-              <select v-model="settingsSelectedYear" class="w-full bg-white border border-[#ede9df] rounded-lg p-1 text-xs focus:outline-none">
-                <option v-for="y in settingsYearOptions" :key="y" :value="y">{{ y }} 年</option>
-              </select>
-            </div>
-            <div class="flex-1">
-              <label class="text-[9px] text-[#a8a297] block mb-0.5">預算月份</label>
-              <select v-model="settingsSelectedMonth" class="w-full bg-white border border-[#ede9df] rounded-lg p-1 text-xs focus:outline-none">
-                <option v-for="m in 12" :key="m" :value="String(m).padStart(2,'0')">{{ m }} 月</option>
-              </select>
-            </div>
-          </div>
-
-          <!-- 快速複製與套用 -->
-          <div class="flex justify-between items-center pt-2 border-t border-[#ede9df]/60 text-[10px]">
-            <span class="text-[#8c8577] font-medium">💡 當月設定總計: NT$ {{ formatNumber(settingsCurrentPeriodBudgetSum) }}</span>
-            <button @click="replicateSettingsBudget" class="text-xs text-[#8c8577] bg-white border border-[#ede9df] px-2 py-0.5 rounded-md hover:bg-[#eae5da] font-medium">
-              套用至該年所有月份
+            <button @click="submitScanExpense"
+              class="w-full py-3.5 bg-[#8c8577] text-white rounded-xl text-sm font-medium hover:bg-[#736c60] transition-colors" :class="['doodle-btn']">
+              儲存記帳紀錄 (含相片)
             </button>
           </div>
         </div>
 
-        <!-- 各項類別預算表單 -->
-        <div class="space-y-3 max-h-60 overflow-y-auto no-scrollbar pr-1">
-          <div v-for="cat in categories" :key="cat" class="flex items-center justify-between gap-4 text-xs">
-            <span class="font-medium text-[#4a463f] w-1/3 truncate">{{ cat }}</span>
-            <div class="relative flex-1 flex items-center">
-              <span class="absolute left-2 text-[10px] text-[#a8a297]">NT$</span>
-              <input type="number" 
-                :value="getBudgetBindingValue(cat)"
-                @input="updateBudgetBindingValue(cat, $event.target.value)"
-                placeholder="無月預算" 
-                class="w-full bg-[#f4f1ea]/50 border border-[#ede9df] rounded-lg p-1.5 pl-8 text-right text-xs focus:outline-none">
+      </div>
+    </div>
+
+    <!-- ANALYTICS -->
+    <div v-if="currentTab==='analytics'" class="space-y-6">
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- 月份 / 年份篩選選單 -->
+        <div class="bg-white/60 p-4 rounded-2xl border border-[#ede9df] shadow-sm flex flex-col justify-center space-y-3" :class="['doodle-card']">
+          <div class="flex bg-[#eae5da]/50 p-1 rounded-xl text-xs mb-2" :class="{'bg-transparent border-2 border-[#111111] p-0.5 rounded-lg': isDoodleMode}">
+            <button @click="analyticsPeriod='month'" :class="[analyticsPeriod==='month' ? (isDoodleMode ? 'bg-[#fff176] font-bold border border-[#111111]' : 'bg-[#faf8f5] shadow-sm font-medium') : '']" class="flex-1 py-1.5 rounded-lg text-center">月度分析</button>
+            <button @click="analyticsPeriod='year'" :class="[analyticsPeriod==='year' ? (isDoodleMode ? 'bg-[#fff176] font-bold border border-[#111111]' : 'bg-[#faf8f5] shadow-sm font-medium') : '']" class="flex-1 py-1.5 rounded-lg text-center">年度分析</button>
+          </div>
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-medium text-[#736c60]" :class="{'text-[#111111] font-bold': isDoodleMode}">選擇分析區間：</span>
+            
+            <div v-if="analyticsPeriod==='month'" class="flex items-center gap-1.5">
+              <select v-model="analyticsSelectedYear" class="bg-[#f4f1ea] border border-[#ede9df] rounded-lg p-1.5 text-xs text-[#4a463f] focus:outline-none" :class="['doodle-input']">
+                <option v-for="y in availableYears" :key="y" :value="y">{{ y }}年</option>
+              </select>
+              <select v-model="analyticsSelectedMonth" class="bg-[#f4f1ea] border border-[#ede9df] rounded-lg p-1.5 text-xs text-[#4a463f] focus:outline-none" :class="['doodle-input']">
+                <option v-for="m in 12" :key="m" :value="String(m).padStart(2,'0')">{{ m }}月</option>
+              </select>
+            </div>
+
+            <div v-if="analyticsPeriod==='year'" class="flex items-center gap-1.5">
+              <select v-model="analyticsSelectedYear" class="bg-[#f4f1ea] border border-[#ede9df] rounded-lg p-1.5 text-xs text-[#4a463f] focus:outline-none" :class="['doodle-input']">
+                <option v-for="y in availableYears" :key="y" :value="y">{{ y }}年</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- 實際消費比對預算大看板 -->
+        <div class="text-center py-5 px-6 bg-[#f4f1ea]/40 rounded-2xl border border-[#ede9df]/60 relative overflow-hidden flex flex-col justify-center" :class="['doodle-card', 'doodle-tilt-left']">
+          <div class="absolute top-2 left-3 text-[9px] text-[#a8a297] tracking-wider uppercase font-medium" :class="{'text-[#111111] font-bold': isDoodleMode}">總體理財整合</div>
+          <p class="text-xs text-[#a8a297] uppercase tracking-wider mb-1.5 mt-2" :class="{'text-[#111111]': isDoodleMode}">
+            實際: <span class="text-[#4a463f] font-semibold" :class="{'text-[#111111] font-bold': isDoodleMode}">NT$ {{ formatNumber(filteredGrandTotal) }}</span>
+            /
+            預算: <span class="text-[#8c8577] font-semibold" :class="{'text-[#111111] font-bold': isDoodleMode}">NT$ {{ formatNumber(currentPeriodTotalBudget) }}</span>
+          </p>
+          
+          <div class="w-full h-2.5 bg-[#eae5da] rounded-full overflow-hidden mt-1 relative" :class="['doodle-progress-bg']">
+            <div class="h-full rounded-full transition-all duration-500" 
+              :class="[totalProgressPercent > 100 ? 'bg-[#b8735c]' : 'bg-[#8c8577]', isDoodleMode ? (totalProgressPercent > 100 ? 'doodle-progress-bar' : 'bg-[#4a463f] border-r-2 border-[#111111]') : '']" 
+              :style="{ width: Math.min(totalProgressPercent, 100) + '%' }">
+            </div>
+          </div>
+          <p class="text-[10px] text-[#a8a297] mt-1.5" :class="{'text-[#111111] font-bold': isDoodleMode}">
+            預算消耗進度: <span class="font-medium" :class="[totalProgressPercent > 100 ? 'text-[#b8735c]' : 'text-[#736c60]', isDoodleMode ? (totalProgressPercent > 100 ? 'text-red-600' : 'text-[#111111]') : '']">{{ Math.round(totalProgressPercent) }}%</span>
+          </p>
+        </div>
+      </div>
+
+      <!-- 折線波動與支付分布 -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- 折線波動 -->
+        <div class="lg:col-span-7 space-y-2 :class='[doodle-tilt-right]'">
+          <h3 class="text-xs tracking-wider text-[#a8a297] mb-2 uppercase" :class="{'text-[#111111] font-bold': isDoodleMode}">區間花費波動</h3>
+          <div class="bg-white p-5 rounded-2xl border border-[#ede9df] h-40 flex items-end justify-between px-8 pt-6 transition-colors duration-300" 
+            :class="['doodle-card', isDoodleMode ? '!bg-[#4a463f]' : '']">
+            <div v-for="(h,i) in trendHeights" :key="i" class="w-4 rounded-t transition-all duration-300" :class="[i%3===2?'bg-[#8c8577]':'bg-[#eae5da]', isDoodleMode ? 'border border-[#111111] bg-[#fff176]' : '']" :style="{height:h}"></div>
+          </div>
+        </div>
+
+        <!-- 支付方式分布 -->
+        <div class="lg:col-span-5 bg-white p-5 rounded-2xl border border-[#ede9df] space-y-3" :class="['doodle-card']">
+          <h4 class="text-xs text-[#a8a297] uppercase border-b border-[#ede9df]/60 pb-1.5" :class="{'border-[#111111] border-b-2': isDoodleMode}">支付分布</h4>
+          <div class="space-y-3">
+            <div v-for="method in payMethodsWithData" :key="method">
+              <div class="flex justify-between text-[11px] mb-1">
+                <span class="font-medium text-[#4a463f]" :class="{'text-[#111111] font-bold': isDoodleMode}">{{ method }}</span>
+                <div class="flex items-center gap-2">
+                  <span class="text-[#8c8577] font-medium" :class="{'text-[#111111] font-black': isDoodleMode}">NT$ {{ formatNumber(getFilteredPayMethodAmount(method)) }}</span>
+                  <span class="text-[#a8a297] bg-[#f4f1ea] px-1.5 py-0.5 rounded text-[10px]" :class="['doodle-tag']">{{ getFilteredPayMethodPercent(method) }}%</span>
+                </div>
+              </div>
+              <div class="w-full h-2 bg-[#f4f1ea] rounded-full overflow-hidden" :class="['doodle-progress-bg']">
+                <div class="h-full bg-[#a8a297] rounded-full" :class="{'bg-[#4a463f]': isDoodleMode}" :style="{width:getFilteredPayMethodPercent(method)+'%'}"></div>
+              </div>
+            </div>
+            <div v-if="!payMethodsWithData.length" class="text-[10px] text-[#a8a297] italic py-2" :class="{'text-[#111111]': isDoodleMode}">無數據</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 實際與預算雙軌比對 -->
+      <div class="space-y-3">
+        <div @click="isAnalyticsComparisonExpanded = !isAnalyticsComparisonExpanded" class="flex justify-between items-center cursor-pointer select-none">
+          <h3 class="text-xs tracking-wider text-[#a8a297] uppercase font-semibold" :class="{'text-[#111111] font-black': isDoodleMode}">實際與預算雙軌比對</h3>
+          <i :data-lucide="isAnalyticsComparisonExpanded ? 'chevron-up' : 'chevron-down'" class="w-4 h-4 text-[#a8a297]" :class="{'text-[#111111]': isDoodleMode}"></i>
+        </div>
+
+        <div v-show="isAnalyticsComparisonExpanded" class="bg-white p-5 rounded-2xl border border-[#ede9df] space-y-4 transition-all duration-300" :class="['doodle-card']">
+          <div class="flex justify-between items-center border-b border-[#ede9df]/60 pb-1.5" :class="{'border-[#111111] border-b-2': isDoodleMode}">
+            <h4 class="text-xs text-[#a8a297] uppercase font-semibold" :class="{'text-[#111111] font-bold': isDoodleMode}">實際類別消費 / 預算 ({{ periodLabel }})</h4>
+            <span class="text-[9px] text-[#a8a297]" :class="{'text-[#111111]': isDoodleMode}">實際 / 預算</span>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4">
+            <div v-for="cat in categories" :key="cat" class="space-y-1.5">
+              <div class="flex justify-between text-xs">
+                <span class="font-medium text-[#4a463f]" :class="{'text-[#111111] font-bold': isDoodleMode}">{{ cat }}</span>
+                <div class="flex items-center gap-1.5">
+                  <span class="text-[#4a463f] font-semibold" :class="{'text-[#111111]': isDoodleMode}">實際 {{ formatNumber(getCategorySpentInPeriod(cat, analyticsPeriod)) }}</span>
+                  <span class="text-[#a8a297]" :class="{'text-[#111111]': isDoodleMode}">/</span>
+                  <span class="text-[#8c8577] font-semibold" :class="{'text-[#111111] font-bold': isDoodleMode}">
+                    預算 {{ getBudgetForCategoryInAnalytics(cat) > 0 ? formatNumber(getBudgetForCategoryInAnalytics(cat)) : '未設定' }}
+                  </span>
+                </div>
+              </div>
+              
+              <div class="w-full h-2.5 bg-[#f4f1ea] rounded-full overflow-hidden relative" :class="['doodle-progress-bg']">
+                <div class="h-full rounded-full transition-all duration-500" 
+                  :class="[getCombinedBudgetPercent(cat, analyticsPeriod) > 100 ? 'bg-[#b8735c]' : 'bg-[#8c8577]', isDoodleMode ? (getCombinedBudgetPercent(cat, analyticsPeriod) > 100 ? 'doodle-progress-bar' : 'bg-[#4a463f]') : '']" 
+                  :style="{width: Math.min(getCombinedBudgetPercent(cat, analyticsPeriod), 100) + '%'}">
+                </div>
+              </div>
+
+              <div class="flex justify-between text-[10px] text-[#a8a297]" :class="{'text-[#333333]': isDoodleMode}">
+                <span>預算消耗: {{ Math.round(getCombinedBudgetPercent(cat, analyticsPeriod)) }}%</span>
+                <div v-if="getBudgetForCategoryInAnalytics(cat) > 0">
+                  <span v-if="getCombinedBudgetDiff(cat, analyticsPeriod) >= 0" class="text-[#736c60]" :class="{'text-green-700 font-bold': isDoodleMode}">
+                    剩餘 NT$ {{ formatNumber(getCombinedBudgetDiff(cat, analyticsPeriod)) }}
+                  </span>
+                  <span v-else class="text-[#b8735c] font-medium animate-pulse" :class="{'text-red-600 font-black not-italic': isDoodleMode}">
+                    超支 NT$ {{ formatNumber(Math.abs(getCombinedBudgetDiff(cat, analyticsPeriod))) }}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      <!-- 排行榜 (TOP 10 消費) -->
+      <div class="space-y-2">
+        <div @click="isTopExpensesExpanded = !isTopExpensesExpanded" class="flex justify-between items-center cursor-pointer select-none">
+          <h3 class="text-xs tracking-wider text-[#a8a297] uppercase font-semibold" :class="{'text-[#111111] font-black': isDoodleMode}">TOP 10 消費 ({{ periodLabel }})</h3>
+          <i :data-lucide="isTopExpensesExpanded ? 'chevron-up' : 'chevron-down'" class="w-4 h-4 text-[#a8a297]" :class="{'text-[#111111]': isDoodleMode}"></i>
+        </div>
+
+        <div v-show="isTopExpensesExpanded" class="bg-white rounded-2xl border border-[#ede9df] overflow-hidden transition-all duration-300 grid grid-cols-1 md:grid-cols-2 divide-y md:divide-y-0 md:divide-x divide-[#ede9df]/40" :class="['doodle-card']">
+          <div class="divide-y divide-[#ede9df]/40">
+            <div v-for="(item,index) in filteredTopExpenses.slice(0, 5)" :key="item.id" class="p-3.5 flex justify-between items-center text-xs" :class="{'border-b border-[#111111]/20': isDoodleMode}">
+              <div class="flex items-center space-x-3">
+                <span class="text-[10px] text-[#a8a297] font-mono w-4" :class="{'text-[#111111] font-bold': isDoodleMode}">{{ String(index+1).padStart(2,'0') }}</span>
+                <div>
+                  <p class="font-medium text-[#4a463f]" :class="{'text-[#111111] font-bold': isDoodleMode}">{{ item.title }}</p>
+                  <p class="text-[9px] text-[#a8a297]" :class="{'text-[#555555]': isDoodleMode}">{{ item.date }} · {{ item.category }}</p>
+                </div>
+              </div>
+              <span class="font-semibold" :class="{'text-[#111111] font-black': isDoodleMode}">NT$ {{ formatNumber(item.amount) }}</span>
+            </div>
+          </div>
+          <div class="divide-y divide-[#ede9df]/40 border-t md:border-t-0 border-[#ede9df]/40">
+            <div v-for="(item,index) in filteredTopExpenses.slice(5, 10)" :key="item.id" class="p-3.5 flex justify-between items-center text-xs" :class="{'border-b border-[#111111]/20': isDoodleMode}">
+              <div class="flex items-center space-x-3">
+                <span class="text-[10px] text-[#a8a297] font-mono w-4" :class="{'text-[#111111] font-bold': isDoodleMode}">{{ String(index+6).padStart(2,'0') }}</span>
+                <div>
+                  <p class="font-medium text-[#4a463f]" :class="{'text-[#111111] font-bold': isDoodleMode}">{{ item.title }}</p>
+                  <p class="text-[9px] text-[#a8a297]" :class="{'text-[#555555]': isDoodleMode}">{{ item.date }} · {{ item.category }}</p>
+                </div>
+              </div>
+              <span class="font-semibold" :class="{'text-[#111111] font-black': isDoodleMode}">NT$ {{ formatNumber(item.amount) }}</span>
+            </div>
+          </div>
+          <div v-if="!filteredTopExpenses.length" class="p-6 text-center text-xs text-[#a8a297] italic col-span-2 w-full" :class="{'text-[#111111]': isDoodleMode}">此區間暫無消費明細</div>
+        </div>
+      </div>
     </div>
 
-    <!-- 常用支出 - 支援收起與展開 -->
-    <div class="bg-white p-5 rounded-2xl border border-[#ede9df] space-y-3">
-      <div class="border-b border-[#ede9df] pb-2 flex justify-between items-center">
-        <div @click="isQuickItemsExpanded = !isQuickItemsExpanded" class="flex items-center gap-1.5 cursor-pointer select-none flex-1">
-          <h3 class="text-xs uppercase tracking-wider text-[#4a463f] font-semibold">常用支出選項</h3>
-          <i :data-lucide="isQuickItemsExpanded ? 'chevron-up' : 'chevron-down'" class="w-4 h-4 text-[#a8a297]"></i>
+    <!-- SETTINGS -->
+    <div v-if="currentTab==='settings'" class="space-y-6">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- 類別預算規劃 -->
+        <div class="bg-white p-5 rounded-2xl border border-[#ede9df] space-y-4 h-fit" :class="['doodle-card', 'doodle-tilt-left']">
+          <div @click="isSettingsBudgetsExpanded = !isSettingsBudgetsExpanded" class="pb-2 flex justify-between items-center cursor-pointer select-none">
+            <div class="space-y-1">
+              <h3 class="text-xs uppercase tracking-wider text-[#4a463f] font-bold flex items-center gap-1.5" :class="{'text-[#111111] font-black': isDoodleMode}">
+                自訂各年度月預算
+              </h3>
+              <p class="text-[9px] text-[#a8a297]" :class="{'text-[#333333]': isDoodleMode}">您可以個別規劃每一年、每一個月份的獨立額度</p>
+            </div>
+            <i :data-lucide="isSettingsBudgetsExpanded ? 'chevron-up' : 'chevron-down'" class="w-4 h-4 text-[#a8a297]" :class="{'text-[#111111]': isDoodleMode}"></i>
+          </div>
+
+          <div v-show="isSettingsBudgetsExpanded" class="space-y-4 pt-1 transition-all duration-300">
+            <!-- 年份與月份切換器 -->
+            <div class="bg-[#f4f1ea]/80 p-3 rounded-xl border border-[#ede9df] space-y-2" :class="['doodle-card']">
+              <div class="flex items-center gap-2">
+                <div class="flex-1">
+                  <label class="text-[9px] text-[#a8a297] block mb-0.5" :class="{'text-[#111111] font-bold': isDoodleMode}">預算年份</label>
+                  <select v-model="settingsSelectedYear" class="w-full bg-white border border-[#ede9df] rounded-lg p-1.5 text-xs focus:outline-none" :class="['doodle-input']">
+                    <option v-for="y in settingsYearOptions" :key="y" :value="y">{{ y }} 年</option>
+                  </select>
+                </div>
+                <div class="flex-1">
+                  <label class="text-[9px] text-[#a8a297] block mb-0.5" :class="{'text-[#111111] font-bold': isDoodleMode}">預算月份</label>
+                  <select v-model="settingsSelectedMonth" class="w-full bg-white border border-[#ede9df] rounded-lg p-1.5 text-xs focus:outline-none" :class="['doodle-input']">
+                    <option v-for="m in 12" :key="m" :value="String(m).padStart(2,'0')">{{ m }} 月</option>
+                  </select>
+                </div>
+              </div>
+
+              <!-- 快速複製與套用 -->
+              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center pt-2 border-t border-[#ede9df]/60 gap-2 text-[10px]" :class="{'border-[#111111] pt-3': isDoodleMode}">
+                <span class="text-[#8c8577] font-medium" :class="{'text-[#111111] font-bold': isDoodleMode}">💡 當月設定總計: NT$ {{ formatNumber(settingsCurrentPeriodBudgetSum) }}</span>
+                <button @click="replicateSettingsBudget" class="text-xs text-[#8c8577] bg-white border border-[#ede9df] px-2.5 py-1 rounded-md hover:bg-[#eae5da] font-medium transition-all" :class="['doodle-btn']">
+                  套用至該年所有月份
+                </button>
+              </div>
+            </div>
+
+            <!-- 各項類別預算表單 -->
+            <div class="space-y-3 max-h-72 overflow-y-auto no-scrollbar pr-1">
+              <div v-for="cat in categories" :key="cat" class="flex items-center justify-between gap-4 text-xs">
+                <span class="font-medium text-[#4a463f] w-1/3 truncate" :class="{'text-[#111111] font-bold': isDoodleMode}">{{ cat }}</span>
+                <div class="relative flex-1 flex items-center">
+                  <span class="absolute left-2 text-[10px] text-[#a8a297]" :class="{'text-[#111111] font-bold': isDoodleMode}">NT$</span>
+                  <input type="number" 
+                    :value="getBudgetBindingValue(cat)"
+                    @input="updateBudgetBindingValue(cat, $event.target.value)"
+                    placeholder="無月預算" 
+                    class="w-full bg-[#f4f1ea]/50 border border-[#ede9df] rounded-lg p-2 pl-8 text-right text-xs focus:outline-none" :class="['doodle-input']">
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-        <button @click="openQuickItemModal(null)" class="text-[10px] bg-[#eae5da] hover:bg-[#dfd9cc] text-[#736c60] px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors shrink-0">
-          <i data-lucide="plus" class="w-3 h-3"></i>新增
-        </button>
+
+        <!-- 常用支出 -->
+        <div class="bg-white p-5 rounded-2xl border border-[#ede9df] space-y-4 h-fit" :class="['doodle-card', 'doodle-tilt-right']">
+          <div class="border-b border-[#ede9df] pb-2 flex justify-between items-center" :class="{'border-[#111111] border-b-2': isDoodleMode}">
+            <div @click="isQuickItemsExpanded = !isQuickItemsExpanded" class="flex items-center gap-1.5 cursor-pointer select-none flex-1">
+              <h3 class="text-xs uppercase tracking-wider text-[#4a463f] font-semibold" :class="{'text-[#111111] font-black': isDoodleMode}">常用支出選項</h3>
+              <i :data-lucide="isQuickItemsExpanded ? 'chevron-up' : 'chevron-down'" class="w-4 h-4 text-[#a8a297]" :class="{'text-[#111111]': isDoodleMode}"></i>
+            </div>
+            <button @click="openQuickItemModal(null)" class="text-[10px] bg-[#eae5da] hover:bg-[#dfd9cc] text-[#736c60] px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors shrink-0" :class="['doodle-btn']">
+              <i data-lucide="plus" class="w-3 h-3"></i> 新增
+            </button>
+          </div>
+          
+          <div v-show="isQuickItemsExpanded" class="space-y-2 transition-all duration-300">
+            <div v-if="quickItems.length" class="space-y-2 max-h-80 overflow-y-auto no-scrollbar">
+              <div v-for="(qi,idx) in quickItems" :key="qi.id" class="flex items-center justify-between p-2.5 bg-[#f4f1ea]/60 rounded-xl border border-[#ede9df]/60" :class="['doodle-card']">
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-medium text-[#4a463f] truncate" :class="{'text-[#111111] font-bold': isDoodleMode}">{{ qi.title }}</p>
+                  <p class="text-[10px] text-[#a8a297] mt-0.5" :class="{'text-[#555555]': isDoodleMode}">NT$ {{ formatNumber(qi.amount) }} · {{ qi.category }} · {{ qi.payMethod }}</p>
+                </div>
+                <div class="flex items-center gap-2 ml-2 shrink-0">
+                  <button @click="openQuickItemModal(qi)" class="text-[#a8a297] hover:text-[#736c60]" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                  <button @click="deleteQuickItem(qi.id)" class="text-[#a8a297] hover:text-red-700" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                </div>
+              </div>
+            </div>
+            <div class="text-center py-6 text-[10px] text-[#a8a297] italic" :class="{'text-[#111111]': isDoodleMode}" v-else>尚無常用支出，點擊右上角「新增」。</div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- 基礎參數 -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- 支出類別 -->
+        <div class="bg-white p-5 rounded-2xl border border-[#ede9df] space-y-3" :class="['doodle-card']">
+          <h3 class="text-xs uppercase tracking-wider text-[#a8a297]" :class="{'text-[#111111] font-bold': isDoodleMode}">支出類別管理</h3>
+          <div class="flex flex-wrap gap-2 pb-2">
+            <span v-for="cat in categories" :key="cat" class="text-xs bg-[#f4f1ea] text-[#4a463f] px-2.5 py-1 rounded-lg flex items-center border border-[#ede9df]/40" :class="['doodle-tag']">{{ cat }}<button @click="deleteCategory(cat)" class="ml-1.5 text-[#a8a297] hover:text-red-700 text-[10px]" :class="{'text-[#111111]': isDoodleMode}">×</button></span>
+          </div>
+          <div class="flex gap-2">
+            <input type="text" v-model="newCategoryName" placeholder="新增類別名稱" class="flex-1 bg-[#f4f1ea]/50 border border-[#ede9df] rounded-lg p-2 text-xs focus:outline-none" :class="['doodle-input']">
+            <button @click="addCategory" class="px-4 bg-[#eae5da] text-xs rounded-lg hover:bg-[#dfd9cc]" :class="['doodle-btn']">+ 新增</button>
+          </div>
+        </div>
+        <!-- 支付方式 -->
+        <div class="bg-white p-5 rounded-2xl border border-[#ede9df] space-y-3" :class="['doodle-card']">
+          <h3 class="text-xs uppercase tracking-wider text-[#a8a297]" :class="{'text-[#111111] font-bold': isDoodleMode}">支付方式管理</h3>
+          <div class="flex flex-wrap gap-2 pb-2">
+            <span v-for="method in payMethods" :key="method" class="text-xs bg-[#f4f1ea] text-[#4a463f] px-2.5 py-1 rounded-lg flex items-center border border-[#ede9df]/40" :class="['doodle-tag']">{{ method }}<button @click="deletePayMethod(method)" class="ml-1.5 text-[#a8a297] hover:text-red-700 text-[10px]" :class="{'text-[#111111]': isDoodleMode}">×</button></span>
+          </div>
+          <div class="flex gap-2">
+            <input type="text" v-model="newPayMethodName" placeholder="新增支付方式" class="flex-1 bg-[#f4f1ea]/50 border border-[#ede9df] rounded-lg p-2 text-xs focus:outline-none" :class="['doodle-input']">
+            <button @click="addPayMethod" class="px-4 bg-[#eae5da] text-xs rounded-lg hover:bg-[#dfd9cc]" :class="['doodle-btn']">+ 新增</button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </main>
+
+  <!-- ADD / EDIT EXPENSE MODAL -->
+  <div v-if="isAddModalOpen" class="fixed inset-0 bg-black/25 backdrop-blur-[2px] flex items-end md:items-center justify-center z-50 p-0 md:p-6" @click.self="closeAddModal">
+    <div class="bg-[#faf8f5] w-full md:max-w-lg rounded-t-3xl md:rounded-3xl p-6 space-y-4 border-t md:border border-[#ede9df] shadow-2xl max-h-[92vh] md:max-h-[85vh] overflow-y-auto no-scrollbar" :class="{'border-2 border-[#111111] bg-white': isDoodleMode}">
+      <div class="flex justify-between items-center mb-2">
+        <h3 class="text-sm font-semibold" :class="{'font-black text-[#111111]': isDoodleMode}">{{ editingExpenseId ? '編輯支出' : '記錄一筆支出' }}</h3>
+        <button @click="closeAddModal" class="text-[#a8a297] hover:text-[#4a463f]" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
       
-      <div v-show="isQuickItemsExpanded" class="space-y-2 transition-all duration-300">
-        <div v-if="quickItems.length" class="space-y-2 max-h-64 overflow-y-auto no-scrollbar">
-          <div v-for="(qi,idx) in quickItems" :key="qi.id" class="flex items-center justify-between p-2.5 bg-[#f4f1ea]/60 rounded-xl border border-[#ede9df]/60">
-            <div class="flex-1 min-w-0">
-              <p class="text-xs font-medium text-[#4a463f] truncate">{{ qi.title }}</p>
-              <p class="text-[10px] text-[#a8a297] mt-0.5">NT$ {{ formatNumber(qi.amount) }} · {{ qi.category }} · {{ qi.payMethod }}</p>
-            </div>
-            <div class="flex items-center gap-2 ml-2 shrink-0">
-              <button @click="openQuickItemModal(qi)" class="text-[#a8a297] hover:text-[#736c60]"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
-              <button @click="deleteQuickItem(qi.id)" class="text-[#a8a297] hover:text-red-700"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
-            </div>
-          </div>
+      <!-- 常用支出快選 -->
+      <div v-if="!editingExpenseId && quickItems.length">
+        <label class="text-[10px] text-[#a8a297] uppercase tracking-wider block mb-1.5" :class="{'text-[#111111] font-bold': isDoodleMode}">常用支出快選</label>
+        <div class="flex flex-wrap gap-2 max-h-24 overflow-y-auto no-scrollbar">
+          <button v-for="qi in quickItems" :key="qi.id" @click="applyQuickItem(qi)"
+            class="text-xs bg-[#f4f1ea] hover:bg-[#eae5da] text-[#4a463f] px-3 py-1.5 rounded-lg border border-[#ede9df]/60 transition-colors" :class="['doodle-btn']">
+            {{ qi.title }} <span class="text-[#a8a297]" :class="{'text-[#111111]/70': isDoodleMode}">NT${{ formatNumber(qi.amount) }}</span>
+          </button>
         </div>
-        <div class="text-center py-4 text-[10px] text-[#a8a297] italic" v-else>尚無常用支出，點擊「新增」來設定。</div>
       </div>
-    </div>
 
-    <!-- 支出類別 -->
-    <div class="bg-white p-5 rounded-2xl border border-[#ede9df] space-y-3">
-      <h3 class="text-xs uppercase tracking-wider text-[#a8a297]">支出類別管理</h3>
-      <div class="flex flex-wrap gap-2 pb-2">
-        <span v-for="cat in categories" :key="cat" class="text-xs bg-[#f4f1ea] text-[#4a463f] px-2.5 py-1 rounded-lg flex items-center border border-[#ede9df]/40">{{ cat }}<button @click="deleteCategory(cat)" class="ml-1.5 text-[#a8a297] hover:text-red-700 text-[10px]">×</button></span>
+      <div>
+        <label class="text-[10px] text-[#a8a297] uppercase tracking-wider block mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">金額</label>
+        <input type="number" v-model="newExpense.amount" placeholder="0" class="w-full bg-transparent text-3xl font-light text-[#3d3a34] border-b border-[#ede9df] py-1 focus:outline-none" :class="['doodle-input', 'pl-2']">
       </div>
-      <div class="flex gap-2">
-        <input type="text" v-model="newCategoryName" placeholder="新增類別名稱" class="flex-1 bg-[#f4f1ea]/50 border border-[#ede9df] rounded-lg p-2 text-xs focus:outline-none">
-        <button @click="addCategory" class="px-3 bg-[#eae5da] text-xs rounded-lg hover:bg-[#dfd9cc]">+ 新增</button>
+      
+      <div class="grid grid-cols-2 gap-3">
+        <div><label class="text-[10px] text-[#a8a297] block mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">品項名稱</label><input type="text" v-model="newExpense.title" placeholder="如：觀光列車便當" class="w-full bg-[#f4f1ea]/60 border border-[#ede9df] rounded-lg p-2 text-sm focus:outline-none" :class="['doodle-input']"></div>
+        <div><label class="text-[10px] text-[#a8a297] block mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">日期</label><input type="date" v-model="newExpense.date" class="w-full bg-[#f4f1ea]/60 border border-[#ede9df] rounded-lg p-2 text-sm focus:outline-none" :class="['doodle-input']"></div>
       </div>
-    </div>
-    <!-- 支付方式 -->
-    <div class="bg-white p-5 rounded-2xl border border-[#ede9df] space-y-3">
-      <h3 class="text-xs uppercase tracking-wider text-[#a8a297]">支付方式管理</h3>
-      <div class="flex flex-wrap gap-2 pb-2">
-        <span v-for="method in payMethods" :key="method" class="text-xs bg-[#f4f1ea] text-[#4a463f] px-2.5 py-1 rounded-lg flex items-center border border-[#ede9df]/40">{{ method }}<button @click="deletePayMethod(method)" class="ml-1.5 text-[#a8a297] hover:text-red-700 text-[10px]">×</button></span>
-      </div>
-      <div class="flex gap-2">
-        <input type="text" v-model="newPayMethodName" placeholder="新增支付方式" class="flex-1 bg-[#f4f1ea]/50 border border-[#ede9df] rounded-lg p-2 text-xs focus:outline-none">
-        <button @click="addPayMethod" class="px-3 bg-[#eae5da] text-xs rounded-lg hover:bg-[#dfd9cc]">+ 新增</button>
-      </div>
-    </div>
-  </div>
 
-</main>
-
-<!-- ADD / EDIT EXPENSE MODAL -->
-<div v-if="isAddModalOpen" class="absolute inset-0 bg-black/20 backdrop-blur-[1px] flex items-end justify-center z-40" @click.self="closeAddModal">
-  <div class="bg-[#faf8f5] w-full rounded-t-3xl p-6 space-y-4 border-t border-[#ede9df] shadow-xl max-h-[92vh] overflow-y-auto no-scrollbar">
-    <div class="flex justify-between items-center mb-2">
-      <h3 class="text-sm font-medium">{{ editingExpenseId ? '編輯支出' : '記錄一筆支出' }}</h3>
-      <button @click="closeAddModal" class="text-[#a8a297] hover:text-[#4a463f]"><i data-lucide="x" class="w-5 h-5"></i></button>
-    </div>
-    
-    <!-- 常用支出快選 -->
-    <div v-if="!editingExpenseId && quickItems.length">
-      <label class="text-[10px] text-[#a8a297] uppercase tracking-wider block mb-1.5">常用支出快選</label>
-      <div class="flex flex-wrap gap-2">
-        <button v-for="qi in quickItems" :key="qi.id" @click="applyQuickItem(qi)"
-          class="text-xs bg-[#f4f1ea] hover:bg-[#eae5da] text-[#4a463f] px-3 py-1.5 rounded-lg border border-[#ede9df]/60 transition-colors">
-          {{ qi.title }} <span class="text-[#a8a297]">NT${{ formatNumber(qi.amount) }}</span>
-        </button>
-      </div>
-    </div>
-
-    <div>
-      <label class="text-[10px] text-[#a8a297] uppercase tracking-wider block mb-1">金額</label>
-      <input type="number" v-model="newExpense.amount" placeholder="0" class="w-full bg-transparent text-3xl font-light text-[#3d3a34] border-b border-[#ede9df] py-1 focus:outline-none">
-    </div>
-    
-    <div class="grid grid-cols-2 gap-3">
-      <div><label class="text-[10px] text-[#a8a297] block mb-1">品項名稱</label><input type="text" v-model="newExpense.title" placeholder="如：觀光列車便當" class="w-full bg-[#f4f1ea]/60 border border-[#ede9df] rounded-lg p-2 text-sm focus:outline-none"></div>
-      <div><label class="text-[10px] text-[#a8a297] block mb-1">日期</label><input type="date" v-model="newExpense.date" class="w-full bg-[#f4f1ea]/60 border border-[#ede9df] rounded-lg p-2 text-sm focus:outline-none"></div>
-    </div>
-
-    <!-- 支援直接在彈窗內上傳或拍攝相片 -->
-    <div>
-      <label class="text-[10px] text-[#a8a297] block mb-1.5">收據 / 發票相片</label>
-      <div class="flex items-center gap-3">
-        <div v-if="!newExpense.photo" class="flex gap-2">
-          <label class="px-3 py-2 bg-[#eae5da] hover:bg-[#dfd9cc] text-[#4a463f] text-xs rounded-xl cursor-pointer flex items-center gap-1.5 transition-colors">
-            <i data-lucide="image" class="w-3.5 h-3.5"></i> 選擇相片
-            <input type="file" accept="image/*" class="hidden" @change="onExpensePhotoUploaded" />
-          </label>
-          <label class="px-3 py-2 bg-[#8c8577] hover:bg-[#736c60] text-white text-xs rounded-xl cursor-pointer flex items-center gap-1.5 transition-colors" @click="startCameraForExpense">
-            <i data-lucide="camera" class="w-3.5 h-3.5"></i> 拍照
-          </label>
-        </div>
-        <div class="flex items-center gap-2 w-full">
-          <div class="relative w-16 h-16 rounded-lg border border-[#ede9df] overflow-hidden bg-black/5 shrink-0">
-            <img :src="newExpense.photo" class="w-full h-full object-cover" />
-            <button @click="newExpense.photo = ''" class="absolute -top-0.5 -right-0.5 bg-black/60 text-white rounded-full p-0.5">
-              <i data-lucide="x" class="w-3 h-3"></i>
+      <!-- 彈窗內相片 -->
+      <div>
+        <label class="text-[10px] text-[#a8a297] block mb-1.5" :class="{'text-[#111111] font-bold': isDoodleMode}">收據 / 發票相片</label>
+        <div class="flex items-center gap-3">
+          <div v-if="!newExpense.photo" class="flex gap-2">
+            <label class="px-3 py-2 bg-[#eae5da] hover:bg-[#dfd9cc] text-[#4a463f] text-xs rounded-xl cursor-pointer flex items-center gap-1.5 transition-colors" :class="['doodle-btn']">
+              <i data-lucide="image" class="w-3.5 h-3.5"></i> 選擇相片
+              <input type="file" accept="image/*" class="hidden" @change="onExpensePhotoUploaded" />
+            </label>
+            <button class="px-3 py-2 bg-[#8c8577] hover:bg-[#736c60] text-white text-xs rounded-xl flex items-center gap-1.5 transition-colors" :class="['doodle-btn']" @click="startCameraForExpense">
+              <i data-lucide="camera" class="w-3.5 h-3.5"></i> 拍照
             </button>
           </div>
-          <span class="text-[10px] text-[#8c8577]">相片已連結，將隨支出一併儲存</span>
+          <div v-else class="flex items-center gap-2 w-full">
+            <div class="relative w-16 h-16 rounded-lg border border-[#ede9df] overflow-hidden bg-black/5 shrink-0" :class="{'border-2 border-[#111111]': isDoodleMode}">
+              <img :src="newExpense.photo" class="w-full h-full object-cover" />
+              <button @click="newExpense.photo = ''" class="absolute -top-0.5 -right-0.5 bg-black/60 text-white rounded-full p-0.5">
+                <i data-lucide="x" class="w-3 h-3"></i>
+              </button>
+            </div>
+            <span class="text-[10px] text-[#8c8577]" :class="{'text-[#111111] font-bold': isDoodleMode}">相片已連結，將隨支出一併儲存</span>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- 相機即時拍照遮罩 -->
-    <div v-if="isModalCameraActive" class="p-3 bg-black rounded-2xl overflow-hidden aspect-[4/3] flex flex-col justify-between relative">
-      <video id="modal-camera-feed" autoplay playsinline class="w-full h-full object-cover rounded-xl"></video>
-      <div class="absolute bottom-6 left-0 right-0 flex justify-around items-center px-6">
-        <button @click="stopCameraForExpense" class="w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center backdrop-blur-md">
-          <i data-lucide="x" class="w-4 h-4"></i>
-        </button>
-        <button @click="capturePhotoForExpense" class="w-12 h-12 rounded-full border-4 border-white bg-red-500/80 hover:bg-red-600 active:scale-95 transition-all flex items-center justify-center">
-          <span class="w-6 h-6 rounded-full bg-white block"></span>
-        </button>
+      <!-- 相機遮罩 -->
+      <div v-if="isModalCameraActive" class="p-3 bg-black rounded-2xl overflow-hidden aspect-[4/3] flex flex-col justify-between relative" :class="{'border-2 border-[#111111]': isDoodleMode}">
+        <video id="modal-camera-feed" autoplay playsinline class="w-full h-full object-cover rounded-xl"></video>
+        <div class="absolute bottom-6 left-0 right-0 flex justify-around items-center px-6">
+          <button @click="stopCameraForExpense" class="w-9 h-9 rounded-full bg-black/60 text-white flex items-center justify-center backdrop-blur-md">
+            <i data-lucide="x" class="w-4 h-4"></i>
+          </button>
+          <button @click="capturePhotoForExpense" class="w-12 h-12 rounded-full border-4 border-white bg-red-500/80 hover:bg-red-600 active:scale-95 transition-all flex items-center justify-center">
+            <span class="w-6 h-6 rounded-full bg-white block"></span>
+          </button>
+        </div>
       </div>
+
+      <div><label class="text-[10px] text-[#a8a297] block mb-1.5" :class="{'text-[#111111] font-bold': isDoodleMode}">選擇分類</label><div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1"><button v-for="cat in categories" :key="cat" @click="newExpense.category=cat" :class="[newExpense.category===cat ? (isDoodleMode ? 'bg-[#fff176] font-bold border-2 border-[#111111]' : 'bg-[#8c8577] text-white') : (isDoodleMode ? 'bg-white border border-[#111111]' : 'bg-[#f4f1ea] text-[#6b655b]')]" class="text-xs px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors">{{ cat }}</button></div></div>
+      <div><label class="text-[10px] text-[#a8a297] block mb-1.5" :class="{'text-[#111111] font-bold': isDoodleMode}">支付方式</label><div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1"><button v-for="method in payMethods" :key="method" @click="newExpense.payMethod=method" :class="[newExpense.payMethod===method ? (isDoodleMode ? 'bg-[#fff176] font-bold border-2 border-[#111111]' : 'bg-[#8c8577] text-white') : (isDoodleMode ? 'bg-white border border-[#111111]' : 'bg-[#f4f1ea] text-[#6b655b]')]" class="text-xs px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors">{{ method }}</button></div></div>
+      <button @click="submitExpense" class="w-full py-3.5 bg-[#8c8577] text-white rounded-xl text-sm font-medium hover:bg-[#736c60] transition-colors" :class="['doodle-btn']">{{ editingExpenseId ? '儲存修改' : '儲存紀錄' }}</button>
     </div>
-
-    <div><label class="text-[10px] text-[#a8a297] block mb-1.5">選擇分類</label><div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1"><button v-for="cat in categories" :key="cat" @click="newExpense.category=cat" :class="{'bg-[#8c8577] text-white':newExpense.category===cat,'bg-[#f4f1ea] text-[#6b655b]':newExpense.category!==cat}" class="text-xs px-3 py-1.5 rounded-lg whitespace-nowrap">{{ cat }}</button></div></div>
-    <div><label class="text-[10px] text-[#a8a297] block mb-1.5">支付方式</label><div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1"><button v-for="method in payMethods" :key="method" @click="newExpense.payMethod=method" :class="{'bg-[#8c8577] text-white':newExpense.payMethod===method,'bg-[#f4f1ea] text-[#6b655b]':newExpense.payMethod!==method}" class="text-xs px-3 py-1.5 rounded-lg whitespace-nowrap">{{ method }}</button></div></div>
-    <button @click="submitExpense" class="w-full py-3 bg-[#8c8577] text-white rounded-xl text-sm font-medium">{{ editingExpenseId ? '儲存修改' : '儲存紀錄' }}</button>
   </div>
-</div>
 
-<!-- QUICK ITEM MODAL -->
-<div v-if="isQuickItemModalOpen" class="absolute inset-0 bg-black/20 backdrop-blur-[1px] flex items-end justify-center z-40" @click.self="closeQuickItemModal">
-  <div class="bg-[#faf8f5] w-full rounded-t-3xl p-6 space-y-4 border-t border-[#ede9df] shadow-xl">
-    <div class="flex justify-between items-center">
-      <h3 class="text-sm font-medium">{{ editingQuickItemId ? '編輯常用支出' : '新增常用支出' }}</h3>
-      <button @click="closeQuickItemModal" class="text-[#a8a297] hover:text-[#4a463f]"><i data-lucide="x" class="w-5 h-5"></i></button>
+  <!-- QUICK ITEM MODAL -->
+  <div v-if="isQuickItemModalOpen" class="fixed inset-0 bg-black/25 backdrop-blur-[2px] flex items-end md:items-center justify-center z-50 p-0 md:p-6" @click.self="closeQuickItemModal">
+    <div class="bg-[#faf8f5] w-full md:max-w-md rounded-t-3xl md:rounded-3xl p-6 space-y-4 border-t md:border border-[#ede9df] shadow-2xl" :class="{'border-2 border-[#111111] bg-white': isDoodleMode}">
+      <div class="flex justify-between items-center">
+        <h3 class="text-sm font-semibold" :class="{'font-black text-[#111111]': isDoodleMode}">{{ editingQuickItemId ? '編輯常用支出' : '新增常用支出' }}</h3>
+        <button @click="closeQuickItemModal" class="text-[#a8a297] hover:text-[#4a463f]" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="x" class="w-5 h-5"></i></button>
+      </div>
+      <div><label class="text-[10px] text-[#a8a297] block mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">品項名稱</label><input type="text" v-model="quickItemForm.title" placeholder="如：珍珠奶茶" class="w-full bg-[#f4f1ea]/60 border border-[#ede9df]/60 rounded-lg p-2.5 text-sm focus:outline-none" :class="['doodle-input']"></div>
+      <div><label class="text-[10px] text-[#a8a297] uppercase tracking-wider block mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">預設金額</label><input type="number" v-model="quickItemForm.amount" placeholder="0" class="w-full bg-transparent text-2xl font-light text-[#3d3a34] border-b border-[#ede9df] py-1 focus:outline-none" :class="['doodle-input', 'pl-2']"></div>
+      <div><label class="text-[10px] text-[#a8a297] block mb-1.5" :class="{'text-[#111111] font-bold': isDoodleMode}">分類</label><div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1"><button v-for="cat in categories" :key="cat" @click="quickItemForm.category=cat" :class="[quickItemForm.category===cat ? (isDoodleMode ? 'bg-[#fff176] font-bold border-2 border-[#111111]' : 'bg-[#8c8577] text-white') : (isDoodleMode ? 'bg-white border border-[#111111]' : 'bg-[#f4f1ea] text-[#6b655b]')]" class="text-xs px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors">{{ cat }}</button></div></div>
+      <div><label class="text-[10px] text-[#a8a297] block mb-1.5" :class="{'text-[#111111] font-bold': isDoodleMode}">支付方式</label><div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1"><button v-for="method in payMethods" :key="method" @click="quickItemForm.payMethod=method" :class="[quickItemForm.payMethod===method ? (isDoodleMode ? 'bg-[#fff176] font-bold border-2 border-[#111111]' : 'bg-[#8c8577] text-white') : (isDoodleMode ? 'bg-white border border-[#111111]' : 'bg-[#f4f1ea] text-[#6b655b]')]" class="text-xs px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors">{{ method }}</button></div></div>
+      <button @click="saveQuickItem" class="w-full py-3.5 bg-[#8c8577] text-white rounded-xl text-sm font-medium hover:bg-[#736c60] transition-colors" :class="['doodle-btn']">{{ editingQuickItemId ? '儲存修改' : '建立常用支出' }}</button>
     </div>
-    <div><label class="text-[10px] text-[#a8a297] block mb-1">品項名稱</label><input type="text" v-model="quickItemForm.title" placeholder="如：珍珠奶茶" class="w-full bg-[#f4f1ea]/60 border border-[#ede9df]/60 rounded-lg p-2 text-sm focus:outline-none"></div>
-    <div><label class="text-[10px] text-[#a8a297] uppercase tracking-wider block mb-1">預設金額</label><input type="number" v-model="quickItemForm.amount" placeholder="0" class="w-full bg-transparent text-2xl font-light text-[#3d3a34] border-b border-[#ede9df] py-1 focus:outline-none"></div>
-    <div><label class="text-[10px] text-[#a8a297] block mb-1.5">分類</label><div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1"><button v-for="cat in categories" :key="cat" @click="quickItemForm.category=cat" :class="{'bg-[#8c8577] text-white':quickItemForm.category===cat,'bg-[#f4f1ea] text-[#6b655b]':quickItemForm.category!==cat}" class="text-xs px-3 py-1.5 rounded-lg whitespace-nowrap">{{ cat }}</button></div></div>
-    <div><label class="text-[10px] text-[#a8a297] block mb-1.5">支付方式</label><div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1"><button v-for="method in payMethods" :key="method" @click="quickItemForm.payMethod=method" :class="{'bg-[#8c8577] text-white':quickItemForm.payMethod===method,'bg-[#f4f1ea] text-[#6b655b]':quickItemForm.payMethod!==method}" class="text-xs px-3 py-1.5 rounded-lg whitespace-nowrap">{{ method }}</button></div></div>
-    <button @click="saveQuickItem" class="w-full py-3 bg-[#8c8577] text-white rounded-xl text-sm font-medium">{{ editingQuickItemId ? '儲存修改' : '建立常用支出' }}</button>
   </div>
-</div>
 
-<!-- TOAST -->
-<div v-if="toast.show" class="absolute bottom-20 left-6 right-6 bg-[#4a463f] text-[#faf8f5] text-xs px-4 py-3 rounded-xl flex justify-between items-center shadow-lg z-50 animate-bounce">
-  <span>{{ toast.message }}</span>
-  <button v-if="toast.onUndo" @click="toast.onUndo" class="text-[#dfd9cc] underline tracking-wider font-medium">復原？</button>
-</div>
+  <!-- TOAST -->
+  <div v-if="toast.show" class="fixed bottom-20 md:bottom-6 left-6 right-6 md:left-auto md:right-6 md:w-80 bg-[#4a463f] text-[#faf8f5] text-xs px-4 py-3 rounded-xl flex justify-between items-center shadow-lg z-50 animate-bounce" :class="{'bg-[#111111] border-2 border-white': isDoodleMode}">
+    <span>{{ toast.message }}</span>
+    <button v-if="toast.onUndo" @click="toast.onUndo" class="text-[#dfd9cc] underline tracking-wider font-medium" :class="{'text-[#fff176]': isDoodleMode}">復原？</button>
+  </div>
 
-<!-- NAV -->
-<nav class="absolute bottom-0 left-0 right-0 bg-[#faf8f5] border-t border-[#ede9df] px-4 py-2 flex justify-around items-center z-30">
-  <button @click="switchTab('home')" :class="textClass('home')" class="flex flex-col items-center space-y-0.5 py-1 flex-1"><i data-lucide="home" class="w-4 h-4"></i><span class="text-[9px]">首頁</span></button>
-  <button @click="switchTab('records')" :class="textClass('records')" class="flex flex-col items-center space-y-0.5 py-1 flex-1"><i data-lucide="file-text" class="w-4 h-4"></i><span class="text-[9px]">紀錄</span></button>
-  <button @click="switchTab('scanner')" :class="textClass('scanner')" class="flex flex-col items-center space-y-0.5 py-1 flex-1"><div class="p-1 rounded-lg" :class="currentTab==='scanner'?'bg-[#eae5da]':''"><i data-lucide="scan-line" class="w-4 h-4"></i></div><span class="text-[9px]">掃描</span></button>
-  <button @click="switchTab('analytics')" :class="textClass('analytics')" class="flex flex-col items-center space-y-0.5 py-1 flex-1"><i data-lucide="pie-chart" class="w-4 h-4"></i><span class="text-[9px]">統計</span></button>
-  <button @click="switchTab('settings')" :class="textClass('settings')" class="flex flex-col items-center space-y-0.5 py-1 flex-1"><i data-lucide="settings" class="w-4 h-4"></i><span class="text-[9px]">設定</span></button>
-</nav>
+  <!-- 📱 手機版專屬底欄導覽 -->
+  <nav class="md:hidden absolute bottom-0 left-0 right-0 bg-[#faf8f5] border-t border-[#ede9df] px-4 py-2 flex justify-around items-center z-30" :class="{'border-t-2 border-[#111111] bg-white': isDoodleMode}">
+    <button @click="switchTab('home')" :class="textClass('home')" class="flex flex-col items-center space-y-0.5 py-1 flex-1"><i data-lucide="home" class="w-4 h-4"></i><span class="text-[9px]">首頁</span></button>
+    <button @click="switchTab('records')" :class="textClass('records')" class="flex flex-col items-center space-y-0.5 py-1 flex-1"><i data-lucide="file-text" class="w-4 h-4"></i><span class="text-[9px]">紀錄</span></button>
+    <button @click="switchTab('scanner')" :class="textClass('scanner')" class="flex flex-col items-center space-y-0.5 py-1 flex-1"><div class="p-1 rounded-lg" :class="currentTab==='scanner'?(isDoodleMode ? 'bg-[#fff176] border border-[#111111]' : 'bg-[#eae5da]') : ''"><i data-lucide="scan-line" class="w-4 h-4"></i></div><span class="text-[9px]">掃描</span></button>
+    <button @click="switchTab('analytics')" :class="textClass('analytics')" class="flex flex-col items-center space-y-0.5 py-1 flex-1"><i data-lucide="pie-chart" class="w-4 h-4"></i><span class="text-[9px]">統計</span></button>
+    <button @click="switchTab('settings')" :class="textClass('settings')" class="flex flex-col items-center space-y-0.5 py-1 flex-1"><i data-lucide="settings" class="w-4 h-4"></i><span class="text-[9px]">設定</span></button>
+  </nav>
+
 </div>
 
 <script>
 const { createApp, ref, computed, onMounted, nextTick, watch } = Vue;
 
-// ══ WEATHER ══
+// ══ WEATHER (改用支援 CORS 的 Open-Meteo Geocoding API) ══
 const WMO_ICON={0:'☀️',1:'🌤',2:'⛅',3:'☁️',45:'🌫',48:'🌫',51:'🌦',53:'🌦',55:'🌧',61:'🌧',63:'🌧',65:'🌧',71:'🌨',73:'🌨',75:'❄️',77:'❄️',80:'🌦',81:'🌧',82:'⛈',85:'🌨',86:'❄️',95:'⛈',96:'⛈',99:'⛈'};
 function wmoEmoji(c){return WMO_ICON[c]||WMO_ICON[Math.floor(c/10)*10]||'🌡️';}
+
 async function geocodeCity(city){
-  const r=await fetch('https://nominatim.openstreetmap.org/search?q='+encodeURIComponent(city)+'&format=json&limit=1&accept-language=zh-TW',{headers:{'User-Agent':'SabiFlowApp/6.1'}});
-  const j=await r.json();if(!j.length)throw new Error('NOT_FOUND');
-  return{lat:parseFloat(j[0].lat),lon:parseFloat(j[0].lon),name:j[0].display_name.split(',')[0]};
+  // 更換為穩定無 CORS 阻擋的 Open-Meteo 官方 Geocoding API
+  const r=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(city)+'&count=1&language=zh');
+  const j=await r.json();
+  if(!j.results || !j.results.length) throw new Error('NOT_FOUND');
+  return {lat: j.results[0].latitude, lon: j.results[0].longitude, name: j.results[0].name};
 }
+
 async function getThreeDayForecast(lat,lon){
   const r=await fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=auto&forecast_days=3');
   const wx=await r.json();const d=wx.daily;const labels=['今日','明日','後日'];
@@ -899,26 +1121,30 @@ createApp({
   setup(){
     const currentTab=ref('home'),recordSubTab=ref('date'),analyticsPeriod=ref('month');
 
-    // 當前現實時區的年份和月份
+    const isDoodleMode = ref(localStorage.getItem('sabiflow_doodle_mode') === 'true');
+    const toggleStyleMode = () => {
+      isDoodleMode.value = !isDoodleMode.value;
+      localStorage.setItem('sabiflow_doodle_mode', isDoodleMode.value);
+      showToast(isDoodleMode.value ? '已切換至：手繪塗鴉風 ✏️' : '已切換至：極簡侘寂風 🌾');
+      nextTick(() => lucide.createIcons());
+    };
+
     const currentYear = new Date().getFullYear();
     const currentMonth = String(new Date().getMonth() + 1).padStart(2, '0');
 
-    // ══ 新增：收起與展開控制狀態 ══
-    const isRecentActivityExpanded = ref(true); // 首頁最近活動
-    const isTopExpensesExpanded = ref(true);      // 統計 Top 10 消費
-    const isSettingsBudgetsExpanded = ref(true);  // 設定自訂預算
-    const isQuickItemsExpanded = ref(true);       // 設定常用支出選項
+    const isRecentActivityExpanded = ref(true);
+    const isTopExpensesExpanded = ref(true);
+    const isSettingsBudgetsExpanded = ref(true);
+    const isQuickItemsExpanded = ref(true);
+    const isAnalyticsComparisonExpanded = ref(true);
 
-    // ══ 紀錄頁篩選控制 ══
     const recordsFilterMonth = ref('all');
     const recordsFilterCategory = ref('all');
-    const collapsedDateGroups = ref({}); // 日期折疊狀態 (日期: boolean)
+    const collapsedDateGroups = ref({});
 
-    // ══ 統計頁年月選擇 ══
     const analyticsSelectedYear = ref(String(currentYear));
     const analyticsSelectedMonth = ref(currentMonth);
 
-    // ══ 設定頁預算控制 ══
     const settingsSelectedYear = ref(String(currentYear));
     const settingsSelectedMonth = ref(currentMonth);
     const settingsYearOptions = ref([String(currentYear - 2), String(currentYear - 1), String(currentYear), String(currentYear + 1), String(currentYear + 2)]);
@@ -927,21 +1153,26 @@ createApp({
     // 天氣
     const wCity=ref([localStorage.getItem('sabiflow_wcity0')||'',localStorage.getItem('sabiflow_wcity1')||'']);
     const wData=ref([[],[]]),wName=ref(['','']),wLoading=ref([false,false]),wError=ref(['','']);
+    
     async function fetchWeather(idx){
       const city=wCity.value[idx].trim();if(!city)return;
       localStorage.setItem('sabiflow_wcity'+idx,city);
       wLoading.value[idx]=true;wError.value[idx]='';wData.value[idx]=[];
-      try{const{lat,lon,name}=await geocodeCity(city);const days=await getThreeDayForecast(lat,lon);wName.value[idx]=name;wData.value[idx]=days;nextTick(()=>lucide.createIcons());}
-      catch(e){wError.value[idx]=e.message==='NOT_FOUND'?'找不到「'+city+'」，請換寫法':'查詢失敗，請稍後再試';}
+      try{
+        const{lat,lon,name}=await geocodeCity(city);
+        const days=await getThreeDayForecast(lat,lon);
+        wName.value[idx]=name;wData.value[idx]=days;
+        nextTick(()=>lucide.createIcons());
+      }
+      catch(e){
+        wError.value[idx]=e.message==='NOT_FOUND'?'找不到「'+city+'」，請換寫法':'氣象服務暫停，請稍後再試';
+      }
       finally{wLoading.value[idx]=false;}
     }
 
-    // 專案資料載入與同步
-    const projectId=ref(localStorage.getItem('sabiflow_active_project_id')||'生活支出紀錄');
-    const tempProjectId=ref(projectId.value);
+    const projectId=ref('生活支出紀錄');
     const categories=ref([]),payMethods=ref([]),categoryBudgets=ref({}),expenses=ref([]),quickItems=ref([]);
     
-    // 智慧相機與感知解析狀態
     const isCameraActive=ref(false);
     const isScanning=ref(false);
     const scanStatusText=ref('正在呼叫智慧感知解析中...');
@@ -950,10 +1181,8 @@ createApp({
     const scanPhoto = ref(null);
     const scannedResult = ref(null);
 
-    // 收據展開檢視狀態控制
     const expandedExpensePhotos = ref({});
 
-    // 手動輸入表單
     const scanForm = ref({
       title: '', amount: null,
       date: new Date().toISOString().split('T')[0],
@@ -961,7 +1190,6 @@ createApp({
       payMethod: ''
     });
 
-    // 獲取某一特定年份和月份的類別預算
     const getMonthlyCategoryBudget = (cat, year, month) => {
       const yStr = String(year);
       const mStr = String(month).padStart(2, '0');
@@ -971,7 +1199,6 @@ createApp({
       return Number(categoryBudgets.value[cat]) || 0;
     };
 
-    // 取得在設定頁面上自訂年度預算的雙向綁定數值
     const getBudgetBindingValue = (cat) => {
       const yStr = settingsSelectedYear.value;
       const mStr = settingsSelectedMonth.value;
@@ -981,46 +1208,29 @@ createApp({
       return categoryBudgets.value[cat] || null;
     };
 
-    // 變更在設定頁自訂年度預算的值
     const updateBudgetBindingValue = (cat, val) => {
       const yStr = settingsSelectedYear.value;
       const mStr = settingsSelectedMonth.value;
-      
-      if (!yearlyMonthlyBudgets.value[yStr]) {
-        yearlyMonthlyBudgets.value[yStr] = {};
-      }
-      if (!yearlyMonthlyBudgets.value[yStr][mStr]) {
-        yearlyMonthlyBudgets.value[yStr][mStr] = {};
-      }
-      
+      if (!yearlyMonthlyBudgets.value[yStr]) yearlyMonthlyBudgets.value[yStr] = {};
+      if (!yearlyMonthlyBudgets.value[yStr][mStr]) yearlyMonthlyBudgets.value[yStr][mStr] = {};
       yearlyMonthlyBudgets.value[yStr][mStr][cat] = val === '' ? null : Number(val);
       saveToStorage();
     };
 
-    // 複製目前設定月份的預算到這整年的所有月份
     const replicateSettingsBudget = () => {
       const yStr = settingsSelectedYear.value;
       const mStr = settingsSelectedMonth.value;
-      
       const sourceBudget = {};
-      categories.value.forEach(cat => {
-        sourceBudget[cat] = getBudgetBindingValue(cat);
-      });
-
-      if (!yearlyMonthlyBudgets.value[yStr]) {
-        yearlyMonthlyBudgets.value[yStr] = {};
-      }
-
+      categories.value.forEach(cat => { sourceBudget[cat] = getBudgetBindingValue(cat); });
+      if (!yearlyMonthlyBudgets.value[yStr]) yearlyMonthlyBudgets.value[yStr] = {};
       for (let m = 1; m <= 12; m++) {
         const targetMonth = String(m).padStart(2, '0');
         yearlyMonthlyBudgets.value[yStr][targetMonth] = { ...sourceBudget };
       }
-
       saveToStorage();
       showToast(`已複製 ${yStr} 年 ${mStr} 月的預算設定至該年所有 12 個月份！`);
     };
 
-    // 載入專案格局上下文
     const loadProjectContext=async()=>{
       const pid=projectId.value;
       const lsLoad=(key,fb)=>{try{const s=localStorage.getItem('sabiflow_'+pid+'_'+key);return s?JSON.parse(s):fb;}catch(e){return fb;}};
@@ -1043,12 +1253,8 @@ createApp({
       expenses.value=lsLoad('expenses',defaults.expenses);
       quickItems.value=lsLoad('quick_items',defaults.quickItems);
       
-      if (!scanForm.value.category && categories.value.length) {
-        scanForm.value.category = categories.value[0];
-      }
-      if (!scanForm.value.payMethod && payMethods.value.length) {
-        scanForm.value.payMethod = payMethods.value[0];
-      }
+      if (!scanForm.value.category && categories.value.length) scanForm.value.category = categories.value[0];
+      if (!scanForm.value.payMethod && payMethods.value.length) scanForm.value.payMethod = payMethods.value[0];
 
       if(window._fb&&window._fb.ready){
         try{
@@ -1062,7 +1268,6 @@ createApp({
             if(d.yearlyMonthlyBudgets)yearlyMonthlyBudgets.value=d.yearlyMonthlyBudgets;
             if(d.expenses)expenses.value=d.expenses;
             if(d.quickItems)quickItems.value=d.quickItems;
-            
             if (categories.value.length) scanForm.value.category = categories.value[0];
             if (payMethods.value.length) scanForm.value.payMethod = payMethods.value[0];
           }
@@ -1091,22 +1296,10 @@ createApp({
             quickItems:quickItems.value,
             updatedAt:new Date().toISOString()
           });
-          console.log('Firebase 儲存成功');
         }catch(e){console.warn('Firebase 寫入失敗，資料已存本機',e);}
       }
     };
 
-    const switchProject=()=>{
-      const t=tempProjectId.value.trim();
-      if(!t)return;
-      projectId.value=t;
-      localStorage.setItem('sabiflow_active_project_id',t);
-      loadProjectContext();
-      showToast('已切換至：'+t);
-      switchTab('home');
-    };
-
-    // 狀態設定
     const newCategoryName=ref(''),newPayMethodName=ref('');
     const expandedCategories=ref({'交通':true,'餐飲':true});
     const isAddModalOpen=ref(false);
@@ -1129,7 +1322,6 @@ createApp({
 
     const clearScanPhoto = () => { scanPhoto.value = null; };
 
-    // 儲存掃描頁之手動記帳
     const submitScanExpense = () => {
       if (!scanForm.value.amount || !scanForm.value.title) {
         showToast('請填寫品項名稱與金額');
@@ -1162,9 +1354,7 @@ createApp({
         cameraStream.value = stream;
         nextTick(() => {
           const video = document.getElementById('camera-feed');
-          if (video) {
-            video.srcObject = stream;
-          }
+          if (video) video.srcObject = stream;
           lucide.createIcons();
         });
       } catch (err) {
@@ -1197,7 +1387,6 @@ createApp({
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
         const base64Image = canvas.toDataURL('image/jpeg');
         scanPhoto.value = base64Image;
         stopCamera();
@@ -1207,8 +1396,7 @@ createApp({
 
     const triggerFileInput=()=>{
       const input = document.getElementById("file-upload-input");
-      if (!input) return;
-      input.click();
+      if (input) input.click();
     };
 
     const handleFileUpload=(event)=>{
@@ -1222,11 +1410,9 @@ createApp({
       reader.readAsDataURL(file);
     };
 
-    // 串接高精度感知模型 (使用 Gemini Flash API)
     const processImageWithGemini=async(base64Data)=>{
       isScanning.value = true;
       scanStatusText.value = '正在上傳與解析感知中...';
-
       const apiKey = ""; 
       if (!apiKey) {
         setTimeout(() => {
@@ -1235,17 +1421,14 @@ createApp({
         }, 1000);
         return;
       }
-
       try {
         const parts = base64Data.split(',');
         const mimeMatch = parts[0].match(/:(.*?);/);
         const mimeType = mimeMatch ? mimeMatch[1] : 'image/jpeg';
         const cleanBase64 = parts[1];
-
         const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-        
         const systemPrompt = "你是一位精準的收據與明細感知助理。請分析傳入的收據影像，並必定以結構化的繁體中文 JSON 回應。";
-        const userQuery = `請精準分析這張收據照片。不論是哪種語系，請將分析結果以 JSON 格式回傳，格式必須嚴格符合以下結構：
+        const userQuery = `請精準分析這張收據照片。請將分析結果以 JSON 格式回傳，格式必須嚴格符合以下結構：
 {
   "title": "解析店名或是消費主題",
   "date": "YYYY-MM-DD",
@@ -1256,7 +1439,7 @@ createApp({
     {"name": "品項名稱(若為外文請翻譯成繁體中文)", "originalName": "原始品項名稱", "price": 價格數字}
   ]
 }
-請注意，只能回傳該 JSON 結構，不要包含 markdown 標籤，也不要包含任何 markdown 的 \`\`\` 符號。`;
+請注意，只能回傳該 JSON 結構，不要包含 markdown 標籤，也不要包含 \`\`\` 符號。`;
 
         const payload = {
           contents: [{
@@ -1267,9 +1450,7 @@ createApp({
             ]
           }],
           systemInstruction: { parts: [{ text: systemPrompt }] },
-          generationConfig: { 
-            responseMimeType: "application/json"
-          }
+          generationConfig: { responseMimeType: "application/json" }
         };
 
         let response;
@@ -1282,24 +1463,18 @@ createApp({
               body: JSON.stringify(payload)
             });
             if (response.ok) break;
-          } catch (e) {
-            if (i === 4) throw e;
-          }
+          } catch (e) { if (i === 4) throw e; }
           await new Promise(r => setTimeout(r, delay));
           delay *= 2;
         }
 
-        if (!response || !response.ok) {
-          throw new Error('呼召 Gemini 智慧感知失敗');
-        }
-
+        if (!response || !response.ok) throw new Error('呼召 Gemini 智慧感知失敗');
         const result = await response.json();
         const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
         if (!text) throw new Error('解析內容為空');
 
         const cleanedText = text.replace(/```json/g, '').replace(/```/g, '').trim();
         const parsed = JSON.parse(cleanedText);
-
         const mappedCat = categories.value.includes(parsed.category) ? parsed.category : (categories.value[0] || '其他');
         const mappedMethod = payMethods.value.includes(parsed.payMethod) ? parsed.payMethod : (payMethods.value[0] || '現金');
 
@@ -1311,11 +1486,9 @@ createApp({
           amount: Number(parsed.amount) || 0,
           items: parsed.items || []
         };
-
         showToast('智慧感知解析成功！');
         isScanning.value = false;
         nextTick(() => lucide.createIcons());
-
       } catch (error) {
         isScanning.value = false;
         showToast('感知解析失敗，改為對照手動輸入。');
@@ -1323,7 +1496,6 @@ createApp({
       }
     };
 
-    // 常用支出設定 modal
     const isQuickItemModalOpen=ref(false);
     const editingQuickItemId=ref(null);
     const quickItemForm=ref({title:'',amount:null,category:'餐飲',payMethod:'現金'});
@@ -1352,22 +1524,15 @@ createApp({
     const deleteQuickItem=(id)=>{quickItems.value=quickItems.value.filter(q=>q.id!==id);saveToStorage();showToast('已刪除常用支出');};
     const applyQuickItem=(qi)=>{newExpense.value.title=qi.title;newExpense.value.amount=qi.amount;newExpense.value.category=qi.category;newExpense.value.payMethod=qi.payMethod;};
 
-    // 期間判斷
     const isInPeriod=(dateStr, period)=>{
       const date=new Date(dateStr);if(isNaN(date.getTime()))return false;
       const targetYear = Number(analyticsSelectedYear.value);
       const targetMonth = Number(analyticsSelectedMonth.value);
-      
-      if(period==='month'){
-        return date.getFullYear()===targetYear && (date.getMonth()+1)===targetMonth;
-      }
-      if(period==='year'){
-        return date.getFullYear()===targetYear;
-      }
+      if(period==='month') return date.getFullYear()===targetYear && (date.getMonth()+1)===targetMonth;
+      if(period==='year') return date.getFullYear()===targetYear;
       return true;
     };
 
-    // 理財脈絡頁單一類別的預算取得
     const getBudgetForCategoryInAnalytics = (cat) => {
       if (analyticsPeriod.value === 'month') {
         return getMonthlyCategoryBudget(cat, analyticsSelectedYear.value, analyticsSelectedMonth.value);
@@ -1380,45 +1545,33 @@ createApp({
       }
     };
 
-    // 類別預算百分比計算
     const getCombinedBudgetPercent=(cat, period)=>{
       const budget = getBudgetForCategoryInAnalytics(cat);
       if(budget === 0) return 0;
-      const spent = getCategorySpentInPeriod(cat, period);
-      return (spent / budget) * 100;
+      return (getCategorySpentInPeriod(cat, period) / budget) * 100;
     };
 
     const getCombinedBudgetDiff=(cat, period)=>{
-      const budget = getBudgetForCategoryInAnalytics(cat);
-      const spent = getCategorySpentInPeriod(cat, period);
-      return budget - spent;
+      return getBudgetForCategoryInAnalytics(cat) - getCategorySpentInPeriod(cat, period);
     };
 
-    // 統計大面板專屬：當前篩選時段內的所有類別「總預算額度」
     const currentPeriodTotalBudget = computed(() => {
-      return categories.value.reduce((sum, cat) => {
-        return sum + getBudgetForCategoryInAnalytics(cat);
-      }, 0);
+      return categories.value.reduce((sum, cat) => sum + getBudgetForCategoryInAnalytics(cat), 0);
     });
 
-    // 總進度百分比計算
     const totalProgressPercent = computed(() => {
       const budget = currentPeriodTotalBudget.value;
       if (budget === 0) return 0;
       return (filteredGrandTotal.value / budget) * 100;
     });
 
-    // 首頁專用預算加總計算（當前年份月份）
     const totalBudgetSum=computed(()=>{
       return categoriesWithBudget.value.reduce((s,c)=>s+getMonthlyCategoryBudget(c, currentYear, currentMonth), 0);
     });
     const totalSpentSum=computed(()=>categoriesWithBudget.value.reduce((s,c)=>s+getCategorySpentInPeriod(c,'month'),0));
     
-    // 設定頁當前自訂設定年月下的預算總和
     const settingsCurrentPeriodBudgetSum = computed(() => {
-      return categories.value.reduce((s, c) => {
-        return s + (Number(getBudgetBindingValue(c)) || 0);
-      }, 0);
+      return categories.value.reduce((s, c) => s + (Number(getBudgetBindingValue(c)) || 0), 0);
     });
     
     const periodLabel=computed(()=>{
@@ -1426,9 +1579,7 @@ createApp({
       return `${analyticsSelectedYear.value}年度`;
     });
 
-    const currentYearMonthLabel = computed(() => {
-      return `${currentYear}年${currentMonth}月`;
-    });
+    const currentYearMonthLabel = computed(() => `${currentYear}年${currentMonth}月`);
     
     const filteredExpenses=computed(()=>expenses.value.filter(e=>isInPeriod(e.date,analyticsPeriod.value)));
     const filteredGrandTotal=computed(()=>filteredExpenses.value.reduce((s,e)=>s+e.amount,0));
@@ -1441,64 +1592,48 @@ createApp({
       const t=new Date().toISOString().split('T')[0];
       return expenses.value.filter(e=>e.date===t).reduce((s,e)=>s+e.amount,0);
     });
+
+    // 💡 修正後的核心 computed：動態精確統計「本月」真正的累積消耗金額
+    const currentMonthTotal = computed(() => {
+      const yStr = String(currentYear);
+      const mStr = String(currentMonth).padStart(2, '0');
+      return expenses.value
+        .filter(e => e.date && e.date.startsWith(`${yStr}-${mStr}`))
+        .reduce((sum, e) => sum + e.amount, 0);
+    });
     
-    // 首頁篩選：有設定月預算的類別
     const categoriesWithBudget=computed(()=>{
-      return categories.value.filter(c => {
-        const b = getMonthlyCategoryBudget(c, currentYear, currentMonth);
-        return b && b > 0;
-      });
+      return categories.value.filter(c => getMonthlyCategoryBudget(c, currentYear, currentMonth) > 0);
     });
 
-    // 提取所有現有消費記錄中的「年份 + 月份」
     const availableYearMonths = computed(() => {
       const ymSet = new Set();
-      expenses.value.forEach(e => {
-        if (e.date && e.date.length >= 7) {
-          ymSet.add(e.date.substring(0, 7));
-        }
-      });
+      expenses.value.forEach(e => { if (e.date && e.date.length >= 7) ymSet.add(e.date.substring(0, 7)); });
       return Array.from(ymSet).sort((a,b) => b.localeCompare(a));
     });
 
-    // 提取所有現有消費記錄中的「年份」列表
     const availableYears = computed(() => {
       const ySet = new Set();
       ySet.add(String(currentYear));
-      expenses.value.forEach(e => {
-        if (e.date && e.date.length >= 4) {
-          ySet.add(e.date.substring(0, 4));
-        }
-      });
+      expenses.value.forEach(e => { if (e.date && e.date.length >= 4) ySet.add(e.date.substring(0, 4)); });
       return Array.from(ySet).sort((a,b) => b.localeCompare(a));
     });
 
-    // 輔助格式化年月選單 Label
     const formatYearMonthLabel = (ymStr) => {
       const parts = ymStr.split('-');
       return `${parts[0]}年${parts[1]}月`;
     };
 
-    // 紀錄頁篩選過後的支出項目
     const recordsFilteredList = computed(() => {
       return expenses.value.filter(item => {
-        if (recordsFilterMonth.value !== 'all') {
-          if (!item.date || !item.date.startsWith(recordsFilterMonth.value)) {
-            return false;
-          }
-        }
-        if (recordsFilterCategory.value !== 'all') {
-          if (item.category !== recordsFilterCategory.value) {
-            return false;
-          }
-        }
+        if (recordsFilterMonth.value !== 'all' && (!item.date || !item.date.startsWith(recordsFilterMonth.value))) return false;
+        if (recordsFilterCategory.value !== 'all' && item.category !== recordsFilterCategory.value) return false;
         return true;
       });
     });
 
     const filteredRecordsCount = computed(() => recordsFilteredList.value.length);
     
-    // 紀錄頁：按日期排列且篩選
     const groupedByDateFiltered=computed(()=>{
       const g={};
       [...recordsFilteredList.value].sort((a,b)=>new Date(b.date)-new Date(a.date)).forEach(e=>{
@@ -1509,7 +1644,6 @@ createApp({
       return g;
     });
     
-    // 紀錄頁：按分類排列且篩選
     const groupedByCategoryFiltered=computed(()=>{
       const g={};
       categories.value.forEach(c=>g[c]={items:[],total:0});
@@ -1522,16 +1656,11 @@ createApp({
       return g;
     });
 
-    // 紀錄頁一鍵全部折疊或展開
     const toggleAllCollapse = (shouldCollapse) => {
       if (recordSubTab.value === 'date') {
-        Object.keys(groupedByDateFiltered.value).forEach(date => {
-          collapsedDateGroups.value[date] = shouldCollapse;
-        });
+        Object.keys(groupedByDateFiltered.value).forEach(date => { collapsedDateGroups.value[date] = shouldCollapse; });
       } else {
-        categories.value.forEach(cat => {
-          expandedCategories.value[cat] = !shouldCollapse;
-        });
+        categories.value.forEach(cat => { expandedCategories.value[cat] = !shouldCollapse; });
       }
       nextTick(()=>lucide.createIcons());
     };
@@ -1543,10 +1672,8 @@ createApp({
     
     const payMethodsWithData=computed(()=>payMethods.value.filter(m=>filteredExpenses.value.some(e=>e.payMethod===m)));
 
-    // 理財時段類別花費計算
     const getCategorySpentInPeriod=(cat,period)=>expenses.value.filter(e=>e.category===cat&&isInPeriod(e.date,period)).reduce((s,e)=>s+e.amount,0);
     
-    // 首頁用預算百分比
     const getBudgetPercent=(cat)=>{
       const b=getMonthlyCategoryBudget(cat, currentYear, currentMonth);
       return b===0?0:(getCategorySpentInPeriod(cat,'month')/b)*100;
@@ -1559,14 +1686,16 @@ createApp({
     };
 
     const switchTab=(tab)=>{
-      if (currentTab.value === 'scanner' && tab !== 'scanner') {
-        stopCamera();
-      }
+      if (currentTab.value === 'scanner' && tab !== 'scanner') stopCamera();
       currentTab.value=tab;
       nextTick(()=>lucide.createIcons());
     };
     
-    const textClass=(tab)=>currentTab.value===tab?'text-[#4a463f] font-medium scale-105':'text-[#a8a297]';
+    const textClass=(tab)=>{
+      if (currentTab.value===tab) return isDoodleMode.value ? 'text-[#111111] font-black scale-105' : 'text-[#4a463f] font-medium scale-105';
+      return isDoodleMode.value ? 'text-[#666666]' : 'text-[#a8a297]';
+    };
+
     const formatNumber=(n)=>(n||0).toLocaleString();
     const toggleCategoryCollapse=(cat)=>expandedCategories.value[cat]=!expandedCategories.value[cat];
 
@@ -1575,13 +1704,11 @@ createApp({
       toast.value={show:true,message:msg,onUndo,timer:setTimeout(()=>toast.value.show=false,5000)};
     };
 
-    // 控制明細收據照片展開收合
     const toggleExpensePhoto=(id)=>{
       expandedExpensePhotos.value[id] = !expandedExpensePhotos.value[id];
       nextTick(()=>lucide.createIcons());
     };
 
-    // ══ 新增支出彈窗相關 ══
     const isModalCameraActive = ref(false);
     const modalCameraStream = ref(null);
 
@@ -1605,7 +1732,6 @@ createApp({
       editingExpenseId.value=null;
     };
 
-    // 新增/編輯彈窗中的相片上傳
     const onExpensePhotoUploaded=(e)=>{
       const file = e.target.files[0];
       if(!file) return;
@@ -1617,13 +1743,10 @@ createApp({
       reader.readAsDataURL(file);
     };
 
-    // 新增/編輯彈窗中的直接相機拍照
     const startCameraForExpense=async()=>{
       isModalCameraActive.value = true;
       try {
-        const stream = await navigator.mediaDevices.getUserMedia({
-          video: { facingMode: 'environment' }
-        });
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
         modalCameraStream.value = stream;
         nextTick(()=>{
           const video = document.getElementById('modal-camera-feed');
@@ -1652,7 +1775,6 @@ createApp({
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
         context.drawImage(video, 0, 0, canvas.width, canvas.height);
-        
         const base64Image = canvas.toDataURL('image/jpeg');
         newExpense.value.photo = base64Image;
         stopCameraForExpense();
@@ -1665,19 +1787,11 @@ createApp({
       if(editingExpenseId.value){
         const idx=expenses.value.findIndex(e=>e.id===editingExpenseId.value);
         if(idx!==-1) {
-          expenses.value[idx]={
-            ...expenses.value[idx],
-            ...newExpense.value,
-            amount:Number(newExpense.value.amount)
-          };
+          expenses.value[idx]={ ...expenses.value[idx], ...newExpense.value, amount:Number(newExpense.value.amount) };
         }
         showToast('已更新支出 (含關聯相片)');
       }else{
-        expenses.value.unshift({
-          id:Date.now(),
-          ...newExpense.value,
-          amount:Number(newExpense.value.amount)
-        });
+        expenses.value.unshift({ id:Date.now(), ...newExpense.value, amount:Number(newExpense.value.amount) });
         showToast('已記錄支出 (含關聯相片)');
       }
       saveToStorage();closeAddModal();
@@ -1718,9 +1832,7 @@ createApp({
       delete categoryBudgets.value[c];
       Object.keys(yearlyMonthlyBudgets.value).forEach(y => {
         Object.keys(yearlyMonthlyBudgets.value[y]).forEach(m => {
-          if(yearlyMonthlyBudgets.value[y][m]) {
-            delete yearlyMonthlyBudgets.value[y][m][c];
-          }
+          if(yearlyMonthlyBudgets.value[y][m]) delete yearlyMonthlyBudgets.value[y][m][c];
         });
       });
       saveToStorage();
@@ -1736,7 +1848,6 @@ createApp({
     };
     const deletePayMethod=(m)=>{payMethods.value=payMethods.value.filter(x=>x!==m);saveToStorage();};
 
-    // 感知確認導入
     const confirmScannerAdd=()=>{
       if(scannedResult.value){
         expenses.value.unshift({
@@ -1757,20 +1868,15 @@ createApp({
     };
 
     const doLogout=async()=>{
-      if(window._fb&&window._fb.auth){
-        await window._fb.signOut(window._fb.auth);
-      }
+      if(window._fb&&window._fb.auth) await window._fb.signOut(window._fb.auth);
     };
 
-    // 監聽所有新折疊控制狀態的變化，自動刷新 Lucide 圖示避免渲染錯誤
     watch(
       [
-        analyticsPeriod, analyticsSelectedYear, analyticsSelectedMonth,
-        isRecentActivityExpanded, isTopExpensesExpanded, isSettingsBudgetsExpanded, isQuickItemsExpanded
+        currentTab, recordSubTab, analyticsPeriod, analyticsSelectedYear, analyticsSelectedMonth,
+        isRecentActivityExpanded, isTopExpensesExpanded, isSettingsBudgetsExpanded, isQuickItemsExpanded, isAnalyticsComparisonExpanded, isDoodleMode
       ],
-      () => {
-        nextTick(() => lucide.createIcons());
-      }
+      () => { nextTick(() => lucide.createIcons()); }
     );
 
     onMounted(()=>{
@@ -1794,7 +1900,7 @@ createApp({
           if(user){
             loginScreen.style.display='none';
             appEl.style.display='flex';
-            appEl.style.flexDirection='column';
+            appEl.style.flexDirection='row';
             startApp();
           } else {
             loginScreen.style.display='flex';
@@ -1828,7 +1934,7 @@ createApp({
       getCategorySpentInPeriod,getBudgetPercent,
       getFilteredPayMethodAmount,getFilteredPayMethodPercent,
       confirmScannerAdd,saveToStorage,scanPhoto,scanForm,onScanPhotoSelected,clearScanPhoto,submitScanExpense,
-      projectId,tempProjectId,switchProject,
+      projectId,
       totalBudgetSum,totalSpentSum,currentTabTitle,
       doLogout,
       isCameraActive,isScanning,scanStatusText,startCamera,stopCamera,switchCamera,capturePhoto,handleFileUpload,triggerFileInput,
@@ -1836,23 +1942,22 @@ createApp({
       expandedExpensePhotos,toggleExpensePhoto,
       isModalCameraActive,onExpensePhotoUploaded,startCameraForExpense,stopCameraForExpense,capturePhotoForExpense,
       
-      // 折疊與展開新增狀態
-      isRecentActivityExpanded, isTopExpensesExpanded, isSettingsBudgetsExpanded, isQuickItemsExpanded,
+      isRecentActivityExpanded, isTopExpensesExpanded, isSettingsBudgetsExpanded, isQuickItemsExpanded, isAnalyticsComparisonExpanded,
 
-      // 進階年月、分類篩選
       recordsFilterMonth,recordsFilterCategory,availableYearMonths,formatYearMonthLabel,
       recordsFilteredList,filteredRecordsCount,groupedByDateFiltered,groupedByCategoryFiltered,
       collapsedDateGroups,toggleDateGroupCollapse,toggleAllCollapse,
 
-      // 理財脈絡
       analyticsSelectedYear,analyticsSelectedMonth,availableYears,getBudgetForCategoryInAnalytics,
       currentPeriodTotalBudget,totalProgressPercent,
 
-      // 每年不同月預算
       settingsSelectedYear,settingsSelectedMonth,settingsYearOptions,yearlyMonthlyBudgets,
       settingsCurrentPeriodBudgetSum,getBudgetBindingValue,updateBudgetBindingValue,
       replicateSettingsBudget,getMonthlyCategoryBudget,
-      currentYear,currentMonth,currentYearMonthLabel
+      currentYear,currentMonth,currentYearMonthLabel,
+
+      currentMonthTotal, // 傳回修正後的真實月花費
+      isDoodleMode, toggleStyleMode
     };
   }
 }).mount('#app');

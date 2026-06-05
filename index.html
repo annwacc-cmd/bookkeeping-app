@@ -189,7 +189,7 @@ transform: rotate(0.8deg);
       <p class="text-xl font-bold text-[#4a463f] mt-1" :class="{'text-[#111111] font-black': isDoodleMode}">日常與留白</p>
     </div>
 
-```
+
 <!-- 左側直式選單 -->
 <nav class="space-y-1.5">
   <button @click="switchTab('home')" :class="[currentTab === 'home' ? (isDoodleMode ? 'bg-[#fff176] border-2 border-[#111111] font-bold' : 'bg-[#eae5da] text-[#4a463f] font-semibold') : 'text-[#a8a297] hover:text-[#4a463f]']" class="w-full text-left py-2 px-3 rounded-xl flex items-center gap-3 transition-all text-sm">
@@ -244,7 +244,7 @@ transform: rotate(0.8deg);
     <i data-lucide="log-out" class="w-4 h-4"></i>
   </button>
 </div>
-```
+
 
   </aside>
 
@@ -258,7 +258,7 @@ transform: rotate(0.8deg);
     <div class="flex items-center gap-1.5">
       <span class="text-[10px] bg-[#eae5da] text-[#736c60] px-2 py-1 rounded-md font-mono border border-[#ede9df]" :class="['doodle-tag']">📁 {{ projectId }}</span>
 
-```
+
   <!-- 風格切換按鈕 -->
   <button @click="toggleStyleMode" title="切換風格"
     class="w-9 h-9 rounded-full bg-[#eae5da] hover:bg-[#dfd9cc] flex items-center justify-center text-[#4a463f] transition-colors"
@@ -278,7 +278,7 @@ transform: rotate(0.8deg);
     <i data-lucide="log-out" class="w-4 h-4"></i>
   </button>
 </div>
-```
+
 
   </header>
 
@@ -286,7 +286,7 @@ transform: rotate(0.8deg);
 
   <main class="flex-1 overflow-y-auto px-6 py-6 no-scrollbar pb-24 md:pb-6">
 
-```
+
 <!-- 💻 電腦版頂部麵包屑 -->
 <div class="hidden md:flex justify-between items-center mb-6 border-b border-[#ede9df]/60 pb-3" :class="{'border-[#111111] border-b-2': isDoodleMode}">
   <div>
@@ -1006,7 +1006,7 @@ transform: rotate(0.8deg);
   </div>
 
 </div>
-```
+
 
   </main>
 
@@ -1019,7 +1019,7 @@ transform: rotate(0.8deg);
         <button @click="closeAddModal" class="text-[#a8a297] hover:text-[#4a463f]" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="x" class="w-5 h-5"></i></button>
       </div>
 
-```
+
   <!-- 常用支出快選 -->
   <div v-if="!editingExpenseId && quickItems.length">
     <label class="text-[10px] text-[#a8a297] uppercase tracking-wider block mb-1.5" :class="{'text-[#111111] font-bold': isDoodleMode}">常用支出快選</label>
@@ -1083,7 +1083,7 @@ transform: rotate(0.8deg);
   <div><label class="text-[10px] text-[#a8a297] block mb-1.5" :class="{'text-[#111111] font-bold': isDoodleMode}">支付方式</label><div class="flex space-x-2 overflow-x-auto no-scrollbar pb-1"><button v-for="method in payMethods" :key="method" @click="newExpense.payMethod=method" :class="[newExpense.payMethod===method ? (isDoodleMode ? 'bg-[#fff176] font-bold border-2 border-[#111111]' : 'bg-[#8c8577] text-white') : (isDoodleMode ? 'bg-white border border-[#111111]' : 'bg-[#f4f1ea] text-[#6b655b]')]" class="text-xs px-3 py-1.5 rounded-lg whitespace-nowrap transition-colors">{{ method }}</button></div></div>
   <button @click="submitExpense" class="w-full py-3.5 bg-[#8c8577] text-white rounded-xl text-sm font-medium hover:bg-[#736c60] transition-colors" :class="['doodle-btn']">{{ editingExpenseId ? '儲存修改' : '儲存紀錄' }}</button>
 </div>
-```
+
 
   </div>
 
@@ -1499,7 +1499,7 @@ createApp({
         const text = result.candidates?.[0]?.content?.parts?.[0]?.text;
         if (!text) throw new Error('解析內容為空');
 
-        const cleanedText = text.replace(/```json/g, '').replace(/```/g, '').trim();
+        const cleanedText = text.replace(/json/g, '').replace(//g, '').trim();
         const parsed = JSON.parse(cleanedText);
         const mappedCat = categories.value.includes(parsed.category) ? parsed.category : (categories.value[0] || '其他');
         const mappedMethod = payMethods.value.includes(parsed.payMethod) ? parsed.payMethod : (payMethods.value[0] || '現金');

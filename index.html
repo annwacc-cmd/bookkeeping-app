@@ -394,9 +394,13 @@ color: #111111 !important;
               <span class="text-sm text-gray-700 truncate max-w-[150px] md:max-w-[200px]" :class="{'text-[#111111] font-bold': isDoodleMode}">{{ item.title }}</span>
               <i v-if="item.photo" data-lucide="image" class="w-3.5 h-3.5 text-gray-400" :class="{'text-[#111111]': isDoodleMode}"></i>
             </div>
-            <span class="text-sm font-semibold whitespace-nowrap" :class="[item.type === 'income' ? 'text-emerald-600' : 'text-gray-700', isDoodleMode ? 'font-black !text-[#111111]' : '']">
-              {{ item.type === 'income' ? '+' : '-' }}NT$ {{ formatNumber(item.amount) }}
-            </span>
+            <div class="flex items-center space-x-2 shrink-0">
+              <span class="text-sm font-semibold whitespace-nowrap" :class="[item.type === 'income' ? 'text-emerald-600' : 'text-gray-700', isDoodleMode ? 'font-black !text-[#111111]' : '']">
+                {{ item.type === 'income' ? '+' : '-' }}NT$ {{ formatNumber(item.amount) }}
+              </span>
+              <button @click.stop="openEditModal(item)" class="text-gray-400 hover:text-theme-green opacity-80 ml-1" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+              <button @click.stop="deleteExpense(item.id)" class="text-gray-400 hover:text-red-500 opacity-80" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+            </div>
           </div>
           <div v-if="expenses.length===0" class="text-center py-6 text-xs text-gray-400 italic" :class="{'text-[#111111]': isDoodleMode}">無最新動態</div>
         </div>
@@ -478,8 +482,8 @@ color: #111111 !important;
                   <span class="text-sm font-semibold" :class="[item.type === 'income' ? 'text-emerald-600' : 'text-gray-700', isDoodleMode ? 'font-black !text-[#111111]' : '']">
                     {{ item.type === 'income' ? '+' : '' }}NT$ {{ formatNumber(item.amount) }}
                   </span>
-                  <button @click="openEditModal(item)" class="text-gray-400 hover:text-theme-green opacity-80" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
-                  <button @click="deleteExpense(item.id)" class="text-gray-400 hover:text-red-500 opacity-80" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                  <button @click.stop="openEditModal(item)" class="text-gray-400 hover:text-theme-green opacity-80" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                  <button @click.stop="deleteExpense(item.id)" class="text-gray-400 hover:text-red-500 opacity-80" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                 </div>
               </div>
               
@@ -528,8 +532,8 @@ color: #111111 !important;
                 </div>
                 <div class="flex items-center space-x-2 shrink-0 pr-3">
                   <span class="font-semibold text-gray-700" :class="{'text-[#111111] font-black': isDoodleMode}">NT$ {{ formatNumber(item.amount) }}</span>
-                  <button @click="openEditModal(item)" class="text-gray-400 hover:text-theme-green" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
-                  <button @click="deleteExpense(item.id)" class="text-gray-400 hover:text-red-500" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+                  <button @click.stop="openEditModal(item)" class="text-gray-400 hover:text-theme-green" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                  <button @click.stop="deleteExpense(item.id)" class="text-gray-400 hover:text-red-500" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
                 </div>
               </div>
               
@@ -902,7 +906,11 @@ color: #111111 !important;
                   <p class="text-[9px] text-gray-400" :class="{'text-[#555555]': isDoodleMode}">{{ item.date }} · {{ item.category }}</p>
                 </div>
               </div>
-              <span class="font-semibold" :class="{'text-[#111111] font-black': isDoodleMode}">NT$ {{ formatNumber(item.amount) }}</span>
+              <div class="flex items-center space-x-2 shrink-0">
+                <span class="font-semibold" :class="{'text-[#111111] font-black': isDoodleMode}">NT$ {{ formatNumber(item.amount) }}</span>
+                <button @click.stop="openEditModal(item)" class="text-gray-400 hover:text-theme-green opacity-80 ml-1" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                <button @click.stop="deleteExpense(item.id)" class="text-gray-400 hover:text-red-500 opacity-80" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+              </div>
             </div>
           </div>
           <div class="divide-y divide-gray-100 border-t md:border-t-0 border-gray-100">
@@ -914,7 +922,11 @@ color: #111111 !important;
                   <p class="text-[9px] text-gray-400" :class="{'text-[#555555]': isDoodleMode}">{{ item.date }} · {{ item.category }}</p>
                 </div>
               </div>
-              <span class="font-semibold" :class="{'text-[#111111] font-black': isDoodleMode}">NT$ {{ formatNumber(item.amount) }}</span>
+              <div class="flex items-center space-x-2 shrink-0">
+                <span class="font-semibold" :class="{'text-[#111111] font-black': isDoodleMode}">NT$ {{ formatNumber(item.amount) }}</span>
+                <button @click.stop="openEditModal(item)" class="text-gray-400 hover:text-theme-green opacity-80 ml-1" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="edit-3" class="w-3.5 h-3.5"></i></button>
+                <button @click.stop="deleteExpense(item.id)" class="text-gray-400 hover:text-red-500 opacity-80" :class="{'text-[#111111]': isDoodleMode}"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+              </div>
             </div>
           </div>
           <div v-if="!filteredTopExpenses.length" class="p-6 text-center text-xs text-gray-400 italic col-span-2 w-full" :class="{'text-[#111111]': isDoodleMode}">此區間暫無消費明細</div>
@@ -953,7 +965,8 @@ color: #111111 !important;
         </div>
         <div class="flex items-center gap-3">
           <span class="font-semibold" :class="acc.balance < 0 ? 'text-red-500' : 'text-gray-700'">${{ formatNumber(acc.balance) }}</span>
-          <button @click="deleteAccount(acc.id)" class="text-gray-300 hover:text-red-500 text-xs"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+          <button @click.stop="openEditAccountModal(acc)" class="text-gray-300 hover:text-theme-green text-xs"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+          <button @click.stop="deleteAccount(acc.id)" class="text-gray-300 hover:text-red-500 text-xs"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
         </div>
       </div>
       <div v-if="!assetAccounts.length" class="text-center text-xs text-gray-400 py-6 italic">暫無資產帳戶，請點擊上方新增。</div>
@@ -962,7 +975,7 @@ color: #111111 !important;
 
   <div v-if="isAccountModalOpen" class="fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50 p-6">
     <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-xl">
-      <h3 class="text-sm font-bold text-gray-700">新增資產帳戶</h3>
+      <h3 class="text-sm font-bold text-gray-700">{{ editingAccountId ? '編輯資產帳戶' : '新增資產帳戶' }}</h3>
       <div>
         <label class="text-[10px] text-gray-400 block mb-1">帳戶名稱</label>
         <input type="text" v-model="newAccount.name" placeholder="例如：國泰銀行、悠遊卡" class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green">
@@ -1349,19 +1362,41 @@ const payMethods = computed(() => {
     const totalNetAssets = computed(() => totalAssetsAmount.value - totalLiabilitiesAmount.value);
 
     const isAccountModalOpen = ref(false);
+    const editingAccountId = ref(null); // 新增：用來記錄目前正在編輯的帳戶 ID
     const newAccount = ref({ name: '', type: 'cash', balance: 0 });
 
     const openAddAccountModal = () => {
+      editingAccountId.value = null;
       newAccount.value = { name: '', type: 'cash', balance: 0 };
+      isAccountModalOpen.value = true;
+    };
+
+    // 新增：開啟編輯視窗
+    const openEditAccountModal = (acc) => {
+      editingAccountId.value = acc.id;
+      newAccount.value = { ...acc };
       isAccountModalOpen.value = true;
     };
 
     const saveNewAccount = () => {
       if (!newAccount.value.name) { showToast('請填寫帳戶名稱'); return; }
-      assetAccounts.value.push({ id: Date.now(), ...newAccount.value });
+      
+      if (editingAccountId.value) {
+        // 編輯模式
+        const idx = assetAccounts.value.findIndex(a => a.id === editingAccountId.value);
+        if (idx !== -1) {
+          assetAccounts.value[idx] = { ...assetAccounts.value[idx], ...newAccount.value };
+        }
+        showToast('已更新資產帳戶');
+      } else {
+        // 新增模式
+        assetAccounts.value.push({ id: Date.now(), ...newAccount.value });
+        showToast('已新增資產帳戶');
+      }
+      
       isAccountModalOpen.value = false;
       saveToStorage();
-      showToast('已新增資產帳戶');
+      nextTick(() => lucide.createIcons()); // 重新渲染圖示
     };
 
     const deleteAccount = (id) => {
@@ -2144,8 +2179,9 @@ const updateAccountBalance = (methodName, amount, type, isRevert = false) => {
     // 扣除新紀錄的金額
     updateAccountBalance(expenseObj.payMethod, expenseObj.amount, expenseObj.type || 'expense', false);
     showToast(`已記錄一筆${newExpense.value.type === 'income' ? '收入' : '支出'}`);
-  }
+ }
   saveToStorage();
+  nextTick(()=>lucide.createIcons()); // 新增這行：重繪圖示
 };
     
     const deleteExpense=(id)=>{
@@ -2156,9 +2192,10 @@ const updateAccountBalance = (methodName, amount, type, isRevert = false) => {
     // 刪除時，把錢補回來(復原)
     updateAccountBalance(lastDeletedItem.payMethod, lastDeletedItem.amount, lastDeletedItem.type || 'expense', true);
     
-    expenses.value.splice(idx,1);
+   expenses.value.splice(idx,1);
     saveToStorage();
     showToast('已刪除「'+lastDeletedItem.title+'」',undoDelete);
+    nextTick(()=>lucide.createIcons()); // 新增這行：重繪圖示
   }
 };
     
@@ -2172,6 +2209,7 @@ const updateAccountBalance = (methodName, amount, type, isRevert = false) => {
     lastDeletedItem=null;
     toast.value.show=false;
     showToast('紀錄已還原');
+    nextTick(()=>lucide.createIcons()); // 新增這行：重繪圖示
   }
 };
     
@@ -2383,6 +2421,7 @@ applyQuickItemToModal,
       transferFromAccount, transferToAccount, assetAccounts,
       totalAssetsAmount, totalLiabilitiesAmount, totalNetAssets,
       isAccountModalOpen, newAccount, openAddAccountModal, saveNewAccount, deleteAccount,
+      editingAccountId, openEditAccountModal,
       monthlyTotalBudget, monthlyBudgetRemaining, monthlyBudgetUsagePercent,
       remainingDaysInMonth, dailyAverageRemaining, catEmoji,
       donutChartData, donutGradient,

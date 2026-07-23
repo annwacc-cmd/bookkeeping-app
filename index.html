@@ -1236,23 +1236,31 @@ color: #111111 !important;
     <button v-if="toast.onUndo" @click="toast.onUndo" class="text-theme-green-light underline tracking-wider font-medium" :class="{'text-[#fff176]': isDoodleMode}">復原？</button>
   </div>
 
-  <!-- 📱 手機版專屬底欄導覽 (懸浮膠囊風格) -->
-  <nav class="md:hidden fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-sm bg-white/95 backdrop-blur-md rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.08)] px-6 py-3 flex justify-between items-center z-40 border border-white/50">
+ <!-- 📱 手機版專屬底欄導覽 (懸浮膠囊風格 - 含時序明細按鈕) -->
+  <nav class="md:hidden fixed bottom-5 left-1/2 -translate-x-1/2 w-[94%] max-w-md bg-white/95 backdrop-blur-md rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.08)] px-4 py-2.5 flex justify-between items-center z-40 border border-white/50">
+    <!-- 首頁 -->
     <button @click="switchTab('home')" :class="currentTab==='home' ? 'text-theme-green bg-theme-green/10 p-2 rounded-full' : 'text-gray-400 p-2'">
       <i data-lucide="home" class="w-5 h-5"></i>
     </button>
+    <!-- 時序明細 (新增) -->
+    <button @click="switchTab('records')" :class="currentTab==='records' ? 'text-theme-green bg-theme-green/10 p-2 rounded-full' : 'text-gray-400 p-2'">
+      <i data-lucide="file-text" class="w-5 h-5"></i>
+    </button>
+    <!-- 智慧感知掃描 -->
+    <button @click="switchTab('scanner')" :class="currentTab==='scanner' ? 'text-white bg-theme-green p-2 rounded-full shadow-md -translate-y-1.5' : 'text-gray-400 p-2'">
+      <i data-lucide="scan-line" class="w-5 h-5"></i>
+    </button>
+    <!-- 理財脈絡 -->
     <button @click="switchTab('analytics')" :class="currentTab==='analytics' ? 'text-theme-green bg-theme-green/10 p-2 rounded-full' : 'text-gray-400 p-2'">
       <i data-lucide="pie-chart" class="w-5 h-5"></i>
     </button>
-    <!-- 若需要掃描按鈕可加回，此處保留與原本底部風格相同的配置並加上資產 -->
-    <button @click="switchTab('scanner')" :class="currentTab==='scanner' ? 'text-white bg-theme-green p-2 rounded-full shadow-md -translate-y-2' : 'text-gray-400 p-2'">
-      <i data-lucide="scan-line" class="w-5 h-5"></i>
-    </button>
+    <!-- 資產管理 -->
     <button @click="switchTab('assets')" :class="currentTab==='assets' ? 'text-theme-green bg-theme-green/10 p-2 rounded-full' : 'text-gray-400 p-2'">
       <i data-lucide="wallet" class="w-5 h-5"></i>
     </button>
+    <!-- 基底格局/設定 -->
     <button @click="switchTab('settings')" :class="currentTab==='settings' ? 'text-theme-green bg-theme-green/10 p-2 rounded-full' : 'text-gray-400 p-2'">
-      <i data-lucide="more-horizontal" class="w-5 h-5"></i>
+      <i data-lucide="settings" class="w-5 h-5"></i>
     </button>
   </nav>
 

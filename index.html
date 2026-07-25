@@ -436,6 +436,51 @@ color: #111111 !important;
           </div>
         </div>
 
+<!-- 依據明細頁面篩選條件動態變化的預算卡片 -->
+      <div v-if="recordsFilterMonth !== 'all'" class="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm space-y-4 transition-all" :class="['doodle-card']">
+        <div class="flex justify-between items-center border-b border-gray-100 pb-3">
+          <div class="flex items-center gap-2">
+            <i data-lucide="target" class="w-4 h-4 text-theme-green"></i>
+            <span class="text-xs font-bold text-gray-700">{{ recordsPeriodLabel }} 總預算</span>
+          </div>
+          <span class="text-sm font-bold text-gray-600">${{ formatNumber(recordsTotalBudget) }}</span>
+        </div>
+        <div class="grid grid-cols-3 gap-2 text-center py-2">
+          <div>
+            <p class="text-[10px] text-gray-400 mb-1">支出</p>
+            <p class="text-base font-bold text-gray-700">${{ formatNumber(recordsTotalExpense) }}</p>
+            <p class="text-[9px] text-gray-400 mt-0.5">{{ recordsBudgetUsagePercent }}%</p>
+          </div>
+          <div class="border-x border-gray-100 px-1">
+            <p class="text-[10px] text-gray-400 mb-1">剩餘</p>
+            <p class="text-base font-bold" :class="recordsBudgetRemaining >= 0 ? 'text-theme-green-dark' : 'text-red-500'">
+              ${{ formatNumber(recordsBudgetRemaining) }}
+            </p>
+          </div>
+          <div>
+            <p class="text-[10px] text-gray-400 mb-1">剩餘日均</p>
+            <p class="text-base font-bold text-gray-700">${{ formatNumber(recordsDailyAverage) }}</p>
+            <p class="text-[9px] text-gray-400 mt-0.5">剩餘 {{ recordsRemainingDays }} 天</p>
+          </div>
+        </div>
+        <div class="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden relative">
+          <div class="h-full rounded-full transition-all duration-500"
+            :class="recordsBudgetUsagePercent > 100 ? 'bg-red-400' : 'bg-theme-green'"
+            :style="{ width: Math.min(recordsBudgetUsagePercent, 100) + '%' }">
+          </div>
+        </div>
+      </div>
+
+      <!-- 當選擇「顯示全部月份」時，退化為只顯示總支出的簡化卡片 -->
+      <div v-else class="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm flex justify-between items-center transition-all" :class="['doodle-card']">
+        <div class="flex items-center gap-2">
+          <i data-lucide="calculator" class="w-4 h-4 text-theme-green"></i>
+          <span class="text-xs font-bold text-gray-700">{{ recordsPeriodLabel }} 總支出</span>
+        </div>
+        <span class="text-xl font-bold text-gray-700">${{ formatNumber(recordsTotalExpense) }}</span>
+      </div>
+
+
         <div class="flex justify-between items-center text-[10px] border-t border-gray-100 pt-3 px-1" :class="{'border-[#111111]': isDoodleMode}">
           <span class="text-gray-400" :class="{'text-[#111111] font-bold': isDoodleMode}">已篩選出 {{ filteredRecordsCount }} 筆</span>
           <div class="flex gap-2">
@@ -1993,6 +2038,60 @@ const currentMonthIncome = computed(() => {
 
     const filteredRecordsCount = computed(() => recordsFilteredList.value.length);
     
+// === 明細頁面專屬的預算與支出計算 (依據 recordsFilteredList 變化) ===
+    const recordsPeriodLabel = computed(() => {
+      let label = recordsFilterMonth.value === 'all' ? '全部區間' : formatYearMonthLabel(recordsFilterMonth.value);
+      if (recordsFilterCategory.value !== 'all') label += ` (${recordsFilterCategory.value})`;
+      return label;
+    });
+
+    const recordsTotalExpense = computed(() => {
+      return recordsFilteredList.value.filter(e => e.type !== 'income').reduce((s, e) => s + (Number(e.amount) || 0), 0);
+    });
+
+    const recordsTotalBudget = computed(() => {
+      if (recordsFilterMonth.value === 'all') return 0;
+      const [y, m] = recordsFilterMonth.value.split('-');
+      
+      // 如果有選擇特定分類，只抓該分類的預算；否則抓所有分類預算加總
+      if (recordsFilterCategory.value !== 'all') {
+         return getMonthlyCategoryBudget(recordsFilterCategory.value, y, m);
+      }
+      return categories.value.reduce((sum, cat) => sum + getMonthlyCategoryBudget(cat, y, m), 0);
+    });
+
+    const recordsBudgetRemaining = computed(() => recordsTotalBudget.value - recordsTotalExpense.value);
+
+    const recordsBudgetUsagePercent = computed(() => {
+      if (recordsTotalBudget.value === 0) return 0;
+      return Math.round((recordsTotalExpense.value / recordsTotalBudget.value) * 100);
+    });
+
+    const recordsRemainingDays = computed(() => {
+      if (recordsFilterMonth.value === 'all') return 0;
+      const [y, m] = recordsFilterMonth.value.split('-');
+      const targetY = parseInt(y);
+      const targetM = parseInt(m);
+      const now = new Date();
+      const currentY = now.getFullYear();
+      const currentM = now.getMonth() + 1;
+
+      if (targetY === currentY && targetM === currentM) {
+        const lastDay = new Date(targetY, targetM, 0).getDate();
+        return lastDay - now.getDate();
+      } else if (targetY < currentY || (targetY === currentY && targetM < currentM)) {
+        return 0; // 過去月份
+      } else {
+        return new Date(targetY, targetM, 0).getDate(); // 未來月份
+      }
+    });
+
+    const recordsDailyAverage = computed(() => {
+      if (recordsRemainingDays.value <= 0 || recordsBudgetRemaining.value <= 0) return 0;
+      return Math.round(recordsBudgetRemaining.value / recordsRemainingDays.value);
+    });
+
+
     const groupedByDateFiltered = computed(() => {
       const g = {};
       [...recordsFilteredList.value].sort((a, b) => {
@@ -2462,7 +2561,8 @@ applyQuickItemToModal,
       isRecentActivityExpanded, isTopExpensesExpanded, isSettingsBudgetsExpanded, isQuickItemsExpanded, isAnalyticsComparisonExpanded,
 
       recordsFilterMonth,recordsFilterCategory,availableYearMonths,formatYearMonthLabel,
-      recordsFilteredList,filteredRecordsCount,groupedByDateFiltered,groupedByCategoryFiltered,
+      recordsFilteredList,filteredRecordsCount,recordsPeriodLabel, recordsTotalExpense, recordsTotalBudget, recordsBudgetRemaining, 
+      recordsBudgetUsagePercent, recordsRemainingDays, recordsDailyAverage,groupedByDateFiltered,groupedByCategoryFiltered,
       collapsedDateGroups,toggleDateGroupCollapse,toggleAllCollapse,
 
       analyticsSelectedYear,analyticsSelectedMonth,availableYears,getBudgetForCategoryInAnalytics,

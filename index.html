@@ -323,26 +323,63 @@ color: #111111 !important;
 
        <!-- 今日花費看板 & 本月總預算監控 -->
 <div class="space-y-5">
-<!-- 新增：本月收支總計 (對應圖示紅框) -->
-  <div class="grid grid-cols-2 gap-3 mb-2">
-    <div class="bg-theme-green/20 rounded-2xl p-4 flex flex-col items-center justify-center border border-theme-green/30" :class="['doodle-card', isDoodleMode ? '!bg-[#fff176]' : '']">
-      <div class="flex items-center gap-1.5 text-xs text-gray-600 font-bold mb-1" :class="{'text-[#111111]': isDoodleMode}">
-        <i data-lucide="file-minus" class="w-3.5 h-3.5 text-theme-green-dark"></i> 支出
-      </div>
-      <div class="text-xl font-bold text-gray-700" :class="{'text-[#111111] font-black': isDoodleMode}">
-        ${{ formatNumber(currentMonthTotal) }}
-      </div>
+<!-- 本月收支總計 -->
+<div
+  class="bg-[#8b9e8f] rounded-[28px] p-3 flex gap-3 mb-2 shadow-sm"
+  :class="isDoodleMode ? 'border-2 border-[#111111]' : ''"
+>
+
+  <!-- 支出 -->
+  <div
+    class="flex-1 rounded-2xl p-4 flex flex-col items-center justify-center bg-[#a9b59f]"
+    :class="isDoodleMode ? 'border-2 border-[#111111]' : ''"
+  >
+    <div
+      class="flex items-center gap-1.5 text-[11px] text-white font-medium mb-1"
+      :class="isDoodleMode ? 'text-[#111111] font-bold' : ''"
+    >
+      <i
+        data-lucide="file-minus"
+        class="w-3.5 h-3.5"
+        :class="isDoodleMode ? 'text-[#111111]' : 'text-white'"
+      ></i>
+      支出
     </div>
-    <div class="bg-theme-green/20 rounded-2xl p-4 flex flex-col items-center justify-center border border-theme-green/30" :class="['doodle-card', isDoodleMode ? '!bg-[#a5d6a7]' : '']">
-      <div class="flex items-center gap-1.5 text-xs text-gray-600 font-bold mb-1" :class="{'text-[#111111]': isDoodleMode}">
-        <i data-lucide="file-plus" class="w-3.5 h-3.5 text-theme-green-dark"></i> 收入
-      </div>
-      <div class="text-xl font-bold text-gray-700" :class="{'text-[#111111] font-black': isDoodleMode}">
-        ${{ formatNumber(currentMonthIncome) }}
-      </div>
+
+    <div
+      class="text-xl font-semibold text-white tracking-wide"
+      :class="isDoodleMode ? 'text-[#111111] font-black' : ''"
+    >
+      ${{ formatNumber(currentMonthTotal) }}
     </div>
   </div>
 
+  <!-- 收入 -->
+  <div
+    class="flex-1 rounded-2xl p-4 flex flex-col items-center justify-center bg-[#a9b59f]"
+    :class="isDoodleMode ? 'border-2 border-[#111111]' : ''"
+  >
+    <div
+      class="flex items-center gap-1.5 text-[11px] text-white font-medium mb-1"
+      :class="isDoodleMode ? 'text-[#111111] font-bold' : ''"
+    >
+      <i
+        data-lucide="file-plus"
+        class="w-3.5 h-3.5"
+        :class="isDoodleMode ? 'text-[#111111]' : 'text-white'"
+      ></i>
+      收入
+    </div>
+
+    <div
+      class="text-xl font-semibold text-white tracking-wide"
+      :class="isDoodleMode ? 'text-[#111111] font-black' : ''"
+    >
+      ${{ formatNumber(currentMonthIncome) }}
+    </div>
+  </div>
+
+</div>
   <!-- 本月總預算大卡片 -->
   <div class="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm space-y-4" :class="['doodle-card']">
     <div class="flex justify-between items-center border-b border-gray-100 pb-3">
@@ -797,7 +834,10 @@ color: #111111 !important;
 
         <!-- 圓環圖區塊 -->
         <div class="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm flex flex-col items-center justify-center relative" :class="['doodle-card']">
-          <div class="absolute top-4 left-4 text-xs font-bold text-gray-500 bg-gray-100 px-2 py-1 rounded-md">支出構成</div>
+          <div class="absolute top-4 left-4 flex items-center gap-1 bg-gray-100 rounded-md p-0.5" :class="{'bg-transparent border-2 border-[#111111] p-0.5 rounded-lg': isDoodleMode}">
+  <button @click="analyticsType='expense'" :class="analyticsType==='expense' ? (isDoodleMode ? 'bg-[#fff176] font-bold border border-[#111111]' : 'bg-white shadow-sm font-bold text-theme-green-dark') : 'text-gray-400'" class="text-xs px-2 py-1 rounded transition-all">支出</button>
+  <button @click="analyticsType='income'" :class="analyticsType==='income' ? (isDoodleMode ? 'bg-[#fff176] font-bold border border-[#111111]' : 'bg-white shadow-sm font-bold text-theme-green-dark') : 'text-gray-400'" class="text-xs px-2 py-1 rounded transition-all">收入</button>
+</div>
           
           <div class="relative w-40 h-40 rounded-full mt-6 mb-4" :style="{ background: donutGradient }">
             <div class="donut-hole"></div>
@@ -1078,11 +1118,49 @@ color: #111111 !important;
                 </div>
               </div>
 
-              <div class="flex flex-col sm:flex-row sm:justify-between sm:items-center pt-2 border-t border-gray-200 gap-2 text-[10px]" :class="{'border-[#111111] pt-3': isDoodleMode}">
-                <span class="text-theme-green-dark font-medium" :class="{'text-[#111111] font-bold': isDoodleMode}">💡 當月設定總計: NT$ {{ formatNumber(settingsCurrentPeriodBudgetSum) }}</span>
-                <button @click="replicateSettingsBudget" class="text-xs text-theme-green-dark bg-white border border-gray-200 px-2.5 py-1 rounded-md hover:bg-gray-50 font-medium transition-all" :class="['doodle-btn']">
-                  套用至該年所有月份
-                </button>
+              <!-- 當月設定總計 & 多月份快速套用區塊 -->
+              <div class="pt-2 border-t border-gray-200 space-y-2.5 text-[10px]" :class="{'border-[#111111] pt-3': isDoodleMode}">
+                <div class="flex justify-between items-center">
+                  <span class="text-theme-green-dark font-medium" :class="{'text-[#111111] font-bold': isDoodleMode}">💡 當月設定總計: NT$ {{ formatNumber(settingsCurrentPeriodBudgetSum) }}</span>
+                  <div class="flex items-center gap-1.5">
+                    <button @click="toggleSelectAllMonths" class="text-[9px] text-gray-400 hover:text-gray-600 underline">
+                      {{ selectedTargetMonths.length === 12 ? '全不選' : '全選 12 個月' }}
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 1~12 月可勾選點擊按鈕 -->
+                <div>
+                  <p class="text-[9px] text-gray-400 mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">選擇要將 {{ settingsSelectedMonth }} 月設定複製套用的目標月份：</p>
+                  <div class="grid grid-cols-6 gap-1">
+                    <button v-for="m in 12" :key="m"
+                      @click="toggleTargetMonth(String(m).padStart(2,'0'))"
+                      :disabled="String(m).padStart(2,'0') === settingsSelectedMonth"
+                      :class="[
+                        String(m).padStart(2,'0') === settingsSelectedMonth ? 'opacity-40 cursor-not-allowed bg-gray-200 border-gray-200 text-gray-400' :
+                        selectedTargetMonths.includes(String(m).padStart(2,'0')) ? 'bg-theme-green text-white font-bold border-theme-green' : 'bg-white text-gray-600 border-gray-200 hover:bg-gray-50'
+                      ]"
+                      class="py-1 text-center rounded-md border text-[10px] transition-all"
+                    >
+                      {{ m }}月
+                    </button>
+                  </div>
+                </div>
+
+                <!-- 套用執行按鈕 -->
+                <div class="flex gap-2 pt-1">
+                  <button @click="replicateSettingsBudgetToSelected" 
+                    :disabled="!selectedTargetMonths.length"
+                    class="flex-1 py-1.5 text-xs text-theme-green-dark bg-white border border-gray-200 rounded-lg hover:bg-gray-50 font-medium transition-all disabled:opacity-40 disabled:cursor-not-allowed" 
+                    :class="['doodle-btn']">
+                    套用至勾選月份 ({{ selectedTargetMonths.length }})
+                  </button>
+                  <button @click="replicateSettingsBudget" 
+                    class="py-1.5 px-3 text-xs text-gray-500 bg-gray-100 hover:bg-gray-200 rounded-lg font-medium transition-all shrink-0" 
+                    :class="['doodle-btn']">
+                    全部 12 個月
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -1521,6 +1599,60 @@ const payMethods = computed(() => {
       saveToStorage();
     };
 
+    // === 新增：自訂套用至指定月份邏輯 ===
+    const selectedTargetMonths = ref([]);
+
+    // 當切換預算月份時，預設清除已選取的目標月份
+    watch(settingsSelectedMonth, (newVal) => {
+      selectedTargetMonths.value = [];
+    });
+
+    const toggleTargetMonth = (mStr) => {
+      if (mStr === settingsSelectedMonth.value) return; // 來源月份不可作為目標
+      const idx = selectedTargetMonths.value.indexOf(mStr);
+      if (idx > -1) {
+        selectedTargetMonths.value.splice(idx, 1);
+      } else {
+        selectedTargetMonths.value.push(mStr);
+      }
+    };
+
+    const toggleSelectAllMonths = () => {
+      if (selectedTargetMonths.value.length === 12) {
+        selectedTargetMonths.value = [];
+      } else {
+        selectedTargetMonths.value = [];
+        for (let m = 1; m <= 12; m++) {
+          const mStr = String(m).padStart(2, '0');
+          if (mStr !== settingsSelectedMonth.value) {
+            selectedTargetMonths.value.push(mStr);
+          }
+        }
+      }
+    };
+
+    // 套用至選擇的月份
+    const replicateSettingsBudgetToSelected = () => {
+      if (!selectedTargetMonths.value.length) {
+        showToast('請先點選要套用的目標月份');
+        return;
+      }
+      const yStr = settingsSelectedYear.value;
+      const mStr = settingsSelectedMonth.value;
+      const sourceBudget = {};
+      categories.value.forEach(cat => { sourceBudget[cat] = getBudgetBindingValue(cat); });
+
+      if (!yearlyMonthlyBudgets.value[yStr]) yearlyMonthlyBudgets.value[yStr] = {};
+
+      selectedTargetMonths.value.forEach(targetM => {
+        yearlyMonthlyBudgets.value[yStr][targetM] = { ...sourceBudget };
+      });
+
+      saveToStorage();
+      showToast(`已成功將 ${yStr}年 ${mStr}月 設定套用至 ${selectedTargetMonths.value.length} 個指定月份！`);
+    };
+
+    // 原始：套用至該年全 12 個月份
     const replicateSettingsBudget = () => {
       const yStr = settingsSelectedYear.value;
       const mStr = settingsSelectedMonth.value;
@@ -2421,12 +2553,17 @@ const deletePayMethod = () => {};
 
     // === 新增：圓環圖 (Donut Chart) 邏輯 ===
     const chartColors = ['#9baea0', '#c2c9bf', '#e2d5c8', '#e8ece6', '#f2dbd5'];
+    const analyticsType = ref('expense'); // 'expense' 支出構成 / 'income' 收入構成
     
     const donutChartData = computed(() => {
       const data = [];
       let total = 0;
-      categories.value.forEach(cat => {
-        const spent = getCategorySpentInPeriod(cat, analyticsPeriod.value);
+      const isIncome = analyticsType.value === 'income';
+      const catList = isIncome ? incomeCategories.value : categories.value;
+      catList.forEach(cat => {
+        const spent = expenses.value
+          .filter(e => e.category === cat && isInPeriod(e.date, analyticsPeriod.value) && (isIncome ? e.type === 'income' : e.type !== 'income'))
+          .reduce((s, e) => s + (Number(e.amount) || 0), 0);
         if (spent > 0) {
           data.push({ cat, amount: spent });
           total += spent;
@@ -2571,9 +2708,12 @@ applyQuickItemToModal,
       settingsSelectedYear,settingsSelectedMonth,settingsYearOptions,yearlyMonthlyBudgets,
       settingsCurrentPeriodBudgetSum,getBudgetBindingValue,updateBudgetBindingValue,
       replicateSettingsBudget,getMonthlyCategoryBudget,
+selectedTargetMonths, toggleTargetMonth, toggleSelectAllMonths, replicateSettingsBudgetToSelected,
       currentYear,currentMonth,currentYearMonthLabel,
 
       currentMonthTotal,
+      currentMonthIncome,
+      analyticsType,
       isDoodleMode, toggleStyleMode
     };
   }

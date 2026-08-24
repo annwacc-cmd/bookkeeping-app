@@ -448,14 +448,23 @@ color: #111111 !important;
 
     <!-- RECORDS -->
     <div v-if="currentTab==='records'" class="space-y-6">
-      <div class="bg-white p-4 rounded-2xl border border-gray-200 space-y-4 shadow-sm" :class="['doodle-card']">
-        <div class="flex flex-col md:flex-row gap-4 items-center justify-between">
-          <div class="flex bg-gray-100 p-1 rounded-xl text-xs w-full md:w-64" :class="{'bg-transparent border-2 border-[#111111] p-0.5 rounded-lg': isDoodleMode}">
+  <!-- 紅框方塊外層容器 -->
+      <div class="bg-white p-5 rounded-2xl border border-gray-200 space-y-4 shadow-sm" :class="['doodle-card']">
+        <!-- 頂部篩選按鈕區 -->
+        <div class="flex flex-col md:flex-row md:flex-wrap gap-4 items-center justify-between">
+          <div class="flex bg-gray-100 p-1 rounded-xl text-xs w-full md:w-64 shrink-0" :class="{'bg-transparent border-2 border-[#111111] p-0.5 rounded-lg': isDoodleMode}">
             <button @click="recordSubTab='date'" :class="[recordSubTab==='date' ? (isDoodleMode ? 'bg-[#fff176] font-bold border border-[#111111]' : 'bg-white shadow-sm font-medium text-theme-green') : 'text-gray-500']" class="flex-1 py-1.5 rounded-lg text-center transition-all">按日期</button>
             <button @click="recordSubTab='category'" :class="[recordSubTab==='category' ? (isDoodleMode ? 'bg-[#fff176] font-bold border border-[#111111]' : 'bg-white shadow-sm font-medium text-theme-green') : 'text-gray-500']" class="flex-1 py-1.5 rounded-lg text-center transition-all">按分類</button>
           </div>
 
-          <div class="grid grid-cols-2 gap-3 text-xs w-full md:w-auto md:flex items-center">
+          <div class="grid grid-cols-3 gap-3 text-xs w-full md:w-auto md:flex items-center">
+            <div class="md:w-32">
+              <label class="text-[9px] text-gray-400 block mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">年度篩選</label>
+              <select v-model="recordsFilterYear" class="w-full bg-theme-bg border border-gray-200 rounded-lg p-2 text-xs text-gray-700 focus:outline-none focus:border-theme-green" :class="['doodle-input']">
+                <option value="all">顯示全部年度</option>
+                <option v-for="y in availableYears" :key="y" :value="y">{{ y }}年</option>
+              </select>
+            </div>
             <div class="md:w-44">
               <label class="text-[9px] text-gray-400 block mb-1" :class="{'text-[#111111] font-bold': isDoodleMode}">月份篩選</label>
               <select v-model="recordsFilterMonth" class="w-full bg-theme-bg border border-gray-200 rounded-lg p-2 text-xs text-gray-700 focus:outline-none focus:border-theme-green" :class="['doodle-input']">
@@ -473,51 +482,71 @@ color: #111111 !important;
           </div>
         </div>
 
-<!-- 依據明細頁面篩選條件動態變化的預算卡片 -->
-      <div v-if="recordsFilterMonth !== 'all'" class="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm space-y-4 transition-all" :class="['doodle-card']">
-        <div class="flex justify-between items-center border-b border-gray-100 pb-3">
-          <div class="flex items-center gap-2">
-            <i data-lucide="target" class="w-4 h-4 text-theme-green"></i>
-            <span class="text-xs font-bold text-gray-700">{{ recordsPeriodLabel }} 總預算</span>
+ <!-- 藍框一列：總預算/總支出卡片（底色與篩選下拉框相同為 bg-theme-bg） -->
+        <div v-if="recordsFilterMonth !== 'all'" class="bg-theme-bg rounded-xl p-4 space-y-3 transition-all" :class="['doodle-card']">
+          <div class="flex justify-between items-center border-b border-gray-200 pb-2.5" :class="{'border-[#111111]': isDoodleMode}">
+            <div class="flex items-center gap-2">
+              <i data-lucide="target" class="w-4 h-4 text-theme-green"></i>
+              <span class="text-xs font-bold text-gray-700" :class="{'text-[#111111]': isDoodleMode}">{{ recordsPeriodLabel }} 總預算</span>
+            </div>
+            <!-- 補上總收入的標籤 -->
+            <div class="flex items-center gap-3">
+              <span class="text-[10px] text-emerald-600 bg-white px-2 py-0.5 rounded border border-gray-100" :class="{'border-[#111111] font-bold': isDoodleMode}">
+                收入 ${{ formatNumber(recordsFilteredList.filter(e => e.type === 'income').reduce((s, e) => s + (Number(e.amount) || 0), 0)) }}
+              </span>
+              <span class="text-sm font-bold text-gray-600" :class="{'text-[#111111] font-black': isDoodleMode}">${{ formatNumber(recordsTotalBudget) }}</span>
+            </div>
           </div>
-          <span class="text-sm font-bold text-gray-600">${{ formatNumber(recordsTotalBudget) }}</span>
+          <div class="grid grid-cols-3 gap-2 text-center py-1">
+            <div>
+              <p class="text-[10px] text-gray-400 mb-0.5" :class="{'text-[#111111] font-bold': isDoodleMode}">支出</p>
+              <p class="text-base font-bold text-gray-700" :class="{'text-[#111111] font-black': isDoodleMode}">${{ formatNumber(recordsTotalExpense) }}</p>
+              <p class="text-[9px] text-gray-400 mt-0.5" :class="{'text-[#333333]': isDoodleMode}">{{ recordsBudgetUsagePercent }}%</p>
+            </div>
+            <div class="border-x border-gray-200 px-1" :class="{'border-[#111111]': isDoodleMode}">
+              <p class="text-[10px] text-gray-400 mb-0.5" :class="{'text-[#111111] font-bold': isDoodleMode}">剩餘</p>
+              <p class="text-base font-bold" :class="recordsBudgetRemaining >= 0 ? 'text-theme-green-dark' : 'text-red-500'">
+                ${{ formatNumber(recordsBudgetRemaining) }}
+              </p>
+            </div>
+            <div>
+              <p class="text-[10px] text-gray-400 mb-0.5" :class="{'text-[#111111] font-bold': isDoodleMode}">剩餘日均</p>
+              <p class="text-base font-bold text-gray-700" :class="{'text-[#111111] font-black': isDoodleMode}">${{ formatNumber(recordsDailyAverage) }}</p>
+              <p class="text-[9px] text-gray-400 mt-0.5" :class="{'text-[#333333]': isDoodleMode}">剩餘 {{ recordsRemainingDays }} 天</p>
+            </div>
+          </div>
+          <div class="w-full h-2.5 bg-white rounded-full overflow-hidden relative border border-gray-100" :class="{'border-[#111111] doodle-progress-bg': isDoodleMode}">
+            <div class="h-full rounded-full transition-all duration-500"
+              :class="[recordsBudgetUsagePercent > 100 ? 'bg-red-400' : 'bg-theme-green', isDoodleMode ? (recordsBudgetUsagePercent > 100 ? 'doodle-progress-bar' : 'doodle-progress-bar-green') : '']"
+              :style="{ width: Math.min(recordsBudgetUsagePercent, 100) + '%' }">
+            </div>
+          </div>
         </div>
-        <div class="grid grid-cols-3 gap-2 text-center py-2">
-          <div>
-            <p class="text-[10px] text-gray-400 mb-1">支出</p>
-            <p class="text-base font-bold text-gray-700">${{ formatNumber(recordsTotalExpense) }}</p>
-            <p class="text-[9px] text-gray-400 mt-0.5">{{ recordsBudgetUsagePercent }}%</p>
-          </div>
-          <div class="border-x border-gray-100 px-1">
-            <p class="text-[10px] text-gray-400 mb-1">剩餘</p>
-            <p class="text-base font-bold" :class="recordsBudgetRemaining >= 0 ? 'text-theme-green-dark' : 'text-red-500'">
-              ${{ formatNumber(recordsBudgetRemaining) }}
-            </p>
-          </div>
-          <div>
-            <p class="text-[10px] text-gray-400 mb-1">剩餘日均</p>
-            <p class="text-base font-bold text-gray-700">${{ formatNumber(recordsDailyAverage) }}</p>
-            <p class="text-[9px] text-gray-400 mt-0.5">剩餘 {{ recordsRemainingDays }} 天</p>
-          </div>
-        </div>
-        <div class="w-full h-2.5 bg-gray-100 rounded-full overflow-hidden relative">
-          <div class="h-full rounded-full transition-all duration-500"
-            :class="recordsBudgetUsagePercent > 100 ? 'bg-red-400' : 'bg-theme-green'"
-            :style="{ width: Math.min(recordsBudgetUsagePercent, 100) + '%' }">
-          </div>
-        </div>
-      </div>
 
-      <!-- 當選擇「顯示全部月份」時，退化為只顯示總支出的簡化卡片 -->
-      <div v-else class="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm flex justify-between items-center transition-all" :class="['doodle-card']">
-        <div class="flex items-center gap-2">
-          <i data-lucide="calculator" class="w-4 h-4 text-theme-green"></i>
-          <span class="text-xs font-bold text-gray-700">{{ recordsPeriodLabel }} 總支出</span>
+        <!-- 藍框一列：顯示全部月份時顯示簡化卡片 (改為左右並排的總支出與總收入) -->
+        <div v-else class="grid grid-cols-1 md:grid-cols-2 gap-3 transition-all">
+          <!-- 支出 -->
+          <div class="bg-theme-bg rounded-xl px-4 py-3 flex justify-between items-center" :class="['doodle-card']">
+            <div class="flex items-center gap-2">
+              <i data-lucide="file-minus" class="w-4 h-4 text-gray-500" :class="{'text-[#111111]': isDoodleMode}"></i>
+              <span class="text-sm font-medium text-gray-700" :class="{'text-[#111111] font-bold': isDoodleMode}">{{ recordsPeriodLabel }} 總支出</span>
+            </div>
+            <span class="text-lg font-bold text-gray-700" :class="{'text-[#111111] font-black': isDoodleMode}">${{ formatNumber(recordsTotalExpense) }}</span>
+          </div>
+
+          <!-- 收入 -->
+          <div class="bg-theme-bg rounded-xl px-4 py-3 flex justify-between items-center" :class="['doodle-card']">
+            <div class="flex items-center gap-2">
+              <i data-lucide="file-plus" class="w-4 h-4 text-emerald-600" :class="{'text-[#111111]': isDoodleMode}"></i>
+              <span class="text-sm font-medium text-gray-700" :class="{'text-[#111111] font-bold': isDoodleMode}">{{ recordsPeriodLabel }} 總收入</span>
+            </div>
+            <span class="text-lg font-bold text-emerald-600" :class="{'text-[#111111] font-black': isDoodleMode}">
+              ${{ formatNumber(recordsFilteredList.filter(e => e.type === 'income').reduce((s, e) => s + (Number(e.amount) || 0), 0)) }}
+            </span>
+          </div>
         </div>
-        <span class="text-xl font-bold text-gray-700">${{ formatNumber(recordsTotalExpense) }}</span>
-      </div>
 
-
+        <!-- 綠框獨立下一列：已篩選筆數與全部展開/收起 -->
         <div class="flex justify-between items-center text-[10px] border-t border-gray-100 pt-3 px-1" :class="{'border-[#111111]': isDoodleMode}">
           <span class="text-gray-400" :class="{'text-[#111111] font-bold': isDoodleMode}">已篩選出 {{ filteredRecordsCount }} 筆</span>
           <div class="flex gap-2">
@@ -1429,9 +1458,10 @@ createApp({
     const isSettingsBudgetsExpanded = ref(true);
     const isQuickItemsExpanded = ref(true);
     const isAnalyticsComparisonExpanded = ref(true);
-
+    const recordsFilterYear = ref('all');
     const recordsFilterMonth = ref('all');
     const recordsFilterCategory = ref('all');
+watch(recordsFilterYear, () => { recordsFilterMonth.value = 'all'; });
     const collapsedDateGroups = ref({});
 
     const analyticsSelectedYear = ref(String(currentYear));
@@ -2160,22 +2190,26 @@ const currentMonthIncome = computed(() => {
       return `${parts[0]}年${parts[1]}月`;
     };
 
-    const recordsFilteredList = computed(() => {
-      return expenses.value.filter(item => {
-        if (recordsFilterMonth.value !== 'all' && (!item.date || typeof item.date !== 'string' || !item.date.startsWith(recordsFilterMonth.value))) return false;
-        if (recordsFilterCategory.value !== 'all' && item.category !== recordsFilterCategory.value) return false;
-        return true;
-      });
-    });
+   const recordsFilteredList = computed(() => {
+  return expenses.value.filter(item => {
+    if (recordsFilterYear.value !== 'all' && (!item.date || typeof item.date !== 'string' || !item.date.startsWith(recordsFilterYear.value))) return false;
+    if (recordsFilterMonth.value !== 'all' && (!item.date || typeof item.date !== 'string' || !item.date.startsWith(recordsFilterMonth.value))) return false;
+    if (recordsFilterCategory.value !== 'all' && item.category !== recordsFilterCategory.value) return false;
+    return true;
+  });
+});
 
     const filteredRecordsCount = computed(() => recordsFilteredList.value.length);
     
 // === 明細頁面專屬的預算與支出計算 (依據 recordsFilteredList 變化) ===
     const recordsPeriodLabel = computed(() => {
-      let label = recordsFilterMonth.value === 'all' ? '全部區間' : formatYearMonthLabel(recordsFilterMonth.value);
-      if (recordsFilterCategory.value !== 'all') label += ` (${recordsFilterCategory.value})`;
-      return label;
-    });
+  let label;
+  if (recordsFilterMonth.value !== 'all') label = formatYearMonthLabel(recordsFilterMonth.value);
+  else if (recordsFilterYear.value !== 'all') label = `${recordsFilterYear.value}年度`;
+  else label = '全部區間';
+  if (recordsFilterCategory.value !== 'all') label += ` (${recordsFilterCategory.value})`;
+  return label;
+});
 
     const recordsTotalExpense = computed(() => {
       return recordsFilteredList.value.filter(e => e.type !== 'income').reduce((s, e) => s + (Number(e.amount) || 0), 0);
@@ -2234,7 +2268,7 @@ const currentMonthIncome = computed(() => {
         const d = e.date || '未知日期';
         if (!g[d]) g[d] = { items: [], total: 0 };
         g[d].items.push(e);
-        if (e.type !== 'income') g[d].total += (Number(e.amount) || 0);
+        g[d].total += (Number(e.amount) || 0);
       });
       return g;
     });
@@ -2247,7 +2281,7 @@ const currentMonthIncome = computed(() => {
         if(!g[c])g[c]={items:[],total:0};
         g[c].items.push(e);
         // 這裡是用 c 來加總
-        if(e.type!=='income') g[c].total+=e.amount;
+        g[c].total += (Number(e.amount) || 0);
       });
       const result = {};
       Object.keys(g).forEach(k => {
@@ -2696,8 +2730,7 @@ applyQuickItemToModal,
       isModalCameraActive,onExpensePhotoUploaded,startCameraForExpense,stopCameraForExpense,capturePhotoForExpense,
       
       isRecentActivityExpanded, isTopExpensesExpanded, isSettingsBudgetsExpanded, isQuickItemsExpanded, isAnalyticsComparisonExpanded,
-
-      recordsFilterMonth,recordsFilterCategory,availableYearMonths,formatYearMonthLabel,
+recordsFilterYear,      recordsFilterMonth,recordsFilterCategory,availableYearMonths,formatYearMonthLabel,
       recordsFilteredList,filteredRecordsCount,recordsPeriodLabel, recordsTotalExpense, recordsTotalBudget, recordsBudgetRemaining, 
       recordsBudgetUsagePercent, recordsRemainingDays, recordsDailyAverage,groupedByDateFiltered,groupedByCategoryFiltered,
       collapsedDateGroups,toggleDateGroupCollapse,toggleAllCollapse,

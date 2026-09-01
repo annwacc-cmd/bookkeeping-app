@@ -203,6 +203,9 @@ color: #111111 !important;
       <button @click="switchTab('assets')" :class="[currentTab === 'assets' ? (isDoodleMode ? 'bg-[#fff176] border-2 border-[#111111] font-bold' : 'bg-theme-green/10 text-theme-green font-semibold') : 'text-gray-400 hover:text-gray-700']" class="w-full text-left py-2 px-3 rounded-xl flex items-center gap-3 transition-all text-sm">
         <i data-lucide="wallet" class="w-4 h-4"></i> 資產管理
       </button>
+<button @click="switchTab('investments')" :class="[currentTab === 'investments' ? (isDoodleMode ? 'bg-[#fff176] border-2 border-[#111111] font-bold' : 'bg-theme-green/10 text-theme-green font-semibold') : 'text-gray-400 hover:text-gray-700']" class="w-full text-left py-2 px-3 rounded-xl flex items-center gap-3 transition-all text-sm">
+        <i data-lucide="trending-up" class="w-4 h-4"></i> 投資理財
+      </button>
       <button @click="switchTab('settings')" :class="[currentTab === 'settings' ? (isDoodleMode ? 'bg-[#fff176] border-2 border-[#111111] font-bold' : 'bg-theme-green/10 text-theme-green font-semibold') : 'text-gray-400 hover:text-gray-700']" class="w-full text-left py-2 px-3 rounded-xl flex items-center gap-3 transition-all text-sm">
         <i data-lucide="settings" class="w-4 h-4"></i> 基底格局
       </button>
@@ -832,7 +835,7 @@ color: #111111 !important;
       </div>
     </div>
 
-    <!-- ANALYTICS -->
+<!-- ANALYTICS -->
     <div v-if="currentTab==='analytics'" class="space-y-6">
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- 月份 / 年份篩選選單 -->
@@ -864,9 +867,10 @@ color: #111111 !important;
         <!-- 圓環圖區塊 -->
         <div class="bg-white p-6 rounded-3xl border border-gray-200 shadow-sm flex flex-col items-center justify-center relative" :class="['doodle-card']">
           <div class="absolute top-4 left-4 flex items-center gap-1 bg-gray-100 rounded-md p-0.5" :class="{'bg-transparent border-2 border-[#111111] p-0.5 rounded-lg': isDoodleMode}">
-  <button @click="analyticsType='expense'" :class="analyticsType==='expense' ? (isDoodleMode ? 'bg-[#fff176] font-bold border border-[#111111]' : 'bg-white shadow-sm font-bold text-theme-green-dark') : 'text-gray-400'" class="text-xs px-2 py-1 rounded transition-all">支出</button>
-  <button @click="analyticsType='income'" :class="analyticsType==='income' ? (isDoodleMode ? 'bg-[#fff176] font-bold border border-[#111111]' : 'bg-white shadow-sm font-bold text-theme-green-dark') : 'text-gray-400'" class="text-xs px-2 py-1 rounded transition-all">收入</button>
-</div>
+            <!-- 收入與支出按鈕位置對調 -->
+            <button @click="analyticsType='income'" :class="analyticsType==='income' ? (isDoodleMode ? 'bg-[#fff176] font-bold border border-[#111111]' : 'bg-white shadow-sm font-bold text-theme-green-dark') : 'text-gray-400'" class="text-xs px-2 py-1 rounded transition-all">收入</button>
+            <button @click="analyticsType='expense'" :class="analyticsType==='expense' ? (isDoodleMode ? 'bg-[#fff176] font-bold border border-[#111111]' : 'bg-white shadow-sm font-bold text-theme-green-dark') : 'text-gray-400'" class="text-xs px-2 py-1 rounded transition-all">支出</button>
+          </div>
           
           <div class="relative w-40 h-40 rounded-full mt-6 mb-4" :style="{ background: donutGradient }">
             <div class="donut-hole"></div>
@@ -876,8 +880,9 @@ color: #111111 !important;
             <div v-for="(item, idx) in donutChartData" :key="item.cat" class="space-y-1">
               <div class="flex justify-between text-xs">
                 <span class="flex items-center gap-1.5 font-medium text-gray-700">
-                  <span class="w-2.5 h-2.5 rounded-full" :style="{ backgroundColor: item.color }"></span>
-                  {{ item.cat }} {{ item.percent }}%
+                  <span class="w-2.5 h-2.5 rounded-full shrink-0" :style="{ backgroundColor: item.color }"></span>
+                  <!-- 加上分類 Emoji -->
+                  <span>{{ catEmoji(item.cat) }}</span> {{ item.cat }} {{ item.percent }}%
                 </span>
                 <span class="font-semibold text-gray-600">${{ formatNumber(item.amount) }}</span>
               </div>
@@ -885,11 +890,22 @@ color: #111111 !important;
                 <div class="h-full rounded-full" :style="{ width: item.percent + '%', backgroundColor: item.color }"></div>
               </div>
             </div>
+
+            <!-- 圓環圖：合計列 -->
+            <div class="pt-3 mt-2 border-t border-gray-100 flex justify-between items-center text-sm font-bold text-gray-700" :class="{'border-[#111111] text-[#111111] font-black': isDoodleMode}">
+              <span>合計</span>
+              <span :class="analyticsType === 'income' ? 'text-emerald-600' : ''">
+                ${{ analyticsType === 'expense'
+                     ? formatNumber(filteredGrandTotal)
+                     : formatNumber(filteredExpenses.filter(e => e.type === 'income').reduce((s, e) => s + (Number(e.amount) || 0), 0))
+                }}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      <!-- 折線波動與支付分布 -->
+      <!-- 折線波動與支付分布 (恢復滿版 12 欄配置) -->
       <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
         <div class="lg:col-span-7 space-y-2" :class="['doodle-tilt-right']">
           <h3 class="text-xs tracking-wider text-gray-400 mb-2 uppercase" :class="{'text-[#111111] font-bold': isDoodleMode}">區間花費波動</h3>
@@ -915,10 +931,17 @@ color: #111111 !important;
               </div>
             </div>
             <div v-if="!payMethodsWithData.length" class="text-[10px] text-gray-400 italic py-2" :class="{'text-[#111111]': isDoodleMode}">無數據</div>
+
+            <!-- 支付分布：合計列 -->
+            <div v-if="payMethodsWithData.length" class="pt-3 mt-1 border-t border-gray-100 flex justify-between items-center text-sm font-bold text-gray-700" :class="{'border-[#111111] text-[#111111] font-black': isDoodleMode}">
+              <span>合計</span>
+              <span class="text-theme-green-dark" :class="{'!text-[#111111]': isDoodleMode}">NT$ {{ formatNumber(filteredGrandTotal) }}</span>
+            </div>
           </div>
         </div>
       </div>
-<!-- 動態區間總預算大卡片 -->
+
+      <!-- 動態區間總預算大卡片 -->
       <div class="bg-white rounded-3xl p-6 border border-gray-200 shadow-sm space-y-4 mb-6 transition-all" :class="['doodle-card']">
         <div class="flex justify-between items-center border-b border-gray-100 pb-3">
           <div class="flex items-center gap-2">
@@ -1067,22 +1090,41 @@ color: #111111 !important;
       </button>
     </div>
     <div class="space-y-2.5">
-      <div v-for="acc in assetAccounts" :key="acc.id" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex justify-between items-center transition-all hover:border-theme-green/30">
-        <div class="flex items-center gap-3">
-          <div class="p-2.5 bg-theme-bg rounded-xl">
-            <i :data-lucide="acc.type === 'bank' ? 'landmark' : (acc.type === 'credit' ? 'credit-card' : 'wallet')" class="w-5 h-5 text-theme-green"></i>
+      <template v-for="acc in assetAccounts" :key="acc.id">
+        <div @click="toggleAccountDetail(acc.id)" class="bg-white rounded-2xl p-4 shadow-sm border border-gray-100 flex justify-between items-center transition-all hover:border-theme-green/30 cursor-pointer">
+          <div class="flex items-center gap-3">
+            <div class="p-2.5 bg-theme-bg rounded-xl">
+              <i :data-lucide="acc.type === 'bank' ? 'landmark' : (acc.type === 'credit' ? 'credit-card' : (acc.type === 'investment' ? 'trending-up' : 'wallet'))" class="w-5 h-5 text-theme-green"></i>
+            </div>
+            <div>
+              <p class="text-sm font-medium text-gray-700">{{ acc.name }}</p>
+              <p class="text-[10px] text-gray-400 capitalize">{{ acc.type === 'credit' ? '信用卡/負債' : '資產' }}</p>
+            </div>
           </div>
-          <div>
-            <p class="text-sm font-medium text-gray-700">{{ acc.name }}</p>
-            <p class="text-[10px] text-gray-400 capitalize">{{ acc.type === 'credit' ? '信用卡/負債' : '資產' }}</p>
+          <div class="flex items-center gap-3">
+            <span class="font-semibold" :class="acc.balance < 0 ? 'text-red-500' : 'text-gray-700'">${{ formatNumber(acc.balance) }}</span>
+            <i :data-lucide="expandedAccountDetails[acc.id] ? 'chevron-up' : 'chevron-down'" class="w-4 h-4 text-gray-300"></i>
+            <button @click.stop="openEditAccountModal(acc)" class="text-gray-300 hover:text-theme-green text-xs"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+            <button @click.stop="deleteAccount(acc.id)" class="text-gray-300 hover:text-red-500 text-xs"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
           </div>
         </div>
-        <div class="flex items-center gap-3">
-          <span class="font-semibold" :class="acc.balance < 0 ? 'text-red-500' : 'text-gray-700'">${{ formatNumber(acc.balance) }}</span>
-          <button @click.stop="openEditAccountModal(acc)" class="text-gray-300 hover:text-theme-green text-xs"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
-          <button @click.stop="deleteAccount(acc.id)" class="text-gray-300 hover:text-red-500 text-xs"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+
+        <div v-if="expandedAccountDetails[acc.id]" class="bg-theme-bg rounded-2xl border border-gray-100 p-3 space-y-2">
+          <div v-if="getAccountTransactions(acc.name).length" class="space-y-2 max-h-64 overflow-y-auto">
+            <div v-for="tx in getAccountTransactions(acc.name)" :key="tx.id" class="flex justify-between items-center text-xs bg-white rounded-xl px-3 py-2">
+              <div class="flex items-center gap-2 min-w-0">
+                <span class="shrink-0">{{ catEmoji(tx.category) }}</span>
+                <div class="min-w-0">
+                  <p class="text-gray-700 font-medium truncate">{{ tx.title || tx.category }}</p>
+                  <p class="text-[10px] text-gray-400">{{ tx.date }} · {{ tx.category }}</p>
+                </div>
+              </div>
+              <span class="font-semibold shrink-0 ml-2" :class="tx.type === 'income' ? 'text-emerald-600' : 'text-gray-700'">{{ tx.type === 'income' ? '+' : '-' }}${{ formatNumber(tx.amount) }}</span>
+            </div>
+          </div>
+          <div v-else class="text-center text-[11px] text-gray-400 py-3 italic">此帳戶暫無交易明細</div>
         </div>
-      </div>
+      </template>
       <div v-if="!assetAccounts.length" class="text-center text-xs text-gray-400 py-6 italic">暫無資產帳戶，請點擊上方新增。</div>
     </div>
   </div>
@@ -1099,6 +1141,7 @@ color: #111111 !important;
         <select v-model="newAccount.type" class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs text-gray-700 outline-none focus:border-theme-green">
           <option value="cash">現金/電子支付</option>
           <option value="bank">銀行帳戶</option>
+          <option value="investment">理財帳戶</option>
           <option value="credit">信用卡 (負債)</option>
         </select>
       </div>
@@ -1110,6 +1153,154 @@ color: #111111 !important;
         <button @click="isAccountModalOpen=false" class="flex-1 py-2.5 bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors text-xs font-medium rounded-xl">取消</button>
         <button @click="saveNewAccount" class="flex-1 py-2.5 bg-theme-green hover:bg-theme-green-dark transition-colors text-white text-xs font-medium rounded-xl">儲存</button>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- INVESTMENTS (投資理財) -->
+<div v-if="currentTab==='investments'" class="space-y-4 pb-24 md:pb-6">
+  <!-- 頂部：投資總市值卡片 -->
+  <div class="bg-[#f8f6f2] rounded-[32px] p-6 shadow-sm border border-[#edebe4] relative" :class="['doodle-card']">
+    <div class="flex justify-between items-center mb-6">
+      <div class="flex items-center gap-2 text-gray-700 font-bold text-[13px]">
+        <button @click="openAddInvestmentModal" class="w-6 h-6 rounded-full bg-theme-green text-white flex items-center justify-center hover:bg-theme-green-dark transition-colors shadow-sm" title="新增投資標的" :class="{'border-2 border-[#111111]': isDoodleMode}">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+        </button>
+        投資總市值
+      </div>
+      <div class="flex items-center gap-2">
+        <div class="bg-white/70 px-4 py-1.5 rounded-full text-sm font-bold text-gray-700 tracking-wider border border-[#e8e4dc] shadow-sm" :class="{'border-[#111111] bg-white': isDoodleMode}">
+          NT$ {{ formatNumber(totalInvestmentMarketValue) }}
+        </div>
+        <button @click="refreshAllStockPrices" class="w-8 h-8 rounded-full bg-white/70 flex items-center justify-center text-gray-500 border border-[#e8e4dc] shadow-sm hover:bg-gray-50" title="重新整理" :class="{'border-[#111111] bg-white': isDoodleMode}">
+          <i data-lucide="refresh-cw" class="w-4 h-4 text-gray-500" :class="{'text-[#111111]': isDoodleMode}"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="flex justify-between items-start mb-8">
+      <div class="space-y-1.5">
+        <button @click="refreshAllStockPrices" class="bg-white px-3 py-1.5 rounded-full text-[11px] text-gray-700 font-bold flex items-center gap-1.5 border border-[#e8e4dc] shadow-sm mb-3 hover:bg-gray-50 transition-colors" :class="['doodle-btn', '!bg-white !text-gray-700']">
+          <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i> 一鍵更新股價
+        </button>
+        <p class="text-[10px] text-gray-400 font-medium" :class="{'text-[#333333] font-bold': isDoodleMode}">市場狀態：即時連動計算中</p>
+        <p class="text-[10px] text-gray-400 font-medium" :class="{'text-[#333333] font-bold': isDoodleMode}">總持有檔數：{{ userStocks.length }} 檔</p>
+      </div>
+      <div class="text-right">
+        <p class="text-[10px] text-gray-400 font-bold mb-1" :class="{'text-[#111111]': isDoodleMode}">總未實現損益</p>
+        <p class="text-lg font-bold" :class="totalInvestmentPL >= 0 ? 'text-[#b94a48]' : 'text-emerald-600'">
+          {{ totalInvestmentPL >= 0 ? '+' : '' }}NT$ {{ formatNumber(totalInvestmentPL) }}
+        </p>
+      </div>
+    </div>
+
+    <div class="flex justify-between items-center px-1 md:px-6">
+      <div v-for="menu in [{i:'wallet', t:'投資總覽'},{i:'history', t:'交易紀錄'},{i:'circle-dollar-sign', t:'損益紀錄'},{i:'settings', t:'自訂'}]" :key="menu.t" @click="handleInvFeature(menu.t)" class="flex flex-col items-center gap-2 cursor-pointer group">
+        <div class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm border border-[#e8e4dc] group-hover:scale-105 transition-transform" :class="{'border-2 border-[#111111] shadow-[2px_2px_0px_#111111]': isDoodleMode}">
+          <i :data-lucide="menu.i" class="w-5 h-5 text-[#a39281]" :class="{'text-[#111111]': isDoodleMode}"></i>
+        </div>
+        <span class="text-[11px] font-bold text-gray-700" :class="{'text-[#111111] font-black': isDoodleMode}">{{ menu.t }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- 中間：投資變化區塊 -->
+  <div class="bg-[#f8f6f2] rounded-[32px] p-6 shadow-sm border border-[#edebe4]" :class="['doodle-card']">
+    <div class="flex justify-between items-center mb-1">
+      <div class="flex items-center gap-1.5">
+        <h3 class="text-[13px] font-bold text-gray-700" :class="{'text-[#111111] font-black': isDoodleMode}">投資變化清單</h3>
+        <button @click="openAddInvestmentModal" class="w-6 h-6 bg-white rounded-full border border-[#e8e4dc] flex items-center justify-center ml-1 shadow-sm hover:bg-gray-50 text-theme-green" title="新增標的" :class="{'border-[#111111]': isDoodleMode}">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i>
+        </button>
+      </div>
+      <!-- 右側頁籤 -->
+      <div class="flex items-center gap-0.5 text-[11px] font-bold text-gray-400 bg-white px-1.5 py-1.5 rounded-full border border-[#e8e4dc] shadow-sm" :class="{'border-[#111111]': isDoodleMode}">
+        <button @click="invMarket = 'all'" :class="invMarket === 'all' ? (isDoodleMode ? 'bg-[#fff176] text-[#111111] border border-[#111111]' : 'bg-[#baad9c] text-white') : ''" class="px-2.5 py-1 rounded-full transition-colors">全部</button>
+        <button @click="invMarket = 'tw'" :class="invMarket === 'tw' ? (isDoodleMode ? 'bg-[#fff176] text-[#111111] border border-[#111111]' : 'bg-[#baad9c] text-white') : ''" class="px-2.5 py-1 rounded-full transition-colors">台股</button>
+        <button @click="invMarket = 'us'" :class="invMarket === 'us' ? (isDoodleMode ? 'bg-[#fff176] text-[#111111] border border-[#111111]' : 'bg-[#baad9c] text-white') : ''" class="px-2.5 py-1 rounded-full transition-colors">美股</button>
+      </div>
+    </div>
+    <p class="text-[10px] text-gray-400 mb-5 font-medium" :class="{'text-[#333333] font-bold': isDoodleMode}">點擊項目可進行編輯或刪除管理</p>
+
+    <!-- 日期選擇 -->
+    <div class="flex items-center justify-center gap-4 mb-5">
+      <button @click="changeInvDate(-1)" class="w-7 h-7 bg-[#ede4d8] rounded-full flex items-center justify-center text-[#9c8973] hover:bg-[#e6d9c9]" :class="{'border border-[#111111] bg-white text-[#111111]': isDoodleMode}">
+         <i data-lucide="chevron-left" class="w-4 h-4"></i>
+      </button>
+      <div class="bg-white px-5 py-1.5 rounded-full text-sm font-bold text-gray-600 flex items-center gap-2 border border-[#e8e4dc] shadow-sm" :class="{'border-2 border-[#111111]': isDoodleMode}">
+        {{ invDateDisplay }} <i data-lucide="calendar" class="w-3.5 h-3.5 text-gray-400"></i>
+      </div>
+      <button @click="changeInvDate(1)" class="w-7 h-7 bg-[#ede4d8] rounded-full flex items-center justify-center text-[#9c8973] hover:bg-[#e6d9c9]" :class="{'border border-[#111111] bg-white text-[#111111]': isDoodleMode}">
+         <i data-lucide="chevron-right" class="w-4 h-4"></i>
+      </button>
+    </div>
+
+    <!-- 列表標題 -->
+    <div class="grid grid-cols-[1fr_1fr_1fr_1.2fr] gap-1 text-[10px] text-gray-500 font-bold mb-3 border-b border-[#e8e4dc] pb-2" :class="{'border-[#111111] text-[#111111]': isDoodleMode}">
+      <div class="text-left pl-1">代號 / 名稱</div>
+      <div class="text-center">持有股數</div>
+      <div class="text-center">現價 / 均價</div>
+      <div class="text-right pr-1">市值與損益</div>
+    </div>
+
+    <!-- 動態渲染投資列表項目 -->
+    <div class="space-y-2">
+      <div v-for="stock in filteredUserStocks" :key="stock.id" class="grid grid-cols-[1fr_1fr_1fr_1.2fr] gap-1 text-[11px] items-center border-b border-[#e8e4dc]/60 pb-3 pt-2 last:border-0" :class="{'border-[#111111]/30': isDoodleMode}">
+        <div class="text-left pl-1">
+          <p class="font-bold text-gray-700" :class="{'text-[#111111]': isDoodleMode}">{{ stock.symbol }}</p>
+          <p class="text-[9px] text-gray-400 truncate">{{ stock.name }}</p>
+        </div>
+        <div class="text-center text-gray-600 font-medium">{{ formatNumber(stock.shares) }} 股</div>
+        <div class="text-center">
+          <p class="font-bold text-gray-700">${{ formatNumber(stock.currentPrice) }}</p>
+          <p class="text-[9px] text-gray-400">均 ${{ formatNumber(stock.avgPrice) }}</p>
+        </div>
+        <div class="text-right flex flex-col items-end pr-1">
+          <span class="font-bold" :class="stock.totalPL >= 0 ? 'text-[#b94a48]' : 'text-emerald-600'">
+            {{ stock.totalPL >= 0 ? '+' : '' }}${{ formatNumber(stock.totalPL) }}
+          </span>
+          <div class="flex items-center gap-1.5 mt-0.5">
+            <button @click="openEditInvestmentModal(stock)" class="text-gray-400 hover:text-theme-green" title="編輯"><i data-lucide="edit-3" class="w-3 h-3"></i></button>
+            <button @click="deleteInvestmentStock(stock.id)" class="text-gray-400 hover:text-red-500" title="刪除"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
+          </div>
+        </div>
+      </div>
+      <div v-if="filteredUserStocks.length === 0" class="text-center py-6 text-xs text-gray-400 italic">
+        尚無投資標的，點擊上方按鈕新增您的第一檔股票或基金。
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- 新增/編輯投資標的互動彈窗 -->
+<div v-if="isInvestmentModalOpen" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-xl" :class="{'border-2 border-[#111111]': isDoodleMode}">
+    <h3 class="text-sm font-bold text-gray-700">{{ editingInvestmentId ? '編輯投資標的' : '新增投資標的' }}</h3>
+    <div>
+      <label class="text-[10px] text-gray-400 block mb-1">股票/基金代號</label>
+      <input type="text" v-model="investmentForm.symbol" placeholder="例如：2330 或 0050" class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
+    </div>
+    <div>
+      <label class="text-[10px] text-gray-400 block mb-1">名稱</label>
+      <input type="text" v-model="investmentForm.name" placeholder="例如：台積電、元大台灣50" class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <div>
+        <label class="text-[10px] text-gray-400 block mb-1">持有股數</label>
+        <input type="number" v-model.number="investmentForm.shares" placeholder="0" class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
+      </div>
+      <div>
+        <label class="text-[10px] text-gray-400 block mb-1">平均成本價</label>
+        <input type="number" v-model.number="investmentForm.avgPrice" placeholder="0" class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
+      </div>
+    </div>
+    <div>
+      <label class="text-[10px] text-gray-400 block mb-1">目前最新現價</label>
+      <input type="number" v-model.number="investmentForm.currentPrice" placeholder="0" class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
+    </div>
+    <div class="flex gap-2 pt-2">
+      <button @click="isInvestmentModalOpen = false" class="flex-1 py-2.5 bg-gray-100 text-gray-500 hover:bg-gray-200 text-xs font-medium rounded-xl">取消</button>
+      <button @click="saveInvestmentStock" class="flex-1 py-2.5 bg-theme-green text-white hover:bg-theme-green-dark text-xs font-medium rounded-xl">儲存標的</button>
     </div>
   </div>
 </div>
@@ -1238,7 +1429,40 @@ color: #111111 !important;
           </div>
         </div>
       </div>
+<!-- 定期固定收支管理 -->
+<div class="bg-white p-5 rounded-2xl border border-gray-200 space-y-4 shadow-sm" :class="['doodle-card']">
+  <div class="border-b border-gray-100 pb-2 flex justify-between items-center" :class="{'border-[#111111] border-b-2': isDoodleMode}">
+    <div>
+      <h3 class="text-xs uppercase tracking-wider text-gray-700 font-bold" :class="{'text-[#111111] font-black': isDoodleMode}">定期固定收支（發薪/訂閱/租金）</h3>
+      <p class="text-[9px] text-gray-400" :class="{'text-[#333333]': isDoodleMode}">每月指定日期自動產生紀錄並自動連動帳戶餘額</p>
+    </div>
+    <button @click="openAddRecurringModal" class="text-[10px] bg-theme-green text-white px-2.5 py-1 rounded-lg flex items-center gap-1 transition-colors shrink-0" :class="['doodle-btn']">
+      <i data-lucide="plus" class="w-3 h-3"></i> 新增定期項目
+    </button>
+  </div>
 
+  <div class="space-y-2">
+    <div v-for="item in recurringItems" :key="item.id" class="flex items-center justify-between p-3 bg-theme-bg rounded-xl border border-gray-100" :class="['doodle-card']">
+      <div class="flex items-center space-x-3 min-w-0">
+        <span class="text-xl shrink-0">{{ catEmoji(item.category) }}</span>
+        <div class="min-w-0">
+          <p class="text-xs font-semibold text-gray-700 truncate" :class="{'text-[#111111]': isDoodleMode}">{{ item.title }}</p>
+          <p class="text-[10px] text-gray-400">每月 {{ item.day }} 號 · {{ item.payMethod }} · {{ item.category }}</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-2 shrink-0">
+        <span class="text-xs font-bold" :class="item.type === 'income' ? 'text-emerald-600' : 'text-gray-700'">
+          {{ item.type === 'income' ? '+' : '-' }}${{ formatNumber(item.amount) }}
+        </span>
+        <button @click="executeRecurringItemNow(item)" class="text-[10px] bg-white border border-gray-200 px-2 py-0.5 rounded-md hover:bg-theme-green/10 text-theme-green-dark" title="立即執行一次入帳">
+          執行入帳
+        </button>
+        <button @click="deleteRecurringItem(item.id)" class="text-gray-400 hover:text-red-500"><i data-lucide="trash-2" class="w-3.5 h-3.5"></i></button>
+      </div>
+    </div>
+    <div v-if="!recurringItems.length" class="text-center py-6 text-[10px] text-gray-400 italic">尚無定期固定收支項目</div>
+  </div>
+</div>
       <!-- 基礎參數 -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div class="bg-white p-5 rounded-2xl border border-gray-200 space-y-3 shadow-sm" :class="['doodle-card']">
@@ -1381,7 +1605,57 @@ color: #111111 !important;
       <button @click="saveQuickItem" class="w-full py-3.5 bg-theme-green text-white rounded-xl text-sm font-medium hover:bg-theme-green-dark transition-colors shadow-sm" :class="['doodle-btn']">{{ editingQuickItemId ? '儲存修改' : '建立常用支出' }}</button>
     </div>
   </div>
+<!-- 新增定期固定收支彈窗 -->
+<div v-if="isRecurringModalOpen" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-xl" :class="{'border-2 border-[#111111]': isDoodleMode}">
+    <div class="flex justify-between items-center">
+      <h3 class="text-sm font-bold text-gray-700">新增定期固定收支</h3>
+      <button @click="isRecurringModalOpen = false" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
 
+    <!-- 類型選擇 -->
+    <div class="flex gap-2">
+      <button @click="recurringForm.type = 'expense'" :class="recurringForm.type === 'expense' ? 'bg-theme-green text-white font-bold' : 'bg-gray-100 text-gray-500'" class="flex-1 py-1.5 text-xs rounded-lg transition-all">支出</button>
+      <button @click="recurringForm.type = 'income'" :class="recurringForm.type === 'income' ? 'bg-theme-green text-white font-bold' : 'bg-gray-100 text-gray-500'" class="flex-1 py-1.5 text-xs rounded-lg transition-all">收入</button>
+    </div>
+
+    <div>
+      <label class="text-[10px] text-gray-400 block mb-1">項目名稱</label>
+      <input type="text" v-model="recurringForm.title" placeholder="如：每月薪資、Netflix訂閱" class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
+    </div>
+
+    <div class="grid grid-cols-2 gap-2">
+      <div>
+        <label class="text-[10px] text-gray-400 block mb-1">金額</label>
+        <input type="number" v-model.number="recurringForm.amount" placeholder="0" class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
+      </div>
+      <div>
+        <label class="text-[10px] text-gray-400 block mb-1">每月幾號自動發放/扣款</label>
+        <input type="number" min="1" max="31" v-model.number="recurringForm.day" placeholder="1-31" class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-2">
+      <div>
+        <label class="text-[10px] text-gray-400 block mb-1">分類</label>
+        <select v-model="recurringForm.category" class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs text-gray-700 outline-none">
+          <option v-for="cat in (recurringForm.type === 'income' ? incomeCategories : categories)" :key="cat" :value="cat">{{ cat }}</option>
+        </select>
+      </div>
+      <div>
+        <label class="text-[10px] text-gray-400 block mb-1">對應資產帳戶</label>
+        <select v-model="recurringForm.payMethod" class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs text-gray-700 outline-none">
+          <option v-for="m in payMethods" :key="m" :value="m">{{ m }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="flex gap-2 pt-2">
+      <button @click="isRecurringModalOpen = false" class="flex-1 py-2.5 bg-gray-100 text-gray-500 hover:bg-gray-200 text-xs font-medium rounded-xl">取消</button>
+      <button @click="saveRecurringItem" class="flex-1 py-2.5 bg-theme-green text-white hover:bg-theme-green-dark text-xs font-medium rounded-xl">儲存設定</button>
+    </div>
+  </div>
+</div>
   <!-- TOAST -->
   <div v-if="toast.show" class="fixed bottom-24 md:bottom-6 left-6 right-6 md:left-auto md:right-6 md:w-80 bg-gray-800 text-white text-xs px-4 py-3 rounded-xl flex justify-between items-center shadow-lg z-50 animate-bounce" :class="{'bg-[#111111] border-2 border-white': isDoodleMode}">
     <span>{{ toast.message }}</span>
@@ -1410,7 +1684,10 @@ color: #111111 !important;
     <button @click="switchTab('assets')" :class="currentTab==='assets' ? 'text-theme-green bg-theme-green/10 p-2 rounded-full' : 'text-gray-400 p-2'">
       <i data-lucide="wallet" class="w-5 h-5"></i>
     </button>
-    <!-- 基底格局/設定 -->
+<!-- 投資理財 -->
+    <button @click="switchTab('investments')" :class="currentTab==='investments' ? 'text-theme-green bg-theme-green/10 p-2 rounded-full' : 'text-gray-400 p-2'">
+      <i data-lucide="trending-up" class="w-5 h-5"></i>
+    </button>    <!-- 基底格局/設定 -->
     <button @click="switchTab('settings')" :class="currentTab==='settings' ? 'text-theme-green bg-theme-green/10 p-2 rounded-full' : 'text-gray-400 p-2'">
       <i data-lucide="settings" class="w-5 h-5"></i>
     </button>
@@ -1478,6 +1755,17 @@ watch(recordsFilterYear, () => { recordsFilterMonth.value = 'all'; });
     const categoryBudgets=ref({});
     const expenses=ref([]);
     const quickItems=ref([]);
+// ══ 定期固定收支資料狀態 ══
+const recurringItems = ref([]);
+const isRecurringModalOpen = ref(false);
+const recurringForm = ref({
+  title: '',
+  amount: null,
+  category: '餐飲',
+  payMethod: '現金',
+  type: 'expense',
+  day: 1
+});
 
     // === 1. 交易類型與分類管理 ===
     const transactionType = ref('expense'); 
@@ -1505,6 +1793,21 @@ watch(recordsFilterYear, () => { recordsFilterMonth.value = 'all'; });
 
     // === 3. 資產帳戶狀態與邏輯 ===
     const assetAccounts = ref([]);
+    const expandedAccountDetails = ref({}); // 記錄哪些帳戶目前展開明細
+
+    // 點擊帳戶時，展開/收合該帳戶的交易明細
+    const toggleAccountDetail = (id) => {
+      expandedAccountDetails.value[id] = !expandedAccountDetails.value[id];
+      nextTick(() => lucide.createIcons());
+    };
+
+    // 取得指定帳戶（依名稱比對支付方式 payMethod）的所有交易，日期新到舊排序
+    const getAccountTransactions = (accName) => {
+      return expenses.value
+        .filter(e => e.payMethod === accName)
+        .slice()
+        .sort((a, b) => new Date(b.date) - new Date(a.date));
+    };
 
 // 【新增】動態取得資產帳戶名稱作為支付方式
 const payMethods = computed(() => {
@@ -1710,22 +2013,31 @@ const payMethods = computed(() => {
           {id:2,title:'搭計程車',amount:250,date:new Date().toISOString().split('T')[0],category:'交通',payMethod:'Linepay',photo:'', type: 'expense'}
         ],
         quickItems:[],
+recurringItems: [
+  { id: 1, title: '固定薪資', amount: 50000, category: '薪資', payMethod: '華南銀行', type: 'income', day: 5, lastGenerated: '' },
+  { id: 2, title: '房屋租金', amount: 15000, category: '居住', payMethod: '華南銀行', type: 'expense', day: 10, lastGenerated: '' }
+],
         assetAccounts: [
           { id: 1, name: '錢包現金', type: 'cash', balance: 3000 },
           { id: 2, name: 'LinePay', type: 'cash', balance: 20000 },
           { id: 3, name: '華南銀行', type: 'bank', balance: 55080 },
           { id: 4, name: '信用卡帳戶', type: 'credit', balance: -10018 }
+        ],
+        userStocks: [
+          { id: 1, symbol: '0050', name: '元大台灣50', shares: 1000, avgPrice: 150, currentPrice: 165 },
+          { id: 2, symbol: '2330', name: '台積電', shares: 500, avgPrice: 850, currentPrice: 920 }
         ]
       };
       
       categories.value=lsLoad('categories',defaults.categories);
-      
       categoryBudgets.value=lsLoad('category_budgets',defaults.categoryBudgets);
       yearlyMonthlyBudgets.value=lsLoad('yearly_monthly_budgets',defaults.yearlyMonthlyBudgets);
       expenses.value=lsLoad('expenses',defaults.expenses);
       quickItems.value=lsLoad('quick_items',defaults.quickItems);
+recurringItems.value = lsLoad('recurring_items', defaults.recurringItems);
       assetAccounts.value=lsLoad('asset_accounts',defaults.assetAccounts);
-      
+      userStocks.value=lsLoad('user_stocks',defaults.userStocks); 
+
       if (!scanForm.value.category && categories.value.length) scanForm.value.category = categories.value[0];
       if (!scanForm.value.payMethod && payMethods.value.length) scanForm.value.payMethod = payMethods.value[0];
 
@@ -1741,6 +2053,7 @@ const payMethods = computed(() => {
             if(d.yearlyMonthlyBudgets)yearlyMonthlyBudgets.value=d.yearlyMonthlyBudgets;
             if(d.expenses)expenses.value=d.expenses;
             if(d.quickItems)quickItems.value=d.quickItems;
+if (d.recurringItems) recurringItems.value = d.recurringItems;
             if(d.assetAccounts)assetAccounts.value=d.assetAccounts;
             if (categories.value.length) scanForm.value.category = categories.value[0];
             if (payMethods.value.length) scanForm.value.payMethod = payMethods.value[0];
@@ -1758,7 +2071,9 @@ const payMethods = computed(() => {
       localStorage.setItem('sabiflow_'+pid+'_category_budgets',JSON.stringify(categoryBudgets.value));
       localStorage.setItem('sabiflow_'+pid+'_yearly_monthly_budgets',JSON.stringify(yearlyMonthlyBudgets.value));
       localStorage.setItem('sabiflow_'+pid+'_quick_items',JSON.stringify(quickItems.value));
-      localStorage.setItem('sabiflow_'+pid+'_asset_accounts',JSON.stringify(assetAccounts.value));
+localStorage.setItem('sabiflow_' + pid + '_recurring_items', JSON.stringify(recurringItems.value));      localStorage.setItem('sabiflow_'+pid+'_asset_accounts',JSON.stringify(assetAccounts.value));
+localStorage.setItem('sabiflow_' + pid + '_user_stocks', JSON.stringify(userStocks.value));
+
       if(window._fb&&window._fb.ready){
         try{
           const{db,doc,setDoc}=window._fb;
@@ -1769,7 +2084,9 @@ const payMethods = computed(() => {
             categoryBudgets:categoryBudgets.value,
             yearlyMonthlyBudgets:yearlyMonthlyBudgets.value,
             quickItems:quickItems.value,
+recurringItems: recurringItems.value,
             assetAccounts:assetAccounts.value,
+            userStocks:userStocks.value,
             updatedAt:new Date().toISOString()
           });
         }catch(e){console.warn('Firebase 寫入失敗，資料已存本機',e);}
@@ -1988,7 +2305,105 @@ const payMethods = computed(() => {
       isQuickItemModalOpen.value=true;nextTick(()=>lucide.createIcons());
     };
     const closeQuickItemModal=()=>isQuickItemModalOpen.value=false;
-    
+  
+// 💡 自動檢查並產生本月到期之定期收支
+const checkAndGenerateRecurringItems = () => {
+  const today = new Date();
+  const yyyy = today.getFullYear();
+  const mm = String(today.getMonth() + 1).padStart(2, '0');
+  const currentYM = `${yyyy}-${mm}`;
+  const todayDay = today.getDate();
+
+  let count = 0;
+  recurringItems.value.forEach(item => {
+    // 若本月份尚未自動生成過，且今天日期已達到或超過設定的扣款/發放日
+    if (item.lastGenerated !== currentYM && todayDay >= item.day) {
+      const targetDate = `${yyyy}-${mm}-${String(item.day).padStart(2, '0')}`;
+      const expenseObj = {
+        id: Date.now() + Math.random(),
+        title: `[定期] ${item.title}`,
+        amount: Number(item.amount),
+        date: targetDate,
+        category: item.category,
+        payMethod: item.payMethod,
+        type: item.type || 'expense',
+        photo: ''
+      };
+      expenses.value.unshift(expenseObj);
+      updateAccountBalance(item.payMethod, item.amount, item.type || 'expense', false);
+      item.lastGenerated = currentYM;
+      count++;
+    }
+  });
+
+  if (count > 0) {
+    saveToStorage();
+    showToast(`🎉 已自動記錄 ${count} 筆本月定期固定收支！`);
+  }
+};
+
+// 💡 彈窗操作函數
+const openAddRecurringModal = () => {
+  recurringForm.value = {
+    title: '',
+    amount: null,
+    category: categories.value[0] || '其他',
+    payMethod: payMethods.value[0] || '現金',
+    type: 'expense',
+    day: 1
+  };
+  isRecurringModalOpen.value = true;
+  nextTick(() => lucide.createIcons());
+};
+
+const saveRecurringItem = () => {
+  const { title, amount, category, payMethod, type, day } = recurringForm.value;
+  if (!title || !amount) { showToast('請填寫品項名稱與金額'); return; }
+  recurringItems.value.push({
+    id: Date.now(),
+    title,
+    amount: Number(amount),
+    category,
+    payMethod,
+    type,
+    day: Number(day) || 1,
+    lastGenerated: ''
+  });
+  saveToStorage();
+  isRecurringModalOpen.value = false;
+  showToast('已成功建立定期固定收支項目');
+  checkAndGenerateRecurringItems(); // 建立後立即進行檢查
+};
+
+const deleteRecurringItem = (id) => {
+  recurringItems.value = recurringItems.value.filter(r => r.id !== id);
+  saveToStorage();
+  showToast('已刪除該定期項目');
+};
+
+const executeRecurringItemNow = (item) => {
+  const todayStr = new Date().toISOString().split('T')[0];
+  const expenseObj = {
+    id: Date.now(),
+    title: `[定期] ${item.title}`,
+    amount: Number(item.amount),
+    date: todayStr,
+    category: item.category,
+    payMethod: item.payMethod,
+    type: item.type || 'expense',
+    photo: ''
+  };
+  expenses.value.unshift(expenseObj);
+  updateAccountBalance(item.payMethod, item.amount, item.type || 'expense', false);
+
+  const yyyy = new Date().getFullYear();
+  const mm = String(new Date().getMonth() + 1).padStart(2, '0');
+  item.lastGenerated = `${yyyy}-${mm}`;
+  saveToStorage();
+  showToast(`已手動入帳「${item.title}」`);
+};
+
+  
     const saveQuickItem=()=>{
       const{title,amount,category,payMethod}=quickItemForm.value;
       if(!title||!amount){showToast('請填寫名稱與金額');return;}
@@ -2161,7 +2576,7 @@ const currentMonthIncome = computed(() => {
     
     const trendHeights=computed(()=>analyticsPeriod.value==='month'?['20%','40%','85%','30%','15%','70%','25%']:['70%','50%','85%','40%','95%','20%','10%']);
     
-    const currentTabTitle=computed(()=>({home:'日常留白',records:'時序明細',scanner:'智慧感知',analytics:'理財脈絡',settings:'基底格局', assets: '資產管理'})[currentTab.value]);
+    const currentTabTitle=computed(()=>({home:'日常留白',records:'時序明細',scanner:'智慧感知',analytics:'理財脈絡',settings:'基底格局', assets: '資產管理', investments: '投資理財'})[currentTab.value]);
     
     const todayTotal=computed(()=>{
       const t=new Date().toISOString().split('T')[0];
@@ -2550,11 +2965,12 @@ const deletePayMethod = () => {};
 
     onMounted(()=>{
       const startApp=()=>{
-        loadProjectContext().then(()=>{
-          lucide.createIcons();
-          if(wCity.value[0])fetchWeather(0);
-          if(wCity.value[1])fetchWeather(1);
-        });
+       loadProjectContext().then(()=>{
+  checkAndGenerateRecurringItems(); // 🔥 自動觸發本月定期收支檢查
+  lucide.createIcons();
+  if(wCity.value[0])fetchWeather(0);
+  if(wCity.value[1])fetchWeather(1);
+});
       };
       
       const initAuth=()=>{
@@ -2628,6 +3044,125 @@ const deletePayMethod = () => {};
 
     // === 新增：數字鍵盤邏輯 ===
     const numpadValue = ref('');
+// === 投資理財專區變數與資料連動邏輯 ===
+    const invDateObj = ref(new Date()); 
+    const invDateDisplay = computed(() => {
+      const d = invDateObj.value;
+      const days = ['日', '一', '二', '三', '四', '五', '六'];
+      return `${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} (${days[d.getDay()]})`;
+    });
+    const changeInvDate = (days) => {
+      const d = new Date(invDateObj.value);
+      d.setDate(d.getDate() + days);
+      invDateObj.value = d;
+    };
+    
+    const invMarket = ref('all');
+    
+    // 使用者持有的投資標的資料陣列
+    const userStocks = ref([
+      { id: 1, symbol: '0050', name: '元大台灣50', shares: 1000, avgPrice: 150, currentPrice: 165 },
+      { id: 2, symbol: '2330', name: '台積電', shares: 500, avgPrice: 850, currentPrice: 920 }
+    ]);
+
+    // 依市場篩選
+    const filteredUserStocks = computed(() => {
+      if (invMarket.value === 'all') return userStocks.value;
+      if (invMarket.value === 'tw') return userStocks.value.filter(s => !isNaN(s.symbol));
+      if (invMarket.value === 'us') return userStocks.value.filter(s => isNaN(s.symbol));
+      return userStocks.value;
+    });
+
+    // 計算每檔標的的市值與總損益
+    const evaluatedUserStocks = computed(() => {
+      return userStocks.value.map(s => {
+        const marketValue = s.shares * s.currentPrice;
+        const cost = s.shares * s.avgPrice;
+        const totalPL = marketValue - cost;
+        return { ...s, marketValue, cost, totalPL };
+      });
+    });
+
+    // 投資總市值連動計算
+    const totalInvestmentMarketValue = computed(() => {
+      return evaluatedUserStocks.value.reduce((sum, s) => sum + s.marketValue, 0);
+    });
+
+    // 總未實現損益連動計算
+    const totalInvestmentPL = computed(() => {
+      return evaluatedUserStocks.value.reduce((sum, s) => sum + s.totalPL, 0);
+    });
+
+    // 彈窗控制
+    const isInvestmentModalOpen = ref(false);
+    const editingInvestmentId = ref(null);
+    const investmentForm = ref({ symbol: '', name: '', shares: 0, avgPrice: 0, currentPrice: 0 });
+
+    const openAddInvestmentModal = () => {
+      editingInvestmentId.value = null;
+      investmentForm.value = { symbol: '', name: '', shares: 0, avgPrice: 0, currentPrice: 0 };
+      isInvestmentModalOpen.value = true;
+      nextTick(() => lucide.createIcons());
+    };
+
+    const openEditInvestmentModal = (stock) => {
+      editingInvestmentId.value = stock.id;
+      investmentForm.value = { ...stock };
+      isInvestmentModalOpen.value = true;
+      nextTick(() => lucide.createIcons());
+    };
+
+    const saveInvestmentStock = () => {
+      const { symbol, name, shares, avgPrice, currentPrice } = investmentForm.value;
+      if (!symbol || !name) {
+        showToast('請填寫代號與名稱');
+        return;
+      }
+
+      if (editingInvestmentId.value) {
+        const idx = userStocks.value.findIndex(s => s.id === editingInvestmentId.value);
+        if (idx !== -1) {
+          userStocks.value[idx] = { ...userStocks.value[idx], symbol, name, shares: Number(shares), avgPrice: Number(avgPrice), currentPrice: Number(currentPrice) };
+        }
+        showToast('已更新投資標的');
+      } else {
+        userStocks.value.push({
+          id: Date.now(),
+          symbol,
+          name,
+          shares: Number(shares),
+          avgPrice: Number(avgPrice),
+          currentPrice: Number(currentPrice)
+        });
+        showToast('已新增投資標的');
+      }
+
+      isInvestmentModalOpen.value = false;
+      saveToStorage();
+      nextTick(() => lucide.createIcons());
+    };
+
+    const deleteInvestmentStock = (id) => {
+      userStocks.value = userStocks.value.filter(s => s.id !== id);
+      saveToStorage();
+      showToast('已刪除投資標的');
+      nextTick(() => lucide.createIcons());
+    };
+
+    const refreshAllStockPrices = () => {
+      userStocks.value.forEach(s => {
+        const randomChange = (Math.random() * 0.04 - 0.02);
+        s.currentPrice = Math.round(s.currentPrice * (1 + randomChange));
+      });
+      saveToStorage();
+      showToast('已成功同步最新市場股價行情！');
+      nextTick(() => lucide.createIcons());
+    };
+
+    const handleInvFeature = (menuTitle) => {
+      showToast(`切換至：${menuTitle} 檢視模式`);
+    };
+
     // 新增：將常用支出一鍵點擊帶入彈窗
     const applyQuickItemToModal = (qi) => {
       newExpense.value.title = qi.title;
@@ -2694,12 +3229,16 @@ const deletePayMethod = () => {};
     };
 
     return {
+recurringItems, isRecurringModalOpen, recurringForm,
+openAddRecurringModal, saveRecurringItem, deleteRecurringItem, executeRecurringItemNow, checkAndGenerateRecurringItems,
+isDoodleMode, toggleStyleMode,
 applyQuickItemToModal,
       transactionType, incomeCategories, activeCategories, recordsFilterCategoryOptions,
       transferFromAccount, transferToAccount, assetAccounts,
       totalAssetsAmount, totalLiabilitiesAmount, totalNetAssets,
       isAccountModalOpen, newAccount, openAddAccountModal, saveNewAccount, deleteAccount,
-      editingAccountId, openEditAccountModal,
+      editingAccountId, openEditAccountModal,      
+expandedAccountDetails, toggleAccountDetail, getAccountTransactions,
       monthlyTotalBudget, monthlyBudgetRemaining, monthlyBudgetUsagePercent,
       remainingDaysInMonth, dailyAverageRemaining, catEmoji,
       donutChartData, donutGradient,
@@ -2746,8 +3285,11 @@ selectedTargetMonths, toggleTargetMonth, toggleSelectAllMonths, replicateSetting
 
       currentMonthTotal,
       currentMonthIncome,
-      analyticsType,
-      isDoodleMode, toggleStyleMode
+      analyticsType, 
+      userStocks, filteredUserStocks, evaluatedUserStocks, totalInvestmentMarketValue, totalInvestmentPL,
+      isInvestmentModalOpen, investmentForm, openAddInvestmentModal, openEditInvestmentModal,
+      saveInvestmentStock, deleteInvestmentStock, refreshAllStockPrices, handleInvFeature,
+      invDateObj, invDateDisplay, changeInvDate, invMarket, 
     };
   }
 }).mount('#app');

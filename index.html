@@ -1102,7 +1102,7 @@ color: #111111 !important;
             </div>
           </div>
           <div class="flex items-center gap-3">
-            <span class="font-semibold" :class="acc.balance < 0 ? 'text-red-500' : 'text-gray-700'">${{ formatNumber(acc.balance) }}</span>
+ <span class="font-semibold" :class="accountCurrentBalance(acc) < 0 ? 'text-red-500' : 'text-gray-700'">${{ formatNumber(accountCurrentBalance(acc)) }}</span>
             <i :data-lucide="expandedAccountDetails[acc.id] ? 'chevron-up' : 'chevron-down'" class="w-4 h-4 text-gray-300"></i>
             <button @click.stop="openEditAccountModal(acc)" class="text-gray-300 hover:text-theme-green text-xs"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
             <button @click.stop="deleteAccount(acc.id)" class="text-gray-300 hover:text-red-500 text-xs"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
@@ -1145,11 +1145,18 @@ color: #111111 !important;
           <option value="credit">信用卡 (負債)</option>
         </select>
       </div>
-      <div>
-        <label class="text-[10px] text-gray-400 block mb-1">初始金額</label>
-        <input type="number" v-model.number="newAccount.balance" placeholder="0" class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green">
-      </div>
-      <div class="flex gap-2 pt-2">
+          <div>
+      <label class="text-[10px] text-gray-400 block mb-1">初始金額</label>
+      <input type="number" v-model.number="newAccount.initialBalance" placeholder="0" class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green">
+    </div>
+    <!-- 編輯時顯示目前實際餘額（唯讀） -->
+    <div v-if="editingAccountId" class="flex justify-between items-center bg-theme-bg rounded-xl px-3 py-2.5">
+      <span class="text-[10px] text-gray-400">目前餘額（含所有收支紀錄）</span>
+      <span class="text-sm font-bold" :class="newAccount.balance < 0 ? 'text-red-500' : 'text-gray-700'">
+        ${{ formatNumber(newAccount.balance) }}
+      </span>
+    </div>
+    <div class="flex gap-2 pt-2">
         <button @click="isAccountModalOpen=false" class="flex-1 py-2.5 bg-gray-100 text-gray-500 hover:bg-gray-200 transition-colors text-xs font-medium rounded-xl">取消</button>
         <button @click="saveNewAccount" class="flex-1 py-2.5 bg-theme-green hover:bg-theme-green-dark transition-colors text-white text-xs font-medium rounded-xl">儲存</button>
       </div>
@@ -1188,10 +1195,10 @@ color: #111111 !important;
 <p v-if="autoInvestStockCount > 0" class="text-[10px] text-gray-400 font-medium" :class="{'text-[#333333] font-bold': isDoodleMode}">定期定額：{{ autoInvestStockCount }} 檔，每月合計 NT$ {{ formatNumber(autoInvestMonthlyTotal) }}</p>
       </div>
       <div class="text-right">
-        <p class="text-[10px] text-gray-400 font-bold mb-1" :class="{'text-[#111111]': isDoodleMode}">總未實現損益</p>
-        <p class="text-lg font-bold" :class="totalInvestmentPL >= 0 ? 'text-[#b94a48]' : 'text-emerald-600'">
-          {{ totalInvestmentPL >= 0 ? '+' : '' }}NT$ {{ formatNumber(totalInvestmentPL) }}
-        </p>
+        <p class="text-[10px] text-gray-400 font-bold mb-1" :class="{'text-[#111111]': isDoodleMode}">已實現損益</p>
+<p class="text-lg font-bold" :class="totalRealizedPL >= 0 ? 'text-[#b94a48]' : 'text-emerald-600'">
+  {{ totalRealizedPL >= 0 ? '+' : '' }}NT$ {{ formatNumber(totalRealizedPL) }}
+</p>
       </div>
     </div>
 
@@ -1242,7 +1249,7 @@ color: #111111 !important;
       <div class="text-left pl-1">代號 / 名稱</div>
       <div class="text-center">持有股數</div>
       <div class="text-center">現價 / 均價</div>
-      <div class="text-right pr-1">市值與損益</div>
+      <div class="text-right pr-1">市值 / 操作</div>
     </div>
 
     <!-- 動態渲染投資列表項目 -->
@@ -1265,11 +1272,10 @@ color: #111111 !important;
 <div class="text-center text-gray-600 font-medium">
   {{ Number(stock.shares).toLocaleString(undefined, {maximumFractionDigits: 2}) }} 單位
 </div>
-        <div class="text-right flex flex-col items-end pr-1">
-          <span class="font-bold" :class="stock.totalPL >= 0 ? 'text-[#b94a48]' : 'text-emerald-600'">
-            {{ stock.totalPL >= 0 ? '+' : '' }}${{ formatNumber(stock.totalPL) }}
-          </span>
+                <div class="text-right flex flex-col items-end pr-1">
+          <span class="font-bold text-gray-700 text-[11px]">${{ formatNumber(stock.marketValue) }}</span>
           <div class="flex items-center gap-1.5 mt-0.5">
+            <button @click="openSellModal(stock)" class="text-[9px] bg-[#b94a48] text-white px-1.5 py-0.5 rounded hover:opacity-80">賣出</button>
             <button @click="openEditInvestmentModal(stock)" class="text-gray-400 hover:text-theme-green" title="編輯"><i data-lucide="edit-3" class="w-3 h-3"></i></button>
             <button @click="deleteInvestmentStock(stock.id)" class="text-gray-400 hover:text-red-500" title="刪除"><i data-lucide="trash-2" class="w-3 h-3"></i></button>
           </div>
@@ -1281,8 +1287,13 @@ color: #111111 !important;
     </div>
 
     <!-- 交易紀錄 -->
-    <div v-if="invViewMode==='transactions'" class="space-y-2">
-      <div class="grid grid-cols-[1fr_1.4fr_0.9fr_0.9fr] gap-1 text-[10px] text-gray-500 font-bold mb-3 border-b border-[#e8e4dc] pb-2" :class="{'border-[#111111] text-[#111111]': isDoodleMode}">
+<div v-if="invViewMode==='transactions'" class="space-y-2">
+  <div class="flex justify-end mb-1">
+    <button @click="openInvestFlowModal" class="text-xs bg-theme-green text-white px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-theme-green-dark transition-colors" :class="['doodle-btn']">
+      <i data-lucide="plus" class="w-3.5 h-3.5"></i> 新增投資收支
+    </button>
+  </div>
+  <div class="grid grid-cols-[1fr_1.4fr_0.9fr_0.9fr] gap-1 text-[10px] text-gray-500 font-bold mb-3 border-b border-[#e8e4dc] pb-2" :class="{'border-[#111111] text-[#111111]': isDoodleMode}">
         <div class="text-left pl-1">日期</div>
         <div class="text-left">項目</div>
         <div class="text-right">金額</div>
@@ -1291,66 +1302,109 @@ color: #111111 !important;
       <div v-for="tx in investmentTransactions" :key="tx.id" class="grid grid-cols-[1fr_1.4fr_0.9fr_0.9fr] gap-1 text-[11px] items-center border-b border-[#e8e4dc]/60 pb-2 pt-2 last:border-0" :class="{'border-[#111111]/30': isDoodleMode}">
         <div class="text-left pl-1 text-gray-500">{{ tx.date }}</div>
         <div class="text-left text-gray-700 truncate">{{ tx.title }}</div>
-        <div class="text-right font-bold text-[#b94a48]">${{ formatNumber(tx.amount) }}</div>
+        <div class="text-right font-bold" :class="tx.type === 'invest_income' ? 'text-emerald-600' : 'text-[#b94a48]'">
+  {{ tx.type === 'invest_income' ? '+' : '-' }}${{ formatNumber(tx.amount) }}
+</div>
         <div class="text-right pr-1 text-gray-400 truncate">{{ tx.payMethod }}</div>
       </div>
       <div v-if="investmentTransactions.length === 0" class="text-center py-6 text-xs text-gray-400 italic">
-        尚無投資相關交易紀錄，定期定額扣款執行後會顯示在這裡。
+        尚無投資收支紀錄，定期定額扣款執行或手動新增後會顯示在這裡。
       </div>
     </div>
 
-    <!-- 損益紀錄 -->
+        <!-- 損益紀錄（已實現） -->
     <div v-if="invViewMode==='pl'" class="space-y-2">
       <div class="grid grid-cols-[1fr_1fr_1fr_1.2fr] gap-1 text-[10px] text-gray-500 font-bold mb-3 border-b border-[#e8e4dc] pb-2" :class="{'border-[#111111] text-[#111111]': isDoodleMode}">
         <div class="text-left pl-1">代號 / 名稱</div>
         <div class="text-center">成本</div>
-        <div class="text-center">市值</div>
-        <div class="text-right pr-1">損益 (%)</div>
+        <div class="text-center">賣出收入</div>
+        <div class="text-right pr-1">已實現損益</div>
       </div>
-      <div v-for="stock in rankedInvestmentPL" :key="stock.id" class="grid grid-cols-[1fr_1fr_1fr_1.2fr] gap-1 text-[11px] items-center border-b border-[#e8e4dc]/60 pb-3 pt-2 last:border-0" :class="{'border-[#111111]/30': isDoodleMode}">
+      <div v-for="record in rankedInvestmentPL" :key="record.id" class="grid grid-cols-[1fr_1fr_1fr_1.2fr] gap-1 text-[11px] items-center border-b border-[#e8e4dc]/60 pb-3 pt-2 last:border-0" :class="{'border-[#111111]/30': isDoodleMode}">
         <div class="text-left pl-1">
-          <p class="font-bold text-gray-700">{{ stock.symbol }}</p>
-          <p class="text-[9px] text-gray-400 truncate">{{ stock.name }}</p>
+          <p class="font-bold text-gray-700">{{ record.symbol }}</p>
+          <p class="text-[9px] text-gray-400 truncate">{{ record.name }}</p>
+          <p class="text-[9px] text-gray-400">{{ record.sellDate }} · {{ record.sellShares }}股@{{ record.sellPrice }}</p>
         </div>
-        <div class="text-center text-gray-600">${{ formatNumber(stock.cost) }}</div>
-        <div class="text-center text-gray-600">${{ formatNumber(stock.marketValue) }}</div>
+        <div class="text-center text-gray-600">${{ formatNumber(record.cost) }}</div>
+        <div class="text-center text-gray-600">${{ formatNumber(record.saleProceeds) }}</div>
         <div class="text-right pr-1">
-          <span class="font-bold block" :class="stock.totalPL >= 0 ? 'text-[#b94a48]' : 'text-emerald-600'">{{ stock.totalPL >= 0 ? '+' : '' }}${{ formatNumber(stock.totalPL) }}</span>
-          <span class="text-[9px]" :class="stock.totalPL >= 0 ? 'text-[#b94a48]' : 'text-emerald-600'">{{ stock.cost > 0 ? ((stock.totalPL / stock.cost) * 100).toFixed(1) : '0.0' }}%</span>
+          <span class="font-bold block" :class="record.realizedPL >= 0 ? 'text-[#b94a48]' : 'text-emerald-600'">
+            {{ record.realizedPL >= 0 ? '+' : '' }}${{ formatNumber(Math.round(record.realizedPL)) }}
+          </span>
+          <span class="text-[9px]" :class="record.realizedPL >= 0 ? 'text-[#b94a48]' : 'text-emerald-600'">
+            {{ record.cost > 0 ? ((record.realizedPL / record.cost) * 100).toFixed(1) : '0.0' }}%
+          </span>
         </div>
       </div>
       <div v-if="rankedInvestmentPL.length === 0" class="text-center py-6 text-xs text-gray-400 italic">
-        尚無投資標的，無法顯示損益排行。
+        尚無已賣出紀錄，完成賣出後會顯示已實現損益。
       </div>
     </div>
 
-    <!-- 自訂：定期定額總管理 -->
-    <div v-if="invViewMode==='settings'" class="space-y-2">
-      <div class="grid grid-cols-[1fr_1fr_1fr_0.8fr] gap-1 text-[10px] text-gray-500 font-bold mb-3 border-b border-[#e8e4dc] pb-2" :class="{'border-[#111111] text-[#111111]': isDoodleMode}">
-        <div class="text-left pl-1">代號 / 名稱</div>
-        <div class="text-center">每月扣款</div>
-        <div class="text-center">扣款日 / 帳戶</div>
-        <div class="text-right pr-1">操作</div>
+       <!-- 自訂：標的管理總覽 -->
+    <div v-if="invViewMode==='settings'" class="space-y-3">
+      <div class="flex justify-between items-center mb-1">
+        <p class="text-[10px] text-gray-400 font-medium">管理目標價格、定期定額與個人備忘</p>
+        <button @click="openAddInvestmentModal" class="text-xs bg-theme-green text-white px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-theme-green-dark" :class="['doodle-btn']">
+          <i data-lucide="plus" class="w-3.5 h-3.5"></i> 新增標的
+        </button>
       </div>
-      <div v-for="stock in autoInvestList" :key="stock.id" class="grid grid-cols-[1fr_1fr_1fr_0.8fr] gap-1 text-[11px] items-center border-b border-[#e8e4dc]/60 pb-3 pt-2 last:border-0" :class="{'border-[#111111]/30': isDoodleMode}">
-        <div class="text-left pl-1">
-          <p class="font-bold text-gray-700">{{ stock.symbol }}</p>
-          <p class="text-[9px] text-gray-400 truncate">{{ stock.name }}</p>
+
+      <div v-for="stock in evaluatedUserStocks" :key="stock.id" class="bg-white rounded-2xl border border-[#e8e4dc] p-4 space-y-3" :class="['doodle-card']">
+        <!-- 標的標題列 -->
+        <div class="flex justify-between items-start">
+          <div>
+            <p class="font-bold text-gray-700 text-[13px]">{{ stock.symbol }} <span class="text-[10px] text-gray-400 font-normal">{{ stock.name }}</span></p>
+            <p class="text-[10px] text-gray-400 mt-0.5">
+              現價 ${{ stock.currentPrice }} · 均價 ${{ stock.avgPrice }} · 持有 {{ Number(stock.shares).toLocaleString(undefined, {maximumFractionDigits:2}) }} 股
+            </p>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button @click="openSellModal(stock)" class="text-[10px] bg-[#b94a48] text-white px-2 py-1 rounded-md hover:opacity-80">賣出</button>
+            <button @click="openEditInvestmentModal(stock)" class="text-gray-400 hover:text-theme-green"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+            <button @click="deleteInvestmentStock(stock.id)" class="text-gray-400 hover:text-red-500"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+          </div>
         </div>
-        <div class="text-center text-gray-600">${{ formatNumber(stock.autoInvest.amount) }}</div>
-        <div class="text-center text-gray-400 text-[10px]">每月{{ stock.autoInvest.day }}日<br>{{ stock.autoInvest.payMethod }}</div>
-        <div class="text-right pr-1 flex flex-col items-end gap-1">
-          <button @click="openEditInvestmentModal(stock)" class="text-gray-400 hover:text-theme-green" title="編輯"><i data-lucide="edit-3" class="w-3 h-3"></i></button>
-          <span v-if="stock.autoInvest.lastGenerated === (currentYear + '-' + currentMonth)" class="text-[9px] text-gray-400">本月已扣</span>
-          <button v-else @click="executeAutoInvestNow(stock)" class="text-[9px] text-theme-green underline">立即扣款</button>
+
+        <!-- 目標價格 -->
+        <div class="flex items-center gap-2 border-t border-[#f0ede8] pt-2">
+          <label class="text-[10px] text-gray-400 w-14 shrink-0">🎯 目標價</label>
+          <input type="number" :value="stock.targetPrice || null"
+            @change="updateStockField(stock.id, 'targetPrice', $event.target.value ? Number($event.target.value) : null)"
+            placeholder="未設定" class="flex-1 bg-[#f8f6f2] border border-[#e8e4dc] rounded-lg px-2 py-1 text-xs outline-none focus:border-theme-green">
+          <span v-if="stock.targetPrice && stock.currentPrice >= stock.targetPrice"
+            class="text-[9px] bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded-full font-bold shrink-0">✓ 達標</span>
+          <span v-else-if="stock.targetPrice"
+            class="text-[9px] text-gray-400 shrink-0">差 ${{ formatNumber(Math.round(stock.targetPrice - stock.currentPrice)) }}</span>
+        </div>
+
+        <!-- 定期定額狀態 -->
+        <div class="flex items-center gap-2 border-t border-[#f0ede8] pt-2">
+          <label class="text-[10px] text-gray-400 w-14 shrink-0">📅 定期</label>
+          <div v-if="stock.autoInvest && stock.autoInvest.enabled" class="flex items-center gap-2 flex-1 flex-wrap">
+            <span class="text-[10px] text-theme-green-dark">每月{{ stock.autoInvest.day }}日 · ${{ formatNumber(stock.autoInvest.amount) }} · {{ stock.autoInvest.payMethod }}</span>
+            <span v-if="stock.autoInvest.lastGenerated === (currentYear + '-' + currentMonth)"
+              class="text-[9px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded-full">本月已扣</span>
+            <button v-else @click="executeAutoInvestNow(stock)" class="text-[9px] text-theme-green underline hover:text-theme-green-dark">立即扣款</button>
+          </div>
+          <span v-else class="text-[10px] text-gray-400 flex-1">未啟用</span>
+          <button @click="openEditInvestmentModal(stock)" class="text-[9px] text-theme-green bg-theme-green/10 px-2 py-0.5 rounded-md hover:bg-theme-green/20 shrink-0">設定</button>
+        </div>
+
+        <!-- 備忘 -->
+        <div class="flex items-center gap-2 border-t border-[#f0ede8] pt-2">
+          <label class="text-[10px] text-gray-400 w-14 shrink-0">📝 備忘</label>
+          <input type="text" :value="stock.notes || ''"
+            @change="updateStockField(stock.id, 'notes', $event.target.value)"
+            placeholder="新增個人備忘..." class="flex-1 bg-[#f8f6f2] border border-[#e8e4dc] rounded-lg px-2 py-1 text-xs outline-none focus:border-theme-green">
         </div>
       </div>
-      <div v-if="autoInvestList.length === 0" class="text-center py-6 text-xs text-gray-400 italic">
-        尚未設定任何定期定額。編輯標的時開啟「啟用定期定額扣款」即可在此管理。
+
+      <div v-if="userStocks.length === 0" class="text-center py-6 text-xs text-gray-400 italic">
+        尚無投資標的，點擊上方「新增標的」建立第一筆。
       </div>
     </div>
-  </div>
-</div>
 
 <!-- 新增/編輯投資標的互動彈窗 -->
 <div v-if="isInvestmentModalOpen" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -1429,7 +1483,89 @@ color: #111111 !important;
   </div>
 </div>
 </div>
-
+<!-- 新增投資收支彈窗 -->
+<div v-if="isInvestFlowModalOpen" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-xl" :class="{'border-2 border-[#111111]': isDoodleMode}">
+    <div class="flex justify-between items-center">
+      <h3 class="text-sm font-bold text-gray-700">新增投資收支</h3>
+      <button @click="isInvestFlowModalOpen = false" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <div class="flex gap-2">
+      <button @click="investFlowForm.type = 'invest_income'" :class="investFlowForm.type === 'invest_income' ? 'bg-emerald-500 text-white font-bold' : 'bg-gray-100 text-gray-500'" class="flex-1 py-1.5 text-xs rounded-lg transition-all">投資收入</button>
+      <button @click="investFlowForm.type = 'invest_expense'" :class="investFlowForm.type === 'invest_expense' ? 'bg-[#b94a48] text-white font-bold' : 'bg-gray-100 text-gray-500'" class="flex-1 py-1.5 text-xs rounded-lg transition-all">投資費用</button>
+    </div>
+    <div>
+      <label class="text-[10px] text-gray-400 block mb-1">標的代號（選填）</label>
+      <input type="text" v-model="investFlowForm.symbol" placeholder="如：2330、0050" class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
+    </div>
+    <div>
+      <label class="text-[10px] text-gray-400 block mb-1">項目名稱</label>
+      <input type="text" v-model="investFlowForm.title" placeholder="如：股息、手續費、賣出收益" class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
+    </div>
+    <div class="grid grid-cols-2 gap-2">
+      <div>
+        <label class="text-[10px] text-gray-400 block mb-1">金額</label>
+        <input type="number" v-model.number="investFlowForm.amount" placeholder="0" class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
+      </div>
+      <div>
+        <label class="text-[10px] text-gray-400 block mb-1">日期</label>
+        <input type="date" v-model="investFlowForm.date" class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
+      </div>
+    </div>
+    <div class="flex gap-2 pt-2">
+      <button @click="isInvestFlowModalOpen = false" class="flex-1 py-2.5 bg-gray-100 text-gray-500 hover:bg-gray-200 text-xs font-medium rounded-xl">取消</button>
+      <button @click="saveInvestFlow" class="flex-1 py-2.5 bg-theme-green text-white hover:bg-theme-green-dark text-xs font-medium rounded-xl">儲存</button>
+    </div>
+  </div>
+</div>
+<!-- 賣出確認彈窗 -->
+<div v-if="isSellModalOpen" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+  <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-xl" :class="{'border-2 border-[#111111]': isDoodleMode}">
+    <div class="flex justify-between items-center">
+      <h3 class="text-sm font-bold text-gray-700">賣出 {{ sellTargetStock?.symbol }}</h3>
+      <button @click="isSellModalOpen = false" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-4 h-4"></i></button>
+    </div>
+    <p class="text-[10px] text-gray-400">持有 {{ sellTargetStock?.shares }} 股 · 均價 ${{ sellTargetStock?.avgPrice }}</p>
+    <div class="grid grid-cols-2 gap-2">
+      <div>
+        <label class="text-[10px] text-gray-400 block mb-1">賣出股數</label>
+        <input type="number" v-model.number="sellForm.shares" :max="sellTargetStock?.shares" min="0"
+          class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
+      </div>
+      <div>
+        <label class="text-[10px] text-gray-400 block mb-1">賣出價格</label>
+        <input type="number" v-model.number="sellForm.price" min="0"
+          class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
+      </div>
+    </div>
+    <div>
+      <label class="text-[10px] text-gray-400 block mb-1">賣出日期</label>
+      <input type="date" v-model="sellForm.date"
+        class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
+    </div>
+    <!-- 預估損益 -->
+    <div v-if="sellForm.shares && sellForm.price && sellTargetStock" class="bg-[#f8f6f2] rounded-xl p-3 text-[11px] space-y-1.5">
+      <div class="flex justify-between">
+        <span class="text-gray-400">賣出收入</span>
+        <span class="font-medium">${{ formatNumber(Math.round(sellForm.shares * sellForm.price)) }}</span>
+      </div>
+      <div class="flex justify-between">
+        <span class="text-gray-400">持倉成本</span>
+        <span class="font-medium">${{ formatNumber(Math.round(sellForm.shares * (sellTargetStock.avgPrice || 0))) }}</span>
+      </div>
+      <div class="flex justify-between border-t border-[#e8e4dc] pt-1.5">
+        <span class="font-bold">預計損益</span>
+        <span class="font-bold" :class="(sellForm.price - (sellTargetStock.avgPrice || 0)) * sellForm.shares >= 0 ? 'text-[#b94a48]' : 'text-emerald-600'">
+          {{ (sellForm.price - (sellTargetStock.avgPrice || 0)) * sellForm.shares >= 0 ? '+' : '' }}${{ formatNumber(Math.round((sellForm.price - (sellTargetStock.avgPrice || 0)) * sellForm.shares)) }}
+        </span>
+      </div>
+    </div>
+    <div class="flex gap-2 pt-2">
+      <button @click="isSellModalOpen = false" class="flex-1 py-2.5 bg-gray-100 text-gray-500 hover:bg-gray-200 text-xs font-medium rounded-xl">取消</button>
+      <button @click="confirmSell" class="flex-1 py-2.5 bg-[#b94a48] text-white hover:opacity-90 text-xs font-medium rounded-xl">確認賣出</button>
+    </div>
+  </div>
+</div>
     <!-- SETTINGS -->
     <div v-if="currentTab==='settings'" class="space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -1935,6 +2071,15 @@ const recurringForm = ref({
         .slice()
         .sort((a, b) => new Date(b.date) - new Date(a.date));
     };
+const accountCurrentBalance = (acc) => {
+  const initial = acc.initialBalance !== undefined ? acc.initialBalance : 0;
+  return initial + expenses.value
+    .filter(e => e.payMethod === acc.name)
+    .reduce((sum, e) => {
+      if (e.type === 'income') return sum + Number(e.amount || 0);
+      return sum - Number(e.amount || 0);
+    }, 0);
+};
 
 // 【新增】動態取得資產帳戶名稱作為支付方式
 const payMethods = computed(() => {
@@ -1943,12 +2088,16 @@ const payMethods = computed(() => {
 });
 
     const totalAssetsAmount = computed(() => {
-      return assetAccounts.value.filter(a => a.balance > 0).reduce((sum, a) => sum + a.balance, 0);
-    });
+  return assetAccounts.value
+    .filter(a => accountCurrentBalance(a) > 0)
+    .reduce((sum, a) => sum + accountCurrentBalance(a), 0);
+});
 
-    const totalLiabilitiesAmount = computed(() => {
-      return Math.abs(assetAccounts.value.filter(a => a.balance < 0).reduce((sum, a) => sum + a.balance, 0));
-    });
+const totalLiabilitiesAmount = computed(() => {
+  return Math.abs(assetAccounts.value
+    .filter(a => accountCurrentBalance(a) < 0)
+    .reduce((sum, a) => sum + accountCurrentBalance(a), 0));
+});
 
     const totalNetAssets = computed(() => totalAssetsAmount.value - totalLiabilitiesAmount.value);
 
@@ -1956,39 +2105,65 @@ const payMethods = computed(() => {
     const editingAccountId = ref(null); // 新增：用來記錄目前正在編輯的帳戶 ID
     const newAccount = ref({ name: '', type: 'cash', balance: 0 });
 
-    const openAddAccountModal = () => {
-      editingAccountId.value = null;
-      newAccount.value = { name: '', type: 'cash', balance: 0 };
-      isAccountModalOpen.value = true;
-    };
+   const openAddAccountModal = () => {
+  editingAccountId.value = null;
+  newAccount.value = { name: '', type: 'cash', initialBalance: 0 };
+  isAccountModalOpen.value = true;
+};
 
     // 新增：開啟編輯視窗
     const openEditAccountModal = (acc) => {
-      editingAccountId.value = acc.id;
-      newAccount.value = { ...acc };
-      isAccountModalOpen.value = true;
-    };
+  editingAccountId.value = acc.id;
+  newAccount.value = {
+    name: acc.name,
+    type: acc.type,
+   initialBalance: acc.initialBalance !== undefined ? acc.initialBalance : 0,
+balance: accountCurrentBalance(acc)   // 動態計算：初始金額 + 收入 - 支出
+  };
+  isAccountModalOpen.value = true;
+};
 
-    const saveNewAccount = () => {
-      if (!newAccount.value.name) { showToast('請填寫帳戶名稱'); return; }
-      
-      if (editingAccountId.value) {
-        // 編輯模式
-        const idx = assetAccounts.value.findIndex(a => a.id === editingAccountId.value);
-        if (idx !== -1) {
-          assetAccounts.value[idx] = { ...assetAccounts.value[idx], ...newAccount.value };
-        }
-        showToast('已更新資產帳戶');
-      } else {
-        // 新增模式
-        assetAccounts.value.push({ id: Date.now(), ...newAccount.value });
-        showToast('已新增資產帳戶');
-      }
-      
-      isAccountModalOpen.value = false;
-      saveToStorage();
-      nextTick(() => lucide.createIcons()); // 重新渲染圖示
-    };
+   const saveNewAccount = () => {
+  if (!newAccount.value.name) { showToast('請填寫帳戶名稱'); return; }
+
+  if (editingAccountId.value) {
+    // 編輯模式：只更新名稱、類型、初始金額，餘額依差值調整
+    const idx = assetAccounts.value.findIndex(a => a.id === editingAccountId.value);
+    if (idx !== -1) {
+      const oldAcc = assetAccounts.value[idx];
+   const newInitial = Number(newAccount.value.initialBalance) || 0;
+const txNet = expenses.value
+  .filter(e => e.payMethod === oldAcc.name)
+  .reduce((sum, e) => {
+    if (e.type === 'income') return sum + Number(e.amount || 0);
+    return sum - Number(e.amount || 0);
+  }, 0);
+assetAccounts.value[idx] = {
+  ...oldAcc,
+  name: newAccount.value.name,
+  type: newAccount.value.type,
+  initialBalance: newInitial,
+  balance: newInitial + txNet   // 正確：初始金額 + 收支淨值
+};
+    }
+    showToast('已更新資產帳戶');
+  } else {
+    // 新增模式：初始金額同時作為起始餘額
+    const initialBal = Number(newAccount.value.initialBalance) || 0;
+    assetAccounts.value.push({
+      id: Date.now(),
+      name: newAccount.value.name,
+      type: newAccount.value.type,
+      initialBalance: initialBal,
+      balance: initialBal
+    });
+    showToast('已新增資產帳戶');
+  }
+
+  isAccountModalOpen.value = false;
+  saveToStorage();
+  nextTick(() => lucide.createIcons());
+};
 
     const deleteAccount = (id) => {
       assetAccounts.value = assetAccounts.value.filter(a => a.id !== id);
@@ -2162,8 +2337,11 @@ recurringItems: [
       expenses.value=lsLoad('expenses',defaults.expenses);
       quickItems.value=lsLoad('quick_items',defaults.quickItems);
 recurringItems.value = lsLoad('recurring_items', defaults.recurringItems);
-      assetAccounts.value=lsLoad('asset_accounts',defaults.assetAccounts);
-      userStocks.value=lsLoad('user_stocks',defaults.userStocks); 
+      assetAccounts.value = lsLoad('asset_accounts', defaults.assetAccounts).map(acc =>
+  acc.initialBalance !== undefined ? acc : { ...acc, initialBalance: acc.balance }
+);
+userStocks.value=lsLoad('user_stocks',defaults.userStocks);
+      soldRecords.value = lsLoad('sold_records', []);
 
       if (!scanForm.value.category && categories.value.length) scanForm.value.category = categories.value[0];
       if (!scanForm.value.payMethod && payMethods.value.length) scanForm.value.payMethod = payMethods.value[0];
@@ -2181,7 +2359,12 @@ recurringItems.value = lsLoad('recurring_items', defaults.recurringItems);
             if(d.expenses)expenses.value=d.expenses;
             if(d.quickItems)quickItems.value=d.quickItems;
 if (d.recurringItems) recurringItems.value = d.recurringItems;
-            if(d.assetAccounts)assetAccounts.value=d.assetAccounts;
+            if(d.assetAccounts) {
+  assetAccounts.value = d.assetAccounts.map(acc =>
+    acc.initialBalance !== undefined ? acc : { ...acc, initialBalance: acc.balance }
+  );
+}
+            if(d.soldRecords)soldRecords.value=d.soldRecords;
             if (categories.value.length) scanForm.value.category = categories.value[0];
             if (payMethods.value.length) scanForm.value.payMethod = payMethods.value[0];
           }
@@ -2200,6 +2383,7 @@ if (d.recurringItems) recurringItems.value = d.recurringItems;
       localStorage.setItem('sabiflow_'+pid+'_quick_items',JSON.stringify(quickItems.value));
 localStorage.setItem('sabiflow_' + pid + '_recurring_items', JSON.stringify(recurringItems.value));      localStorage.setItem('sabiflow_'+pid+'_asset_accounts',JSON.stringify(assetAccounts.value));
 localStorage.setItem('sabiflow_' + pid + '_user_stocks', JSON.stringify(userStocks.value));
+localStorage.setItem('sabiflow_' + pid + '_sold_records', JSON.stringify(soldRecords.value));
 
       if(window._fb&&window._fb.ready){
         try{
@@ -2214,6 +2398,7 @@ localStorage.setItem('sabiflow_' + pid + '_user_stocks', JSON.stringify(userStoc
 recurringItems: recurringItems.value,
             assetAccounts:assetAccounts.value,
             userStocks:userStocks.value,
+            soldRecords:soldRecords.value,
             updatedAt:new Date().toISOString()
           });
         }catch(e){console.warn('Firebase 寫入失敗，資料已存本機',e);}
@@ -2492,11 +2677,11 @@ const checkAndGenerateAutoInvestments = () => {
           date: targetDate,
           category: '理財',
           payMethod: stock.autoInvest.payMethod,
-          type: 'expense',
-          photo: ''
-        };
-        expenses.value.unshift(expenseObj);
-        updateAccountBalance(stock.autoInvest.payMethod, amount, 'expense', false);
+          type: 'investment',
+photo: ''
+};
+expenses.value.unshift(expenseObj);
+updateAccountBalance(stock.autoInvest.payMethod, amount, 'investment', false);
 
         // 2. 計算買入單位並攤平更新均價與股數
         const priceToBuy = stock.currentPrice > 0 ? stock.currentPrice : 1;
@@ -2529,12 +2714,12 @@ const executeAutoInvestNow = (stock) => {
     amount: amount,
     date: todayStr,
     category: '理財',
-    payMethod: stock.autoInvest.payMethod,
-    type: 'expense',
-    photo: ''
-  };
-  expenses.value.unshift(expenseObj);
-  updateAccountBalance(stock.autoInvest.payMethod, amount, 'expense', false);
+payMethod: stock.autoInvest.payMethod,
+type: 'investment',
+photo: ''
+};
+expenses.value.unshift(expenseObj);
+updateAccountBalance(stock.autoInvest.payMethod, amount, 'investment', false);
 
   const priceToBuy = stock.currentPrice > 0 ? stock.currentPrice : 1;
   const purchasedShares = amount / priceToBuy;
@@ -2696,7 +2881,7 @@ const executeRecurringItemNow = (item) => {
       const m = String(currentMonth).padStart(2, '0');
       return expenses.value
         .filter(e => {
-          if (!e.date || typeof e.date !== 'string' || e.type === 'income') return false;
+         if (!e.date || typeof e.date !== 'string' || e.type === 'income' || e.type === 'investment' || e.type === 'invest_income' || e.type === 'invest_expense') return false;
           const parts = e.date.split('-');
           return parts.length >= 2 && parts[0] === y && parts[1] === m;
         })
@@ -2805,8 +2990,8 @@ const currentMonthIncome = computed(() => {
     const currentYearMonthLabel = computed(() => `${currentYear}年${currentMonth}月`);
     
     const filteredExpenses=computed(()=>expenses.value.filter(e=>isInPeriod(e.date,analyticsPeriod.value)));
-    const filteredGrandTotal=computed(()=>filteredExpenses.value.filter(e=>e.type!=='income').reduce((s,e)=>s+e.amount,0));
-    const filteredTopExpenses=computed(()=>[...filteredExpenses.value].filter(e=>e.type!=='income').sort((a,b)=>b.amount-a.amount).slice(0,10));
+   const filteredGrandTotal=computed(()=>filteredExpenses.value.filter(e=>e.type!=='income'&&e.type!=='investment'&&e.type!=='invest_income'&&e.type!=='invest_expense').reduce((s,e)=>s+e.amount,0));
+    const filteredTopExpenses=computed(()=>[...filteredExpenses.value].filter(e=>e.type!=='income'&&e.type!=='investment'&&e.type!=='invest_income'&&e.type!=='invest_expense').sort((a,b)=>b.amount-a.amount).slice(0,10));
     
     const trendHeights=computed(()=>analyticsPeriod.value==='month'?['20%','40%','85%','30%','15%','70%','25%']:['70%','50%','85%','40%','95%','20%','10%']);
     
@@ -2814,7 +2999,7 @@ const currentMonthIncome = computed(() => {
     
     const todayTotal=computed(()=>{
       const t=new Date().toISOString().split('T')[0];
-      return expenses.value.filter(e=>e.date===t && e.type!=='income').reduce((s,e)=>s+e.amount,0);
+      return expenses.value.filter(e=>e.date===t && e.type!=='income' && e.type!=='investment' && e.type!=='invest_income' && e.type!=='invest_expense').reduce((s,e)=>s+e.amount,0);
     });
     
     const categoriesWithBudget=computed(()=>{
@@ -2841,6 +3026,8 @@ const currentMonthIncome = computed(() => {
 const padMonth = (m) => String(m).padStart(2, '0');
    const recordsFilteredList = computed(() => {
   return expenses.value.filter(item => {
+    // 理財類交易只顯示於理財頁面與資產頁面，明細頁面排除
+    if (item.type === 'investment' || item.type === 'invest_income' || item.type === 'invest_expense') return false;
     if (recordsFilterYear.value !== 'all' && (!item.date || typeof item.date !== 'string' || !item.date.startsWith(recordsFilterYear.value))) return false;
     if (recordsFilterMonth.value !== 'all' && (!item.date || typeof item.date !== 'string' || !item.date.startsWith(recordsFilterMonth.value))) return false;
     if (recordsFilterCategory.value !== 'all' && item.category !== recordsFilterCategory.value) return false;
@@ -2861,7 +3048,7 @@ const padMonth = (m) => String(m).padStart(2, '0');
 });
 
     const recordsTotalExpense = computed(() => {
-      return recordsFilteredList.value.filter(e => e.type !== 'income').reduce((s, e) => s + (Number(e.amount) || 0), 0);
+     return recordsFilteredList.value.filter(e => e.type !== 'income' && e.type !== 'investment' && e.type !== 'invest_income' && e.type !== 'invest_expense').reduce((s, e) => s + (Number(e.amount) || 0), 0);
     });
 
     const recordsTotalBudget = computed(() => {
@@ -2955,14 +3142,14 @@ const padMonth = (m) => String(m).padStart(2, '0');
     
     const payMethodsWithData=computed(()=>payMethods.value.filter(m=>filteredExpenses.value.some(e=>e.payMethod===m)));
 
-    const getCategorySpentInPeriod=(cat,period)=>expenses.value.filter(e=>e.category===cat&&isInPeriod(e.date,period)&&e.type!=='income').reduce((s,e)=>s+e.amount,0);
+    const getCategorySpentInPeriod=(cat,period)=>expenses.value.filter(e=>e.category===cat&&isInPeriod(e.date,period)&&e.type!=='income'&&e.type!=='investment'&&e.type!=='invest_income'&&e.type!=='invest_expense').reduce((s,e)=>s+e.amount,0);
     
     const getBudgetPercent=(cat)=>{
       const b=getMonthlyCategoryBudget(cat, currentYear, currentMonth);
       return b===0?0:(getCategorySpentInPeriod(cat,'month')/b)*100;
     };
     
-    const getFilteredPayMethodAmount=(m)=>filteredExpenses.value.filter(e=>e.payMethod===m&&e.type!=='income').reduce((s,e)=>s+e.amount,0);
+    const getFilteredPayMethodAmount=(m)=>filteredExpenses.value.filter(e=>e.payMethod===m&&e.type!=='income'&&e.type!=='investment'&&e.type!=='invest_income'&&e.type!=='invest_expense').reduce((s,e)=>s+e.amount,0);
     const getFilteredPayMethodPercent=(m)=>{
       const t=getFilteredPayMethodAmount(m);
       return filteredGrandTotal.value?Math.round((t/filteredGrandTotal.value)*100):0;
@@ -3074,7 +3261,7 @@ const updateAccountBalance = (methodName, amount, type, isRevert = false) => {
   const acc = assetAccounts.value.find(a => a.name === methodName);
   if (acc) {
     let change = Number(amount);
-    if (type === 'expense') change = -change; // 若為支出則扣款
+    if (type === 'expense' || type === 'investment' || type === 'invest_expense') change = -change;
     if (isRevert) change = -change;           // 若為「復原」或「刪除」，則反向把錢補回來(或扣回去)
     acc.balance += change;
   }
@@ -3246,8 +3433,8 @@ checkAndGenerateAutoInvestments(); // 🔥 加入這行：啟動檢查定期定�
       const isIncome = analyticsType.value === 'income';
       const catList = isIncome ? incomeCategories.value : categories.value;
       catList.forEach(cat => {
-        const spent = expenses.value
-          .filter(e => e.category === cat && isInPeriod(e.date, analyticsPeriod.value) && (isIncome ? e.type === 'income' : e.type !== 'income'))
+                const spent = expenses.value
+          .filter(e => e.category === cat && isInPeriod(e.date, analyticsPeriod.value) && (isIncome ? e.type === 'income' : (e.type !== 'income' && e.type !== 'investment' && e.type !== 'invest_income' && e.type !== 'invest_expense')))
           .reduce((s, e) => s + (Number(e.amount) || 0), 0);
         if (spent > 0) {
           data.push({ cat, amount: spent });
@@ -3321,16 +3508,14 @@ const filteredUserStocks = computed(() => {
 // 交易紀錄：篩選出所有「理財」類（定期定額自動扣款）產生的支出紀錄，依日期新到舊排序
 const investmentTransactions = computed(() => {
   return expenses.value
-    .filter(e => e.category === '理財')
+    .filter(e => e.type === 'investment' || e.type === 'invest_income' || e.type === 'invest_expense')
     .slice()
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 });
-
 // 損益紀錄：依未實現損益排序（賺最多在前）
 const rankedInvestmentPL = computed(() => {
-  return evaluatedUserStocks.value.slice().sort((a, b) => b.totalPL - a.totalPL);
+  return soldRecords.value.slice().sort((a, b) => b.realizedPL - a.realizedPL);
 });
-
 // 自訂：目前啟用定期定額的標的清單
 const autoInvestList = computed(() => {
   return userStocks.value.filter(s => s.autoInvest && s.autoInvest.enabled);
@@ -3497,7 +3682,115 @@ const saveInvestmentStock = () => {
       showToast('已刪除投資標的');
       nextTick(() => lucide.createIcons());
     };
+// ══ 賣出記錄 ══
+const soldRecords = ref([]);
+const isSellModalOpen = ref(false);
+const sellTargetStock = ref(null);
+const sellForm = ref({ shares: 0, price: 0, date: new Date().toISOString().split('T')[0] });
 
+const openSellModal = (stock) => {
+  sellTargetStock.value = { ...stock };
+  sellForm.value = {
+    shares: stock.shares,
+    price: stock.currentPrice,
+    date: new Date().toISOString().split('T')[0]
+  };
+  isSellModalOpen.value = true;
+  nextTick(() => lucide.createIcons());
+};
+
+const confirmSell = () => {
+  const stock = sellTargetStock.value;
+  const sellShares = Number(sellForm.value.shares);
+  const sellPrice = Number(sellForm.value.price);
+  if (!sellShares || sellShares <= 0 || sellShares > stock.shares) {
+    showToast('賣出股數不可超過持有量'); return;
+  }
+  if (!sellPrice || sellPrice <= 0) {
+    showToast('請輸入有效賣出價格'); return;
+  }
+  const realizedPL = (sellPrice - stock.avgPrice) * sellShares;
+
+  soldRecords.value.unshift({
+    id: Date.now(),
+    symbol: stock.symbol,
+    name: stock.name,
+    sellDate: sellForm.value.date,
+    sellShares,
+    sellPrice,
+    avgCost: stock.avgPrice,
+    saleProceeds: sellPrice * sellShares,
+    cost: stock.avgPrice * sellShares,
+    realizedPL
+  });
+
+  const idx = userStocks.value.findIndex(s => s.id === stock.id);
+  if (idx !== -1) {
+    if (sellShares >= userStocks.value[idx].shares) {
+      userStocks.value.splice(idx, 1);
+    } else {
+      userStocks.value[idx] = { ...userStocks.value[idx], shares: userStocks.value[idx].shares - sellShares };
+    }
+  }
+
+  saveToStorage();
+  isSellModalOpen.value = false;
+  showToast(`已記錄賣出 ${stock.symbol}，損益 ${realizedPL >= 0 ? '+' : ''}$${formatNumber(Math.round(realizedPL))}`);
+  nextTick(() => lucide.createIcons());
+};
+
+const totalRealizedPL = computed(() => {
+  return soldRecords.value.reduce((sum, r) => sum + r.realizedPL, 0);
+});
+
+const updateStockField = (stockId, field, value) => {
+  const idx = userStocks.value.findIndex(s => s.id === stockId);
+  if (idx !== -1) {
+    userStocks.value[idx] = { ...userStocks.value[idx], [field]: value };
+    saveToStorage();
+  }
+};
+// ══ 投資收支 ══
+const isInvestFlowModalOpen = ref(false);
+const investFlowForm = ref({
+  title: '',
+  amount: null,
+  date: new Date().toISOString().split('T')[0],
+  type: 'invest_income',
+  symbol: ''
+});
+
+const openInvestFlowModal = () => {
+  investFlowForm.value = {
+    title: '',
+    amount: null,
+    date: new Date().toISOString().split('T')[0],
+    type: 'invest_income',
+    symbol: ''
+  };
+  isInvestFlowModalOpen.value = true;
+  nextTick(() => lucide.createIcons());
+};
+
+const saveInvestFlow = () => {
+  const { title, amount, date, type, symbol } = investFlowForm.value;
+  if (!title || !amount) { showToast('請填寫項目名稱與金額'); return; }
+  const record = {
+    id: Date.now(),
+    title: symbol ? `[${symbol}] ${title}` : title,
+    amount: Number(amount),
+    date: date || new Date().toISOString().split('T')[0],
+    category: '理財',
+    payMethod: '',
+    type: type,
+    photo: ''
+  };
+  expenses.value.unshift(record);
+  saveToStorage();
+  isInvestFlowModalOpen.value = false;
+  showToast(`已新增投資${type === 'invest_income' ? '收入' : '費用'}紀錄`);
+  nextTick(() => lucide.createIcons());
+};
     const refreshAllStockPrices = () => {
       userStocks.value.forEach(s => {
         const randomChange = (Math.random() * 0.04 - 0.02);
@@ -3587,7 +3880,7 @@ applyQuickItemToModal,
       totalAssetsAmount, totalLiabilitiesAmount, totalNetAssets,
       isAccountModalOpen, newAccount, openAddAccountModal, saveNewAccount, deleteAccount,
       editingAccountId, openEditAccountModal,      
-expandedAccountDetails, toggleAccountDetail, getAccountTransactions,
+expandedAccountDetails, toggleAccountDetail, getAccountTransactions, accountCurrentBalance,
       monthlyTotalBudget, monthlyBudgetRemaining, monthlyBudgetUsagePercent,
       remainingDaysInMonth, dailyAverageRemaining, catEmoji,
       donutChartData, donutGradient,
@@ -3639,9 +3932,10 @@ padMonth,
 invViewMode, investmentTransactions, rankedInvestmentPL, autoInvestList,
 autoInvestStockCount, autoInvestMonthlyTotal, executeAutoInvestNow,
       isInvestmentModalOpen, investmentForm, openAddInvestmentModal, openEditInvestmentModal,
+isInvestFlowModalOpen, investFlowForm, openInvestFlowModal, saveInvestFlow,
 fetchCurrentPrice, fetchHistoricalPrice,
       saveInvestmentStock, deleteInvestmentStock, refreshAllStockPrices, handleInvFeature,
-      invDateObj, invDateDisplay, changeInvDate, invMarket, 
+      invDateObj, invDateDisplay, changeInvDate, invMarket, soldRecords, isSellModalOpen, sellTargetStock, sellForm, openSellModal, confirmSell, totalRealizedPL, updateStockField,
     };
   }
 }).mount('#app');

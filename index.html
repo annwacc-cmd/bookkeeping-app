@@ -1244,16 +1244,16 @@ color: #111111 !important;
     </div>
 
     <!-- 列表標題 -->
-        <div v-if="invViewMode==='overview'" class="grid grid-cols-[1fr_1fr_1fr_1.2fr] gap-1 text-[10px] text-gray-500 font-bold mb-3 border-b border-[#e8e4dc] pb-2" :class="{'border-[#111111] text-[#111111]': isDoodleMode}">
-      <div class="text-left pl-1">代號 / 名稱</div>
-      <div class="text-center">持有股數</div>
-      <div class="text-center">現價 / 均價</div>
-      <div class="text-right pr-1">市值 / 操作</div>
-    </div>
+        <div v-if="invViewMode==='overview'" class="grid grid-cols-[1fr_0.8fr_1fr_1.2fr] gap-1 text-[10px] text-gray-500 font-bold mb-3 border-b border-[#e8e4dc] pb-2" :class="{'border-[#111111] text-[#111111]': isDoodleMode}">
+  <div class="text-left pl-1">代號 / 名稱</div>
+  <div class="text-center">持有股數</div>
+  <div class="text-center">投入資金</div>
+  <div class="text-right pr-1">市值 / 操作</div>
+</div>
 
     <!-- 動態渲染投資列表項目 -->
        <div v-if="invViewMode==='overview'" class="space-y-2">
-      <div v-for="stock in filteredUserStocks" :key="stock.id" class="grid grid-cols-[1fr_1fr_1fr_1.2fr] gap-1 text-[11px] items-center border-b border-[#e8e4dc]/60 pb-3 pt-2 last:border-0" :class="{'border-[#111111]/30': isDoodleMode}">
+      <div v-for="stock in filteredUserStocks" :key="stock.id" class="grid grid-cols-[1fr_0.8fr_1fr_1.2fr] gap-1 text-[11px] items-center border-b border-[#e8e4dc]/60 pb-3 pt-2 last:border-0" :class="{'border-[#111111]/30': isDoodleMode}">
        <!-- 左側代號與名稱 -->
 <div class="text-left pl-1">
   <p class="font-bold text-gray-700 flex items-center gap-1" :class="{'text-[#111111]': isDoodleMode}">
@@ -1261,6 +1261,9 @@ color: #111111 !important;
     <span v-if="stock.autoInvest && stock.autoInvest.enabled" class="text-[9px] bg-theme-green text-white px-1 py-0.5 rounded-sm">定期</span>
   </p>
   <p class="text-[9px] text-gray-400 truncate">{{ stock.name }} <span v-if="stock.type === 'fund'">(基金)</span></p>
+    <p v-if="getLinkedGoal(stock)" class="text-[9px] text-theme-green-dark flex items-center gap-0.5 mt-0.5 truncate">
+    {{ getLinkedGoal(stock).icon }} {{ getLinkedGoal(stock).name }}
+  </p>
   <p v-if="stock.autoInvest && stock.autoInvest.enabled" class="text-[9px] text-theme-green-dark flex items-center gap-1 mt-0.5">
     每月{{ stock.autoInvest.day }}日扣${{ formatNumber(stock.autoInvest.amount) }}
     <span v-if="stock.autoInvest.lastGenerated === (currentYear + '-' + currentMonth)" class="text-gray-400">（本月已扣）</span>
@@ -1270,6 +1273,10 @@ color: #111111 !important;
 <!-- 持有單位 -->
 <div class="text-center text-gray-600 font-medium">
   {{ Number(stock.shares).toLocaleString(undefined, {maximumFractionDigits: 2}) }} 單位
+</div>
+<!-- 投入資金 -->
+<div class="text-center text-gray-600 font-medium">
+  NT$ {{ formatNumber(Math.round(stock.cost || 0)) }}
 </div>
                 <div class="text-right flex flex-col items-end pr-1">
           <span class="font-bold text-gray-700 text-[11px]">${{ formatNumber(stock.marketValue) }}</span>
@@ -1283,6 +1290,13 @@ color: #111111 !important;
            <div v-if="filteredUserStocks.length === 0" class="text-center py-6 text-xs text-gray-400 italic">
         尚無投資標的，點擊上方按鈕新增您的第一檔股票或基金。
       </div>
+<!-- 合計列 -->
+<div v-if="filteredUserStocks.length > 0" class="grid grid-cols-[1fr_0.8fr_1fr_1.2fr] gap-1 text-[11px] items-center border-t-2 border-[#e8e4dc] pt-2.5 mt-1 font-bold" :class="{'border-[#111111]': isDoodleMode}">
+  <div class="text-left pl-1 text-gray-700">合計</div>
+  <div class="text-center text-gray-400">—</div>
+  <div class="text-center text-[#b94a48]">NT$ {{ formatNumber(Math.round(filteredUserStocks.reduce((s,t)=>s+(t.cost||0),0))) }}</div>
+  <div class="text-right pr-1 text-gray-700">NT$ {{ formatNumber(Math.round(filteredUserStocks.reduce((s,t)=>s+t.marketValue,0))) }}</div>
+</div>
     </div>
 
     <!-- 交易紀錄 -->
@@ -1398,32 +1412,45 @@ color: #111111 !important;
             @change="updateStockField(stock.id, 'notes', $event.target.value)"
             placeholder="新增個人備忘..." class="flex-1 bg-[#f8f6f2] border border-[#e8e4dc] rounded-lg px-2 py-1 text-xs outline-none focus:border-theme-green">
         </div>
-      </div>
-
+                <!-- 關聯財務目標 -->
+        <div class="flex items-center gap-2 border-t border-[#f0ede8] pt-2">
+          <label class="text-[10px] text-gray-400 w-14 shrink-0">🔗 關聯目標</label>
+          <select :value="stock.linkedGoalId || ''"
+            @change="updateStockField(stock.id, 'linkedGoalId', $event.target.value ? Number($event.target.value) : null)"
+            class="flex-1 bg-[#f8f6f2] border border-[#e8e4dc] rounded-lg px-2 py-1 text-xs text-gray-700 outline-none focus:border-theme-green"
+            :class="{'border-[#111111]': isDoodleMode}">
+            <option value="">未關聯</option>
+            <option v-for="goal in financialGoals" :key="goal.id" :value="goal.id">
+              {{ goal.icon }} {{ goal.name }}
+            </option>
+          </select>
+          <span v-if="getLinkedGoal(stock)" class="text-[9px] text-theme-green shrink-0">
+            {{ goalProgressPercent(getLinkedGoal(stock)) }}% 達標
+          </span>
+        </div>
+</div>
       <div v-if="userStocks.length === 0" class="text-center py-6 text-xs text-gray-400 italic">
         尚無投資標的，點擊上方「新增標的」建立第一筆。
       </div>
     </div>
  </div>
-<!-- ══ 財務目標設定 ══ -->
+  <!-- ══ 財務目標設定 ══ -->
   <div class="bg-[#f8f6f2] rounded-[32px] p-6 shadow-sm border border-[#edebe4]" :class="['doodle-card']">
     <div class="flex justify-between items-center mb-4">
       <div class="flex items-center gap-2">
         <h3 class="text-[13px] font-bold text-gray-700" :class="{'text-[#111111] font-black': isDoodleMode}">財務目標</h3>
-        <button @click="openGoalModal()" class="w-6 h-6 bg-white rounded-full border border-[#e8e4dc] flex items-center justify-center shadow-sm hover:bg-gray-50 text-theme-green" title="新增財務目標" :class="{'border-[#111111]': isDoodleMode}">
+        <button @click="openGoalModal()" class="w-6 h-6 bg-white rounded-full border border-[#e8e4dc] flex items-center justify-center shadow-sm hover:bg-gray-50 text-theme-green" :class="{'border-[#111111]': isDoodleMode}">
           <i data-lucide="plus" class="w-3.5 h-3.5"></i>
         </button>
       </div>
       <span class="text-[11px] text-gray-400">{{ financialGoals.length }} 個目標</span>
     </div>
 
-    <!-- 無目標提示 -->
     <div v-if="financialGoals.length === 0" class="text-center py-5">
       <p class="text-[11px] text-gray-400 italic mb-2">尚未設定任何財務目標</p>
       <button @click="openGoalModal()" class="text-xs text-theme-green font-bold underline">＋ 新增第一個目標</button>
     </div>
 
-    <!-- 目標清單 -->
     <div v-else class="space-y-3">
       <div v-for="goal in financialGoals" :key="goal.id"
         class="bg-white rounded-2xl p-4 border border-[#e8e4dc]"
@@ -1442,46 +1469,66 @@ color: #111111 !important;
             <button @click="openGoalModal(goal)" class="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-gray-100 border border-[#e8e4dc]" :class="{'border-[#111111]': isDoodleMode}">
               <i data-lucide="pencil" class="w-3 h-3"></i>
             </button>
-            <button @click="deleteGoal(goal.id)" class="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center text-red-300 hover:bg-red-50 hover:text-red-400 border border-[#e8e4dc]" :class="{'border-[#111111]': isDoodleMode}">
+            <button @click="deleteGoal(goal.id)" class="w-6 h-6 rounded-full bg-gray-50 flex items-center justify-center text-red-300 hover:bg-red-50 border border-[#e8e4dc]" :class="{'border-[#111111]': isDoodleMode}">
               <i data-lucide="trash-2" class="w-3 h-3"></i>
             </button>
           </div>
         </div>
 
-        <!-- 進度條 -->
+        <!-- 進度條（含投資市值即時計算） -->
         <div class="mb-2">
           <div class="flex justify-between items-end mb-1.5">
-            <span class="text-[11px] text-gray-500">NT$ {{ formatNumber(goal.currentAmount) }}</span>
-            <span class="text-[13px] font-bold" :class="goalProgressPercent(goal) >= 100 ? 'text-emerald-500' : 'text-gray-700'">
+            <div>
+              <span class="text-[12px] font-bold text-gray-700">NT$ {{ formatNumber(goalEffectiveAmount(goal)) }}</span>
+              <div class="flex gap-2 mt-0.5 flex-wrap">
+                <span v-if="goal.currentAmount > 0" class="text-[9px] text-gray-400">💰 現金 NT${{ formatNumber(goal.currentAmount) }}</span>
+                <span v-if="linkedStockValue(goal) > 0" class="text-[9px] text-theme-green-dark font-medium">📈 投資市值 NT${{ formatNumber(Math.round(linkedStockValue(goal))) }}</span>
+              </div>
+            </div>
+            <span class="text-[13px] font-bold shrink-0 ml-2" :class="goalProgressPercent(goal) >= 100 ? 'text-emerald-500' : 'text-gray-700'">
               {{ goalProgressPercent(goal) }}%
             </span>
           </div>
-          <div class="h-2 bg-gray-100 rounded-full overflow-hidden" :class="{'border border-[#111111]': isDoodleMode}">
-            <div class="h-full rounded-full transition-all duration-700"
+          <div class="h-2 bg-gray-100 rounded-full overflow-hidden relative" :class="{'border border-[#111111]': isDoodleMode}">
+            <!-- 底層：現金部分 -->
+            <div class="h-full rounded-full bg-gray-300 absolute left-0 top-0 transition-all duration-700"
+              :style="`width:${Math.min(100, Math.round((Number(goal.currentAmount||0)/Number(goal.targetAmount))*100))}%`">
+            </div>
+            <!-- 上層：總進度（含投資市值） -->
+            <div class="h-full rounded-full transition-all duration-700 absolute left-0 top-0"
               :class="goalProgressPercent(goal) >= 100 ? 'bg-emerald-400' : 'bg-theme-green'"
-              :style="`width:${goalProgressPercent(goal)}%`">
+              :style="`width:${goalProgressPercent(goal)}%; opacity:0.75`">
             </div>
           </div>
           <div class="flex justify-between text-[10px] text-gray-400 mt-1">
-            <span v-if="goalProgressPercent(goal) < 100">還差 NT$ {{ formatNumber(Math.max(0, goal.targetAmount - goal.currentAmount)) }}</span>
+            <span v-if="goalProgressPercent(goal) < 100">還差 NT$ {{ formatNumber(Math.max(0, Math.round(goal.targetAmount - goalEffectiveAmount(goal)))) }}</span>
             <span v-else class="text-emerald-500 font-bold">🎉 目標達成！</span>
             <span>目標 NT$ {{ formatNumber(goal.targetAmount) }}</span>
+          </div>
+        </div>
+
+        <!-- 關聯投資標的列表 -->
+        <div v-if="linkedStocksForGoal(goal).length > 0" class="bg-[#f4f6f3] rounded-xl p-2.5 mb-2 space-y-1">
+          <p class="text-[9px] text-gray-500 font-bold mb-1.5">關聯投資標的</p>
+          <div v-for="s in linkedStocksForGoal(goal)" :key="s.id" class="flex justify-between text-[10px]">
+            <span class="text-gray-600">{{ s.symbol }} {{ s.name }}</span>
+            <span class="font-bold text-theme-green-dark">NT$ {{ formatNumber(Math.round(s.cost || 0)) }}</span>
           </div>
         </div>
 
         <!-- 備注 -->
         <p v-if="goal.note" class="text-[10px] text-gray-400 italic mt-1">{{ goal.note }}</p>
 
-        <!-- 快速存入 -->
+        <!-- 快速存入現金 -->
         <div v-if="goalProgressPercent(goal) < 100" class="flex gap-2 border-t border-[#f0ede8] pt-2.5 mt-2.5">
           <input type="number"
             :value="goalInputAmounts[goal.id] || ''"
             @input="goalInputAmounts[goal.id] = $event.target.value"
-            placeholder="輸入存入金額..."
+            placeholder="存入現金金額..."
             class="flex-1 bg-[#f8f6f2] border border-[#e8e4dc] rounded-lg px-2.5 py-1.5 text-xs outline-none focus:border-theme-green"
             :class="{'border-[#111111]': isDoodleMode}" min="0">
           <button @click="addGoalAmount(goal.id)"
-            class="bg-theme-green text-white text-[11px] font-bold px-3 py-1.5 rounded-lg hover:bg-theme-green-dark transition-colors shrink-0"
+            class="bg-theme-green text-white text-[11px] font-bold px-3 py-1.5 rounded-lg hover:bg-theme-green-dark shrink-0"
             :class="{'bg-[#fff176] text-[#111111] border-2 border-[#111111]': isDoodleMode}">
             ＋ 存入
           </button>
@@ -1561,7 +1608,20 @@ color: #111111 !important;
       <p class="text-[9px] text-gray-400 mt-1 leading-relaxed">每月到期將從帳戶扣款，並依「金額 ÷ 現價」自動買入單位數且重新攤平計算均價。</p>
     </div>
   </div>
-
+   <!-- 關聯財務目標 -->
+  <div class="border-t border-gray-100 pt-3">
+    <label class="text-[10px] text-gray-400 block mb-1.5">🔗 關聯財務目標（選填）</label>
+    <select v-model="investmentForm.linkedGoalId"
+      class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs text-gray-700 outline-none focus:border-theme-green"
+      :class="['doodle-input']">
+      <option :value="null">未關聯任何目標</option>
+      <option v-for="goal in financialGoals" :key="goal.id" :value="goal.id">
+        {{ goal.icon }} {{ goal.name }}（目標 NT${{ formatNumber(goal.targetAmount) }}）
+      </option>
+    </select>
+    <p v-if="investmentForm.linkedGoalId && investmentForm.autoInvest && investmentForm.autoInvest.enabled"
+      class="text-[9px] text-theme-green mt-1.5">✓ 此標的市值將即時反映至財務目標進度</p>
+  </div>
   <div class="flex gap-2 pt-2">
     <button @click="isInvestmentModalOpen = false" class="flex-1 py-2.5 bg-gray-100 text-gray-500 hover:bg-gray-200 text-xs font-medium rounded-xl">取消</button>
     <button @click="saveInvestmentStock" class="flex-1 py-2.5 bg-theme-green text-white hover:bg-theme-green-dark text-xs font-medium rounded-xl">儲存標的</button>
@@ -1611,18 +1671,23 @@ color: #111111 !important;
       <button @click="isSellModalOpen = false" class="text-gray-400 hover:text-gray-600"><i data-lucide="x" class="w-4 h-4"></i></button>
     </div>
     <p class="text-[10px] text-gray-400">持有 {{ sellTargetStock?.shares }} 股 · 均價 ${{ sellTargetStock?.avgPrice }}</p>
-    <div class="grid grid-cols-2 gap-2">
-      <div>
-        <label class="text-[10px] text-gray-400 block mb-1">賣出股數</label>
-        <input type="number" v-model.number="sellForm.shares" :max="sellTargetStock?.shares" min="0"
-          class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
-      </div>
-      <div>
-        <label class="text-[10px] text-gray-400 block mb-1">賣出價格</label>
-        <input type="number" v-model.number="sellForm.price" min="0"
-          class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
-      </div>
-    </div>
+    <div class="grid grid-cols-3 gap-2">
+  <div>
+    <label class="text-[10px] text-gray-400 block mb-1">賣出股數</label>
+    <input type="number" v-model.number="sellForm.shares" :max="sellTargetStock?.shares" min="0"
+      class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
+  </div>
+  <div>
+    <label class="text-[10px] text-gray-400 block mb-1">成本（每股）</label>
+    <input type="number" v-model.number="sellForm.cost" min="0"
+      class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
+  </div>
+  <div>
+    <label class="text-[10px] text-gray-400 block mb-1">賣出價格</label>
+    <input type="number" v-model.number="sellForm.price" min="0"
+      class="w-full bg-theme-bg border border-gray-200 rounded-xl p-2.5 text-xs outline-none focus:border-theme-green" :class="['doodle-input']">
+  </div>
+</div>
     <div>
       <label class="text-[10px] text-gray-400 block mb-1">賣出日期</label>
       <input type="date" v-model="sellForm.date"
@@ -1636,13 +1701,13 @@ color: #111111 !important;
       </div>
       <div class="flex justify-between">
         <span class="text-gray-400">持倉成本</span>
-        <span class="font-medium">${{ formatNumber(Math.round(sellForm.shares * (sellTargetStock.avgPrice || 0))) }}</span>
+       <span class="font-medium">${{ formatNumber(Math.round(sellForm.shares * (sellForm.cost || 0))) }}</span>
       </div>
       <div class="flex justify-between border-t border-[#e8e4dc] pt-1.5">
         <span class="font-bold">預計損益</span>
-        <span class="font-bold" :class="(sellForm.price - (sellTargetStock.avgPrice || 0)) * sellForm.shares >= 0 ? 'text-[#b94a48]' : 'text-emerald-600'">
-          {{ (sellForm.price - (sellTargetStock.avgPrice || 0)) * sellForm.shares >= 0 ? '+' : '' }}${{ formatNumber(Math.round((sellForm.price - (sellTargetStock.avgPrice || 0)) * sellForm.shares)) }}
-        </span>
+        <span class="font-bold" :class="(sellForm.price - (sellForm.cost || 0)) * sellForm.shares >= 0 ? 'text-[#b94a48]' : 'text-emerald-600'">
+  {{ (sellForm.price - (sellForm.cost || 0)) * sellForm.shares >= 0 ? '+' : '' }}${{ formatNumber(Math.round((sellForm.price - (sellForm.cost || 0)) * sellForm.shares)) }}
+</span>
       </div>
     </div>
     <div class="flex gap-2 pt-2">
@@ -1655,72 +1720,47 @@ color: #111111 !important;
 <div v-if="isGoalModalOpen" class="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-50 p-4">
   <div class="bg-white rounded-3xl p-6 w-full max-w-sm space-y-4 shadow-xl max-h-[85vh] overflow-y-auto no-scrollbar" :class="{'border-2 border-[#111111]': isDoodleMode}">
     <h3 class="text-sm font-bold text-gray-700" :class="{'text-[#111111]': isDoodleMode}">{{ editingGoalId ? '編輯財務目標' : '新增財務目標' }}</h3>
-
-    <!-- 圖示選擇 -->
     <div>
       <label class="text-[11px] text-gray-500 font-medium block mb-2">選擇圖示</label>
       <div class="flex gap-1.5 flex-wrap">
         <button v-for="ico in ['🏠','🚗','✈️','🎓','💍','🏖️','🏦','💰','🎯','🌏','👶','🏋️','🎵','📱','🐶','🌱']"
           :key="ico" @click="goalForm.icon = ico"
           class="w-9 h-9 rounded-xl text-lg flex items-center justify-center border-2 transition-all"
-          :class="goalForm.icon === ico ? 'border-theme-green bg-theme-green/10' : 'border-gray-100 bg-gray-50 hover:bg-gray-100'">
-          {{ ico }}
-        </button>
+          :class="goalForm.icon === ico ? 'border-theme-green bg-theme-green/10' : 'border-gray-100 bg-gray-50'">{{ ico }}</button>
       </div>
     </div>
-
-    <!-- 目標名稱 -->
     <div>
       <label class="text-[11px] text-gray-500 font-medium block mb-1.5">目標名稱 *</label>
-      <input v-model="goalForm.name" type="text" placeholder="例：買房頭期款、退休基金、出國旅遊..."
-        class="w-full bg-[#f8f6f2] border border-[#e8e4dc] rounded-xl px-3 py-2.5 text-sm outline-none focus:border-theme-green"
-        :class="{'border-[#111111]': isDoodleMode}">
+      <input v-model="goalForm.name" type="text" placeholder="例：買房頭期款、退休基金..."
+        class="w-full bg-[#f8f6f2] border border-[#e8e4dc] rounded-xl px-3 py-2.5 text-sm outline-none focus:border-theme-green" :class="{'border-[#111111]': isDoodleMode}">
     </div>
-
-    <!-- 目標金額 -->
     <div>
       <label class="text-[11px] text-gray-500 font-medium block mb-1.5">目標金額 NT$ *</label>
       <input v-model="goalForm.targetAmount" type="number" placeholder="例：3000000"
-        class="w-full bg-[#f8f6f2] border border-[#e8e4dc] rounded-xl px-3 py-2.5 text-sm outline-none focus:border-theme-green"
-        :class="{'border-[#111111]': isDoodleMode}" min="0">
+        class="w-full bg-[#f8f6f2] border border-[#e8e4dc] rounded-xl px-3 py-2.5 text-sm outline-none focus:border-theme-green" :class="{'border-[#111111]': isDoodleMode}" min="0">
     </div>
-
-    <!-- 目前已存 -->
     <div>
-      <label class="text-[11px] text-gray-500 font-medium block mb-1.5">目前已存 NT$</label>
+      <label class="text-[11px] text-gray-500 font-medium block mb-1.5">現金已存 NT$（不含投資）</label>
       <input v-model="goalForm.currentAmount" type="number" placeholder="0"
-        class="w-full bg-[#f8f6f2] border border-[#e8e4dc] rounded-xl px-3 py-2.5 text-sm outline-none focus:border-theme-green"
-        :class="{'border-[#111111]': isDoodleMode}" min="0">
+        class="w-full bg-[#f8f6f2] border border-[#e8e4dc] rounded-xl px-3 py-2.5 text-sm outline-none focus:border-theme-green" :class="{'border-[#111111]': isDoodleMode}" min="0">
+      <p class="text-[9px] text-gray-400 mt-1">投資標的市值會自動加入，此處只需填寫現金存款部分</p>
     </div>
-
-    <!-- 目標期限 -->
     <div>
       <label class="text-[11px] text-gray-500 font-medium block mb-1.5">目標期限（選填）</label>
       <input v-model="goalForm.deadline" type="date"
-        class="w-full bg-[#f8f6f2] border border-[#e8e4dc] rounded-xl px-3 py-2.5 text-sm outline-none focus:border-theme-green"
-        :class="{'border-[#111111]': isDoodleMode}">
+        class="w-full bg-[#f8f6f2] border border-[#e8e4dc] rounded-xl px-3 py-2.5 text-sm outline-none focus:border-theme-green" :class="{'border-[#111111]': isDoodleMode}">
     </div>
-
-    <!-- 備注 -->
     <div>
       <label class="text-[11px] text-gray-500 font-medium block mb-1.5">備注（選填）</label>
       <input v-model="goalForm.note" type="text" placeholder="補充說明..."
-        class="w-full bg-[#f8f6f2] border border-[#e8e4dc] rounded-xl px-3 py-2.5 text-sm outline-none focus:border-theme-green"
-        :class="{'border-[#111111]': isDoodleMode}">
+        class="w-full bg-[#f8f6f2] border border-[#e8e4dc] rounded-xl px-3 py-2.5 text-sm outline-none focus:border-theme-green" :class="{'border-[#111111]': isDoodleMode}">
     </div>
-
-    <!-- 按鈕 -->
     <div class="flex gap-2 pt-1">
-      <button @click="isGoalModalOpen = false"
-        class="flex-1 py-2.5 text-sm font-medium text-gray-500 bg-gray-100 rounded-xl hover:bg-gray-200 transition-colors"
-        :class="{'border-2 border-[#111111]': isDoodleMode}">取消</button>
-      <button @click="saveGoal"
-        class="flex-1 py-2.5 text-sm font-bold text-white bg-theme-green rounded-xl hover:bg-theme-green-dark transition-colors"
-        :class="{'bg-[#fff176] text-[#111111] border-2 border-[#111111]': isDoodleMode}">儲存</button>
+      <button @click="isGoalModalOpen = false" class="flex-1 py-2.5 text-sm font-medium text-gray-500 bg-gray-100 rounded-xl" :class="{'border-2 border-[#111111]': isDoodleMode}">取消</button>
+      <button @click="saveGoal" class="flex-1 py-2.5 text-sm font-bold text-white bg-theme-green rounded-xl hover:bg-theme-green-dark" :class="{'bg-[#fff176] text-[#111111] border-2 border-[#111111]': isDoodleMode}">儲存</button>
     </div>
   </div>
 </div>
-
     <!-- SETTINGS -->
     <div v-if="currentTab==='settings'" class="space-y-6">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -2531,6 +2571,16 @@ if (d.recurringItems) recurringItems.value = d.recurringItems;
           }
         }catch(e){console.warn('Firebase 讀取失敗，使用本機快取',e);}
       }
+      // 從支出紀錄補值 totalInvested（修正現有定扣基金投入資金為0的問題）
+      userStocks.value.forEach(stock => {
+        if (stock.autoInvest && stock.autoInvest.enabled && !(Number(stock.totalInvested) > 0)) {
+          const invested = expenses.value
+            .filter(e => e.title === `[定期定額] ${stock.name}` &&
+                         (e.type === 'investment' || e.type === 'invest_expense'))
+            .reduce((sum, e) => sum + Number(e.amount || 0), 0);
+          if (invested > 0) stock.totalInvested = invested;
+        }
+      });
       nextTick(()=>lucide.createIcons());
     };
 
@@ -2854,7 +2904,9 @@ updateAccountBalance(stock.autoInvest.payMethod, amount, 'investment', false);
         
         stock.shares += purchasedShares;
         stock.avgPrice = (oldTotalCost + amount) / stock.shares;
-        stock.autoInvest.lastGenerated = currentYM;
+stock.totalInvested = (Number(stock.totalInvested) || 0) + amount;
+                stock.autoInvest.lastGenerated = currentYM;
+        
         count++;
       }
     }
@@ -2890,13 +2942,14 @@ updateAccountBalance(stock.autoInvest.payMethod, amount, 'investment', false);
   const oldTotalCost = stock.shares * stock.avgPrice;
   stock.shares += purchasedShares;
   stock.avgPrice = (oldTotalCost + amount) / stock.shares;
-
+stock.totalInvested = (Number(stock.totalInvested) || 0) + amount;
   const yyyy = new Date().getFullYear();
   const mm = String(new Date().getMonth() + 1).padStart(2, '0');
-  stock.autoInvest.lastGenerated = `${yyyy}-${mm}`;
+    stock.autoInvest.lastGenerated = `${yyyy}-${mm}`;
 
   saveToStorage();
-  showToast(`已手動執行「${stock.name}」定期定額買入`);
+  const linkedGoal = getLinkedGoal(stock);
+  showToast(`已手動執行「${stock.name}」定期定額買入${linkedGoal ? '，已同步更新目標「' + linkedGoal.name + '」進度' : ''}`);
 };
 // 💡 彈窗操作函數
 const openAddRecurringModal = (item = null) => {
@@ -3661,14 +3714,16 @@ const filteredUserStocks = computed(() => {
   return list;
 });
     // 計算每檔標的的市值與總損益
-    const evaluatedUserStocks = computed(() => {
-      return userStocks.value.map(s => {
-        const marketValue = s.shares * s.currentPrice;
-        const cost = s.shares * s.avgPrice;
-        const totalPL = marketValue - cost;
-        return { ...s, marketValue, cost, totalPL };
-      });
-    });
+   const evaluatedUserStocks = computed(() => {
+  return userStocks.value.map(s => {
+    const marketValue = s.shares * s.currentPrice;
+       const cost = Number(s.totalInvested) > 0
+      ? Number(s.totalInvested)
+      : Number(s.shares) * Number(s.avgPrice);
+    const totalPL = marketValue - cost;
+    return { ...s, marketValue, cost, totalPL };
+  });
+});
 // 交易紀錄：篩選出所有「理財」類（定期定額自動扣款）產生的支出紀錄，依日期新到舊排序
 const investmentTransactions = computed(() => {
   return expenses.value
@@ -3789,9 +3844,10 @@ const fetchHistoricalPrice = async () => {
     // 2. 開啟新增彈窗 (加入預設欄位)
 const openAddInvestmentModal = () => {
   editingInvestmentId.value = null;
-  investmentForm.value = { 
+      investmentForm.value = { 
     symbol: '', name: '', type: 'stock', shares: 0, avgPrice: 0, currentPrice: 0,
     buyDate: new Date().toISOString().split('T')[0],
+    linkedGoalId: null,
     autoInvest: { enabled: false, amount: null, day: 1, payMethod: payMethods.value[0] || '現金', lastGenerated: '' }
   };
   isInvestmentModalOpen.value = true;
@@ -3801,10 +3857,11 @@ const openAddInvestmentModal = () => {
 // 3. 開啟編輯彈窗 (帶入歷史資料)
 const openEditInvestmentModal = (stock) => {
   editingInvestmentId.value = stock.id;
-  investmentForm.value = { 
+       investmentForm.value = { 
     ...stock, 
     type: stock.type || 'stock',
     buyDate: stock.buyDate || new Date().toISOString().split('T')[0],
+    linkedGoalId: stock.linkedGoalId || null,
     autoInvest: stock.autoInvest ? { ...stock.autoInvest } : { enabled: false, amount: null, day: 1, payMethod: payMethods.value[0] || '現金', lastGenerated: '' }
   };
   isInvestmentModalOpen.value = true;
@@ -3819,17 +3876,19 @@ const saveInvestmentStock = () => {
   if (editingInvestmentId.value) {
     const idx = userStocks.value.findIndex(s => s.id === editingInvestmentId.value);
     if (idx !== -1) {
-      userStocks.value[idx] = { 
+                 userStocks.value[idx] = { 
         ...userStocks.value[idx], symbol, name, type, 
         shares: Number(shares), avgPrice: Number(avgPrice), currentPrice: Number(currentPrice),
+        linkedGoalId: investmentForm.value.linkedGoalId || null,
         autoInvest: { ...autoInvest, amount: Number(autoInvest.amount) }
       };
     }
     showToast('已更新投資標的');
   } else {
-    userStocks.value.push({
+            userStocks.value.push({
       id: Date.now(), symbol, name, type,
       shares: Number(shares), avgPrice: Number(avgPrice), currentPrice: Number(currentPrice),
+      linkedGoalId: investmentForm.value.linkedGoalId || null,
       autoInvest: { ...autoInvest, amount: Number(autoInvest.amount), lastGenerated: '' }
     });
     showToast('已新增投資標的');
@@ -3850,33 +3909,45 @@ const saveInvestmentStock = () => {
 const soldRecords = ref([]);
 const isSellModalOpen = ref(false);
 const sellTargetStock = ref(null);
-const sellForm = ref({ shares: 0, price: 0, date: new Date().toISOString().split('T')[0] });
-
-// ══ 財務目標 ══
+const sellForm = ref({ shares: 0, price: 0, cost: 0, date: new Date().toISOString().split('T')[0] });
+// ══ 財務目標核心 ══
 const financialGoals = ref([]);
 const isGoalModalOpen = ref(false);
 const editingGoalId = ref(null);
 const goalForm = ref({ name: '', targetAmount: null, currentAmount: 0, deadline: '', icon: '🎯', note: '' });
-const goalInputAmounts = ref({}); // 各目標快速存入暫存
+const goalInputAmounts = ref({});
 
-// 計算目標進度百分比
-const goalProgressPercent = (goal) => {
-  if (!goal.targetAmount || goal.targetAmount <= 0) return 0;
-  return Math.min(100, Math.round((Number(goal.currentAmount) / Number(goal.targetAmount)) * 100));
+// 取得某目標關聯的所有投資標的（含市值）
+const linkedStocksForGoal = (goal) => {
+  return evaluatedUserStocks.value.filter(s =>
+    s.linkedGoalId != null && String(s.linkedGoalId) === String(goal.id)
+  );
+};
+// 計算某目標的投資市值加總
+const linkedStockValue = (goal) => {
+  return linkedStocksForGoal(goal).reduce((sum, s) => sum + (s.cost || 0), 0);
+};
+// 有效累積金額：現金存入 + 投資市值（自動帶入）
+const goalEffectiveAmount = (goal) => {
+  return Number(goal.currentAmount || 0) + linkedStockValue(goal);
 };
 
-// 開啟新增/編輯彈窗
+// 目標達成百分比（使用有效累積金額）
+const goalProgressPercent = (goal) => {
+  if (!goal.targetAmount || goal.targetAmount <= 0) return 0;
+  return Math.min(100, Math.round((goalEffectiveAmount(goal) / Number(goal.targetAmount)) * 100));
+};
+
+// 取得投資標的關聯的財務目標物件
+const getLinkedGoal = (stock) => {
+  if (!stock || !stock.linkedGoalId) return null;
+  return financialGoals.value.find(g => g.id === stock.linkedGoalId) || null;
+};
+
 const openGoalModal = (goal = null) => {
   if (goal) {
     editingGoalId.value = goal.id;
-    goalForm.value = {
-      name: goal.name,
-      targetAmount: goal.targetAmount,
-      currentAmount: goal.currentAmount,
-      deadline: goal.deadline || '',
-      icon: goal.icon || '🎯',
-      note: goal.note || ''
-    };
+    goalForm.value = { name: goal.name, targetAmount: goal.targetAmount, currentAmount: goal.currentAmount, deadline: goal.deadline || '', icon: goal.icon || '🎯', note: goal.note || '' };
   } else {
     editingGoalId.value = null;
     goalForm.value = { name: '', targetAmount: null, currentAmount: 0, deadline: '', icon: '🎯', note: '' };
@@ -3885,28 +3956,15 @@ const openGoalModal = (goal = null) => {
   nextTick(() => lucide.createIcons());
 };
 
-// 儲存財務目標
 const saveGoal = () => {
   const { name, targetAmount, currentAmount, deadline, icon, note } = goalForm.value;
   if (!name || !targetAmount) { showToast('請填寫目標名稱與金額'); return; }
   if (editingGoalId.value) {
     const idx = financialGoals.value.findIndex(g => g.id === editingGoalId.value);
-    if (idx !== -1) {
-      financialGoals.value[idx] = {
-        ...financialGoals.value[idx],
-        name, targetAmount: Number(targetAmount),
-        currentAmount: Number(currentAmount) || 0,
-        deadline: deadline || '', icon: icon || '🎯', note: note || ''
-      };
-    }
+    if (idx !== -1) financialGoals.value[idx] = { ...financialGoals.value[idx], name, targetAmount: Number(targetAmount), currentAmount: Number(currentAmount) || 0, deadline: deadline || '', icon: icon || '🎯', note: note || '' };
     showToast('已更新財務目標');
   } else {
-    financialGoals.value.push({
-      id: Date.now(), name,
-      targetAmount: Number(targetAmount),
-      currentAmount: Number(currentAmount) || 0,
-      deadline: deadline || '', icon: icon || '🎯', note: note || ''
-    });
+    financialGoals.value.push({ id: Date.now(), name, targetAmount: Number(targetAmount), currentAmount: Number(currentAmount) || 0, deadline: deadline || '', icon: icon || '🎯', note: note || '' });
     showToast('已新增財務目標 🎯');
   }
   isGoalModalOpen.value = false;
@@ -3914,38 +3972,32 @@ const saveGoal = () => {
   nextTick(() => lucide.createIcons());
 };
 
-// 刪除財務目標
 const deleteGoal = (id) => {
   financialGoals.value = financialGoals.value.filter(g => g.id !== id);
   saveToStorage();
   showToast('已刪除財務目標');
 };
 
-// 快速存入金額
 const addGoalAmount = (goalId) => {
   const amount = Number(goalInputAmounts.value[goalId]);
   if (!amount || amount <= 0) { showToast('請輸入有效金額'); return; }
   const idx = financialGoals.value.findIndex(g => g.id === goalId);
   if (idx !== -1) {
-    financialGoals.value[idx] = {
-      ...financialGoals.value[idx],
-      currentAmount: Number(financialGoals.value[idx].currentAmount || 0) + amount
-    };
+    financialGoals.value[idx] = { ...financialGoals.value[idx], currentAmount: Number(financialGoals.value[idx].currentAmount || 0) + amount };
     goalInputAmounts.value[goalId] = '';
     saveToStorage();
-    const pct = goalProgressPercent(financialGoals.value[idx]);
-    showToast(pct >= 100 ? '🎉 恭喜！目標已達成！' : `已更新進度，完成 ${pct}%`);
+    showToast(`已存入現金，目標進度 ${goalProgressPercent(financialGoals.value[idx])}% 🎉`);
   }
 };
-
 
 const openSellModal = (stock) => {
   sellTargetStock.value = { ...stock };
   sellForm.value = {
-    shares: stock.shares,
-    price: stock.currentPrice,
-    date: new Date().toISOString().split('T')[0]
-  };
+  shares: stock.shares,
+  price: stock.currentPrice || 0,
+  cost: stock.avgPrice || 0,
+  date: new Date().toISOString().split('T')[0]
+};
   isSellModalOpen.value = true;
   nextTick(() => lucide.createIcons());
 };
@@ -3960,20 +4012,21 @@ const confirmSell = () => {
   if (!sellPrice || sellPrice <= 0) {
     showToast('請輸入有效賣出價格'); return;
   }
-  const realizedPL = (sellPrice - stock.avgPrice) * sellShares;
+  const sellCost = Number(sellForm.value.cost) || Number(stock.avgPrice) || 0;
+const realizedPL = (sellPrice - sellCost) * sellShares;
 
-  soldRecords.value.unshift({
-    id: Date.now(),
-    symbol: stock.symbol,
-    name: stock.name,
-    sellDate: sellForm.value.date,
-    sellShares,
-    sellPrice,
-    avgCost: stock.avgPrice,
-    saleProceeds: sellPrice * sellShares,
-    cost: stock.avgPrice * sellShares,
-    realizedPL
-  });
+soldRecords.value.unshift({
+  id: Date.now(),
+  symbol: stock.symbol,
+  name: stock.name,
+  sellDate: sellForm.value.date,
+  sellShares,
+  sellPrice,
+  avgCost: sellCost,
+  saleProceeds: sellPrice * sellShares,
+  cost: sellCost * sellShares,
+  realizedPL
+});
 
   const idx = userStocks.value.findIndex(s => s.id === stock.id);
   if (idx !== -1) {
@@ -4186,8 +4239,10 @@ autoInvestStockCount, autoInvestMonthlyTotal, executeAutoInvestNow,
 isInvestFlowModalOpen, investFlowForm, openInvestFlowModal, saveInvestFlow,
 fetchCurrentPrice, fetchHistoricalPrice,
       saveInvestmentStock, deleteInvestmentStock, refreshAllStockPrices, handleInvFeature,
-      invDateObj, invDateDisplay, changeInvDate, invMarket, soldRecords, isSellModalOpen, sellTargetStock, sellForm, openSellModal, confirmSell, totalRealizedPL, updateStockField,financialGoals, isGoalModalOpen, editingGoalId, goalForm, goalInputAmounts,
-goalProgressPercent, openGoalModal, saveGoal, deleteGoal, addGoalAmount,
+           invDateObj, invDateDisplay, changeInvDate, invMarket, soldRecords, isSellModalOpen, sellTargetStock, sellForm, openSellModal, confirmSell, totalRealizedPL, updateStockField,
+      financialGoals, isGoalModalOpen, editingGoalId, goalForm, goalInputAmounts,
+      goalProgressPercent, goalEffectiveAmount, linkedStockValue, linkedStocksForGoal,
+      openGoalModal, saveGoal, deleteGoal, addGoalAmount, getLinkedGoal,
     };
   }
 }).mount('#app');

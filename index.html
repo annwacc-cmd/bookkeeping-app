@@ -1357,13 +1357,17 @@ color: #111111 !important;
 
        <!-- 自訂：標的管理總覽 -->
     <div v-if="invViewMode==='settings'" class="space-y-3">
-      <div class="flex justify-between items-center mb-1">
-        <p class="text-[10px] text-gray-400 font-medium">管理目標價格、定期定額與個人備忘</p>
+            <div class="flex justify-between items-center mb-1">
+        <button @click="isInvTargetsCollapsed = !isInvTargetsCollapsed"
+          class="flex items-center gap-1.5 text-[11px] font-bold text-gray-600 hover:text-gray-800">
+          <i :data-lucide="isInvTargetsCollapsed ? 'chevron-right' : 'chevron-down'" class="w-3.5 h-3.5"></i>
+          投資標的
+        </button>
         <button @click="openAddInvestmentModal" class="text-xs bg-theme-green text-white px-3 py-1.5 rounded-lg flex items-center gap-1 hover:bg-theme-green-dark" :class="['doodle-btn']">
           <i data-lucide="plus" class="w-3.5 h-3.5"></i> 新增標的
         </button>
       </div>
-
+      <div v-show="!isInvTargetsCollapsed">
       <div v-for="stock in evaluatedUserStocks" :key="stock.id" class="bg-white rounded-2xl border border-[#e8e4dc] p-4 space-y-3" :class="['doodle-card']">
         <!-- 標的標題列 -->
         <div class="flex justify-between items-start">
@@ -1433,19 +1437,25 @@ color: #111111 !important;
         尚無投資標的，點擊上方「新增標的」建立第一筆。
       </div>
     </div>
+      </div><!-- /v-show isInvTargetsCollapsed -->
  </div>
   <!-- ══ 財務目標設定 ══ -->
-  <div class="bg-[#f8f6f2] rounded-[32px] p-6 shadow-sm border border-[#edebe4]" :class="['doodle-card']">
+    <div v-if="invViewMode==='settings'" class="bg-[#f8f6f2] rounded-[32px] p-6 shadow-sm border border-[#edebe4]" :class="['doodle-card']">
     <div class="flex justify-between items-center mb-4">
       <div class="flex items-center gap-2">
-        <h3 class="text-[13px] font-bold text-gray-700" :class="{'text-[#111111] font-black': isDoodleMode}">財務目標</h3>
+                <button @click="isGoalsCollapsed = !isGoalsCollapsed"
+          class="flex items-center gap-1.5 text-[13px] font-bold text-gray-700 hover:text-gray-900"
+          :class="{'text-[#111111] font-black': isDoodleMode}">
+          <i :data-lucide="isGoalsCollapsed ? 'chevron-right' : 'chevron-down'" class="w-4 h-4"></i>
+          財務目標
+        </button>
         <button @click="openGoalModal()" class="w-6 h-6 bg-white rounded-full border border-[#e8e4dc] flex items-center justify-center shadow-sm hover:bg-gray-50 text-theme-green" :class="{'border-[#111111]': isDoodleMode}">
           <i data-lucide="plus" class="w-3.5 h-3.5"></i>
         </button>
       </div>
       <span class="text-[11px] text-gray-400">{{ financialGoals.length }} 個目標</span>
     </div>
-
+    <div v-show="!isGoalsCollapsed">
     <div v-if="financialGoals.length === 0" class="text-center py-5">
       <p class="text-[11px] text-gray-400 italic mb-2">尚未設定任何財務目標</p>
       <button @click="openGoalModal()" class="text-xs text-theme-green font-bold underline">＋ 新增第一個目標</button>
@@ -1535,6 +1545,7 @@ color: #111111 !important;
         </div>
       </div>
     </div>
+    </div><!-- /v-show isGoalsCollapsed -->
   </div>
  </div>
 
@@ -3698,6 +3709,8 @@ checkAndGenerateAutoInvestments(); // 🔥 加入這行：啟動檢查定期定�
     
     const invMarket = ref('all');
     const invViewMode = ref('overview');
+const isInvTargetsCollapsed = ref(false);
+const isGoalsCollapsed = ref(false);
     // 使用者持有的投資標的資料陣列
     const userStocks = ref([
       { id: 1, symbol: '0050', name: '元大台灣50', shares: 1000, avgPrice: 150, currentPrice: 165 },
@@ -4242,7 +4255,7 @@ fetchCurrentPrice, fetchHistoricalPrice,
            invDateObj, invDateDisplay, changeInvDate, invMarket, soldRecords, isSellModalOpen, sellTargetStock, sellForm, openSellModal, confirmSell, totalRealizedPL, updateStockField,
       financialGoals, isGoalModalOpen, editingGoalId, goalForm, goalInputAmounts,
       goalProgressPercent, goalEffectiveAmount, linkedStockValue, linkedStocksForGoal,
-      openGoalModal, saveGoal, deleteGoal, addGoalAmount, getLinkedGoal,
+      openGoalModal, saveGoal, deleteGoal, addGoalAmount, getLinkedGoal,isInvTargetsCollapsed, isGoalsCollapsed,
     };
   }
 }).mount('#app');
